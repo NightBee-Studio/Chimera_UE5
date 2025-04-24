@@ -13,16 +13,31 @@
 namespace ATsAIControllerTag
 {
     // Tag for main AI-status 
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus,            "AIStatus"           );
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Normal    , "AIStatus.Normal"    );
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_NormalSkip, "AIStatus.NormalSkip");
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Attack    , "AIStatus.Attack"    );
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_AttackSkip, "AIStatus.AttackSkip");
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Dead      , "AIStatus.Dead"      );
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_DeadSkip  , "AIStatus.DeadSkip"  );
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Halt      , "AIStatus.Halt"      );
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_HaltSkip  , "AIStatus.HaltSkip"  );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus,            "AIStatus"            );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Normal     , "AIStatus.Normal"     );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_NormalSkip , "AIStatus.NormalSkip" );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Caution    , "AIStatus.Caution"    );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_CautionSkip, "AIStatus.CautionSkip");
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Attack     , "AIStatus.Attack"     );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_AttackSkip , "AIStatus.AttackSkip" );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Dead       , "AIStatus.Dead"       );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_DeadSkip   , "AIStatus.DeadSkip"   );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Halt       , "AIStatus.Halt"       );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_HaltSkip   , "AIStatus.HaltSkip"   );
 }
+
+
+
+
+void ATsAIController::Think()
+{
+    //if ( mStatusTags.HasTagExact(ATsAIControllerTag::AIStatus_Normal) )
+    if ( mAI_Vigilance < 0.2f ){
+        AddTag( ATsAIControllerTag::AIStatus_Normal );
+    }
+}
+
+
 
 
 ATsAIController::ATsAIController()
@@ -34,8 +49,7 @@ void ATsAIController::BeginPlay()
 {
     Super::BeginPlay();
 
-    UStateTreeComponent* st_comp = FindComponentByClass<UStateTreeComponent>();
-    st_comp->StartLogic();
+    mAI_Vigilance = 0;
 
     //// ターゲットをレベル内のアクターから取得（例：Tagが"Target"のActor）
     //TArray<AActor*> FoundActors;
@@ -46,6 +60,15 @@ void ATsAIController::BeginPlay()
     //    TargetActor = FoundActors[0];
     //    MoveToActor(TargetActor, 100.0f); // 100ユニット以内に近づけば到達とみなす
     //}
+
+}
+
+void ATsAIController::OnPossess( APawn* pawn )
+{
+    Super::OnPossess(pawn);
+
+    UStateTreeComponent* st_comp = FindComponentByClass<UStateTreeComponent>();
+    st_comp->StartLogic();
 }
 
 void ATsAIController::Tick(float dt)
@@ -58,3 +81,5 @@ void ATsAIController::Tick(float dt)
     //    MoveToActor(mTargetActor);
     //}
 }
+
+

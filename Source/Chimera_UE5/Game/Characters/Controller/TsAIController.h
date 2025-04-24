@@ -14,45 +14,9 @@
 
 
 
-
-USTRUCT()
-struct CHIMERA_UE5_API FTsData_StateChara
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = Parameter, meta = (DisplayName = "CharaStatus"))
-	ECharaStatus mCharaStatus;
-};
-
-USTRUCT()
-struct CHIMERA_UE5_API FTsData_DoTagState
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, Category = Parameter, meta = (DisplayName = "StatusTag"))
-	FGameplayTag mStatusTag;
-
-	UPROPERTY(EditAnywhere, Category = Parameter, meta = (DisplayName = "SkipTag"))
-	FGameplayTag mSkipTag;
-};
-
-
-
-
-
-USTRUCT(BlueprintType)
-struct CHIMERA_UE5_API FAISpec
-	: public FTableRowBase
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Mesh"))
-	TObjectPtr<UStateTree>	mStateTree;
-};
-
-
 UCLASS()
-class CHIMERA_UE5_API ATsAIController : public AAIController
+class CHIMERA_UE5_API ATsAIController
+	: public AAIController
 {
 	GENERATED_BODY()
 
@@ -62,20 +26,29 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	virtual void OnPossess(APawn* pawn) override;
+
 public:
 	virtual void Tick(float dt) override;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<UDataTable>				mDatas;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	ATsCharacter*						mTargetChara;
+	UPROPERTY(EditAnywhere,BlueprintReadWrite)
+	float								mAI_Vigilance ;//
 
-	UPROPERTY(EditAnywhere)
-	ATsCharacter*						mTargetActor;
+	//
 
 	// Tage
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere,BlueprintReadOnly)
 	FGameplayTagContainer				mStatusTags;
+
+
+	void Think();
+
 
 	void AddTag		(FGameplayTag tag)		{ mStatusTags.AddTag(tag); }
 	void RemoveTag	(FGameplayTag tag)		{ mStatusTags.RemoveTag(tag); }
 	bool HasTag		(FGameplayTag tag) const{ return mStatusTags.HasTag(tag); }
 };
+
+

@@ -64,14 +64,17 @@ struct CHIMERA_UE5_API FCharaSpec
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Type"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (DisplayName = "Type"))
 	ECharaType				mType;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Bitmask, BitmaskEnum = "EItemFlag", DisplayName = "Flag"))
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (Bitmask, BitmaskEnum = "EItemFlag", DisplayName = "Flag"))
 	//int32					mFlag;
 
 	//AI
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "AIStateTree"))
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (DisplayName = "AIStateTree"))
 	TObjectPtr<UStateTree>	mAIStateTree;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (DisplayName = "CharaObj"))
+	TObjectPtr<ATsCharacter>	mChara;
 };
 
 
