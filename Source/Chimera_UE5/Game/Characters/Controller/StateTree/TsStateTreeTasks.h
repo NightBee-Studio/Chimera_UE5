@@ -18,6 +18,61 @@
 
 
 
+
+//-----------------------------------------------------------------------------------------------------------------
+//
+// Chara Control
+//
+//
+
+USTRUCT(BlueprintType, meta = (DisplayName = "Init Character(Ts)"))
+struct CHIMERA_UE5_API FTsTask_InitChara
+    : public FStateTreeTaskCommonBase
+{
+    GENERATED_BODY()
+
+    using FInstanceDataType = FTsData_None;
+    virtual const UStruct* GetInstanceDataType() const override {
+        return FTsData_None::StaticStruct();
+    }
+
+    virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& context, const FStateTreeTransitionResult& trans) const override;
+    virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& context, const float dt) const override;
+};
+
+USTRUCT(BlueprintType, meta = (DisplayName = "Halt Character(Ts)"))
+struct CHIMERA_UE5_API FTsTask_HaltChara
+    : public FStateTreeTaskCommonBase
+{
+    GENERATED_BODY()
+
+    using FInstanceDataType = FTsData_None;
+    virtual const UStruct* GetInstanceDataType() const override {
+        return FTsData_None::StaticStruct();
+    }
+
+    virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& context, const FStateTreeTransitionResult& trans) const override;
+    virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& context, const float dt) const override;
+};
+
+USTRUCT(BlueprintType, meta = (DisplayName = "Destroy Character(Ts)"))
+struct CHIMERA_UE5_API FTsTask_DestroyChara
+    : public FStateTreeTaskCommonBase
+{
+    GENERATED_BODY()
+
+    using FInstanceDataType = FTsData_None;
+    virtual const UStruct* GetInstanceDataType() const override {
+        return FTsData_None::StaticStruct();
+    }
+
+    virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& context, const FStateTreeTransitionResult& trans) const override;
+   // virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& context, const float dt) const override;
+};
+
+
+
+
 //-----------------------------------------------------------------------------------------------------------------
 //
 //
@@ -62,19 +117,8 @@ struct CHIMERA_UE5_API FTsTask_SetCharaState
 
 
 
-
-
-
-
-
-
-
-
-
-
-
 //-----------------------------------------------------------------------------------------------------------------
-//
+// Think Task
 //
 //
 //
@@ -97,7 +141,7 @@ struct CHIMERA_UE5_API FTsTask_Think
 
 
 //-----------------------------------------------------------------------------------------------------------------
-//
+// Tag Controlling
 //
 //
 //
@@ -168,4 +212,30 @@ struct CHIMERA_UE5_API FTsTask_Dummy
     virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& context, const FStateTreeTransitionResult& trans) const override;
     virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& context, const float dt) const override;
 };
+
+
+
+
+
+
+USTRUCT(BlueprintType, meta = (DisplayName = "Do StateTree(Ts)"))
+struct CHIMERA_UE5_API FTsTask_DoStateTree
+    : public FStateTreeTaskCommonBase
+{
+    GENERATED_BODY()
+
+    using FInstanceDataType = FTsData_StateChara;
+    virtual const UStruct* GetInstanceDataType() const override {
+        return FTsData_StateChara::StaticStruct();
+    }
+
+    virtual EStateTreeRunStatus EnterState(FStateTreeExecutionContext& context, const FStateTreeTransitionResult& trans) const override {
+        return EStateTreeRunStatus::Running;
+    }
+    virtual EStateTreeRunStatus Tick(FStateTreeExecutionContext& context, const float dt) const override {
+        return EStateTreeRunStatus::Succeeded;
+    }
+};
+
+
 

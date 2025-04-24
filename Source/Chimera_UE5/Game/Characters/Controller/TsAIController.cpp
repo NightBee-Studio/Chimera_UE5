@@ -23,7 +23,7 @@ namespace ATsAIControllerTag
     UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Dead       , "AIStatus.Dead"       );
     UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_DeadSkip   , "AIStatus.DeadSkip"   );
     UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Halt       , "AIStatus.Halt"       );
-    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_HaltSkip   , "AIStatus.HaltSkip"   );
+    UE_DEFINE_GAMEPLAY_TAG_STATIC(AIStatus_Init       , "AIStatus.Init"       );
 }
 
 

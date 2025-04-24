@@ -5,6 +5,81 @@
 
 
 
+EStateTreeRunStatus 
+    FTsTask_InitChara::EnterState(
+        FStateTreeExecutionContext&         context,
+        const FStateTreeTransitionResult&   trans
+    ) const
+{
+    ATsAIController* ctrl = Cast<ATsAIController>(context.GetOwner());
+    if (!ctrl ) return EStateTreeRunStatus::Failed;
+    ATsCharacter* chara = Cast<ATsCharacter>(ctrl->GetPawn());
+    if (!chara) return EStateTreeRunStatus::Failed;
+    chara->GetStatusComponent()->Set(ECharaStatus::ESch_SysInit);
+    //chara->OnEnable() ;
+    return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus
+    FTsTask_InitChara::Tick(
+        FStateTreeExecutionContext& context,
+        const float                 dt
+    ) const
+{
+    ATsAIController* ctrl = Cast<ATsAIController>(context.GetOwner());
+    if (!ctrl ) return EStateTreeRunStatus::Failed;
+    ATsCharacter* chara = Cast<ATsCharacter>(ctrl->GetPawn());
+    if (!chara) return EStateTreeRunStatus::Failed;
+    return chara->GetStatusComponent()->Is(ECharaStatus::ESch_SysInit) ?
+            EStateTreeRunStatus::Running    :
+            EStateTreeRunStatus::Succeeded  ;
+}
+
+
+EStateTreeRunStatus 
+    FTsTask_HaltChara::EnterState(
+        FStateTreeExecutionContext&         context,
+        const FStateTreeTransitionResult&   trans
+    ) const
+{
+    ATsAIController* ctrl = Cast<ATsAIController>(context.GetOwner());
+    if (!ctrl ) return EStateTreeRunStatus::Failed;
+    ATsCharacter* chara = Cast<ATsCharacter>(ctrl->GetPawn());
+    if (!chara) return EStateTreeRunStatus::Failed;
+    //chara->OnDisable() ;
+    return EStateTreeRunStatus::Running;
+}
+
+EStateTreeRunStatus
+    FTsTask_HaltChara::Tick(
+        FStateTreeExecutionContext& context,
+        const float                 dt
+    ) const
+{
+    ATsAIController* ctrl = Cast<ATsAIController>(context.GetOwner());
+    if (!ctrl ) return EStateTreeRunStatus::Failed;
+    ATsCharacter* chara = Cast<ATsCharacter>(ctrl->GetPawn());
+    if (!chara) return EStateTreeRunStatus::Failed;
+    return chara->GetStatusComponent()->Is(ECharaStatus::ESch_SysHalt) ?
+        EStateTreeRunStatus::Running :
+        EStateTreeRunStatus::Succeeded;
+}
+
+
+EStateTreeRunStatus 
+    FTsTask_DestroyChara::EnterState(
+        FStateTreeExecutionContext&         context,
+        const FStateTreeTransitionResult&   trans
+    ) const
+{
+    ATsAIController* ctrl = Cast<ATsAIController>(context.GetOwner());
+    if (!ctrl ) return EStateTreeRunStatus::Failed;
+    ATsCharacter* chara = Cast<ATsCharacter>(ctrl->GetPawn());
+    if (!chara) return EStateTreeRunStatus::Failed;
+    //chara->OnDisable() ;
+    return EStateTreeRunStatus::Succeeded;
+}
+
 
 
 //-----------------------------------------------------------------------------------------------------------------

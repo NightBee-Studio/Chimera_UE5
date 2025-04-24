@@ -29,3 +29,8 @@ struct CHIMERA_UE5_API FTsData_DoTagState
 };
 
 
+USTRUCT()
+struct CHIMERA_UE5_API FTsData_None
+{
+	GENERATED_BODY()
+};
