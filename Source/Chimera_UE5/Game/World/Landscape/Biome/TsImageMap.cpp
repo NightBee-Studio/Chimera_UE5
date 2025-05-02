@@ -1,0 +1,451 @@
+
+#include "TsImageMap.h"
+
+#include <stdio.h>
+
+#include "CoreMinimal.h"
+
+#include "GenericPlatform/GenericPlatformFile.h"
+#include "Kismet/KismetSystemLibrary.h"
+
+
+
+
+
+// -------------------------------- TsMapOutput  --------------------------------
+int		TsMapOutput::LocalReso()
+{
+	return reso * (n>1 ? 2 : 1);
+}
+
+FBox2D	TsMapOutput::LocalBound(const FBox2D& world_bound)
+{
+	if (n == 1) return world_bound;
+
+	FVector2D	size = world_bound.GetSize()/n;
+	return FBox2D(	world_bound.Min + size * FVector2D( x-0.5f, y-0.5f ),
+					world_bound.Min + size * FVector2D( x+1.5f, y+1.5f ) );
+}
+
+
+
+
+// -------------------------------- TsValueMap  --------------------------------
+void	TsValueMap::ResetRemap() {
+	mMin = 10000.0f;
+	mMax = -10000.0f;
+}
+
+float	TsValueMap::Remap(float val) const {
+	return  (mMax - mMin) > 0 ? (val - mMin) / (mMax - mMin) : 1;
+}
+
+void	TsValueMap::UpdateRemap(const FVector2D& p) {
+	float h = GetValue(p);
+	mMin = FMath::Min(mMin, h);
+	mMax = FMath::Max(mMax, h);
+}
+
+
+
+// -------------------------------- TsNoiseMap  --------------------------------
+void TsNoiseParam::Setup(int seed )
+{
+	if ( seed != -1) FMath::RandInit(seed);
+	mNoisePos = FVector2D(FMath::RandRange(0, 1024), FMath::RandRange(0, 1024));
+}
+
+float	TsNoiseMap::GetValue(const FVector2D& p) {
+	return	( mN0 * FMath::PerlinNoise2D(p * mS0 + mNoisePos)
+			+ mN1 * FMath::PerlinNoise2D(p * mS1 + mNoisePos));
+}
+
+
+
+// -------------------------------- TsImageMap  --------------------------------
+
+float	TsImageCore::gSx = 0;
+float	TsImageCore::gSY = 0;
+
+FString TsImageCore::gDirName;
+
+#define PROJPATH	"D:\\Works\\Projects\\LandscapeGen\\Content\\"
+#define DEMODIR		"Demo\\"
+void	TsImageCore::SetDir(const FString& path, int no_x, int no_y)
+{
+	gDirName = PROJPATH DEMODIR + path;
+	if (no_x >= 0 && no_y >= 0) {
+		gDirName += FString::Printf(TEXT("%02d_%02d"), no_x, no_y);
+	}
+	gDirName += FString("\\");
+
+	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
+	if (!pf.DirectoryExists(*gDirName)) {		// Directory Exists?
+		pf.CreateDirectory(*gDirName);
+	}
+}
+
+struct	BITMAPFILEHEADER {	// BMP struct size will be 16, but Bmp-Format must be 14...
+	char    bfType[2];
+	int		bfSize;
+	short	bfReserved1;
+	short	bfReserved2;
+	int		bfOffBits;
+};
+
+struct	BITMAPINFOHEADER {
+	UINT32	biSize;//ヘッダサイズ	40 - Windows Bitmap	12 - OS/2 Bitmap
+	UINT32	biWidth;//画像の幅 (ピクセル)
+	UINT32	biHeight;//画像の高さ (ピクセル)
+	INT16	biPlanes;//プレーン数　常に 1
+	INT16	biBitCount;//1画素あたりのデータサイズ(bit)	例）256 色ビットマップ ＝ 8
+	UINT32	biCompression;//圧縮形式	0:BI_RGB(無圧縮)	1:BI_RLE8 (RunLength 8 bits/pixel)	2:BI_RLE4 (RunLength 4 bits/pixel)	3:BI_BITFIELDS (Bitfields)	(4 - BI_JPEG)	(5 - BI_PNG)
+	UINT32	biSizeImage;//画像データ部のサイズ(byte)
+	UINT32	biXPelsPerMeter;//横方向解像度 (1mあたりの画素数)	//96dpi ならば3780
+	UINT32	biYPelsPerMeter;//縦方向解像度 (1mあたりの画素数)	//96dpi ならば3780
+	UINT32	biClrUsed;//格納されているパレット数 (使用色数)
+	UINT32	biClrImportant;//重要なパレットのインデックス		//0 の場合もある
+};
+
+
+struct	PNGTYPE {	// BMP struct size will be 16, but Bmp-Format must be 14...
+	UINT8    pnType[8];
+};
+struct	PNGHEADER {			// ChunkType =49 48 44 52	"IHDR" 
+	UINT32	pnWidth;		//画像の幅 (ピクセル)
+	UINT32	pnHeight;		//画像の高さ (ピクセル)
+	UINT8	pnDepth;			//	ビット深度	(有効な値は 1, 2, 4, 8, 16 だが、
+	UINT8	pnColorType;	//	カラータイプ(有効な値は 0, 2, 3, 4, 6)
+	UINT8	pnCompressType;	//	圧縮手法
+	UINT8	pnFilterType;	//	フィルター手法
+	UINT8	pnInteraceType;	//インターレース手法
+	UINT32	pnCRC;			// (Cyclic Redundancy Check)	Chunk Type と Chunk Data を もとに計算される
+};
+struct	PNGChunkBegin {
+	UINT32	pnLength;
+	UINT32	pnChunkType;
+};
+struct	PNGChunkEnd {
+	UINT32	pnCRC;
+};
+
+
+struct DDSHEADER {
+	DWORD   dwMagic				;// == 常に 0x20534444  ' SDD'
+	DWORD   dwSize				;// == 常に 124
+	DWORD   dwFlags				;// ヘッダ内の有効な情報 DDSD_* の組み合わせ
+	DWORD   dwHeight			;// 画像の高さ x size
+	DWORD   dwWidth				;// 画像の幅   y size
+	DWORD   dwPitchOrLinearSize	;// 横1 line の byte 数 (pitch) または 1面分の byte 数 (linearsize)
+	DWORD   dwDepth				;// 画像の奥行き z size (Volume Texture 用)
+	DWORD   dwMipMapCount		;// 含まれている mipmap レベル数
+	DWORD   dwReserved1[11];
+	DWORD   dwPfSize			;// == 常に 32
+	DWORD   dwPfFlags			;// pixel フォーマットを表す DDPF_* の組み合わせ
+	DWORD   dwFourCC			;//フォーマットが FourCC で表現される場合に使用する。 DX10 拡張ヘッダが存在する場合は 'DX10' (0x30315844) が入る。
+	DWORD   dwRGBBitCount		;// 1 pixel の bit 数
+	DWORD   dwRBitMask			;// RGB format 時の mask
+	DWORD   dwGBitMask			;// RGB format 時の mask
+	DWORD   dwBBitMask			;// RGB format 時の mask
+	DWORD   dwRGBAlphaBitMask	;// RGB format 時の mask
+	DWORD   dwCaps				;// mipmap 等のフラグ指定用
+	DWORD   dwCaps2				;// cube/volume texture 等のフラグ指定用
+	DWORD   dwReservedCaps[2];
+	DWORD   dwReserved2;
+};
+enum {
+	DDSD_CAPS			= 0x00000001,	// dwCaps/dwCpas2 が有効
+	DDSD_HEIGHT			= 0x00000002,	// dwHeight が有効
+	DDSD_WIDTH			= 0x00000004,	// dwWidth が有効。すべてのテクスチャで必須。
+	DDSD_PITCH			= 0x00000008,	// dwPitchOrLinearSize が Pitch を表す
+	DDSD_PIXELFORMAT	= 0x00001000,	// dwPfSize/dwPfFlags/dwRGB/dwFourCC～ 等の Pixel 定義が有効。
+	DDSD_MIPMAPCOUNT	= 0x00020000,	// dwMipMapCount が有効。mipmap を格納する場合は必須。
+	DDSD_LINEARSIZE		= 0x00080000,	// dwPitchOrLinearSize が LinearSize を表す
+	DDSD_DEPTH			= 0x00800000,	// dwDepth が有効。3D (Volume) Texture 時に設定
+};
+enum {
+	DDPF_ALPHAPIXELS	= 0x00000001,	// RGB 以外に alpha が含まれている。つまり dwRGBAlphaBitMask が有効。
+	DDPF_ALPHA			= 0x00000002,	// pixel は Alpha 成分のみ含まれている。
+	DDPF_FOURCC			= 0x00000004,	// dwFourCC が有効。
+	DDPF_PALETTEINDEXED4= 0x00000008,	// * Palet 16 colors(DX9 以降はたぶん使用されない)
+	DDPF_PALETTEINDEXED8= 0x00000020,	// * Palet 256 colors(DX10 以降は使用されない)
+	DDPF_RGB			= 0x00000040,	// dwRGBBitCount / dwRBitMask / dwGBitMask / dwBBitMask / dwRGBAlphaBitMask によってフォーマットが定義されていることを示す
+	DDPF_LUMINANCE		= 0x00020000,	// * 1ch のデータが RGB すべてに展開される
+	DDPF_BUMPDUDV		= 0x00080000,	// * pixel が符号付であることを示す(本来は bump 用) DX10以降は使用しない
+};
+enum {
+	DDSCAPS_ALPHA		= 0x00000002,	// Alpha が含まれている場合(あまり参照されない)
+	DDSCAPS_COMPLEX		= 0x00000008,	// 複数のデータが含まれている場合。Palette / Mipmap / Cubemap / VolumeTexture では On にする。
+	DDSCAPS_TEXTURE		= 0x00001000,	// 常に On
+	DDSCAPS_MIPMAP		= 0x00400000,	// MipMap が存在する場合。(dwFlags の DDSD_MIPMAPCOUNT が On でかつ dwMipMapCount が 2以上の場合に On)
+};
+enum {
+	DDSCAPS2_CUBEMAP			= 0x00000200 ,//	Cubemap の場合
+	DDSCAPS2_CUBEMAP_POSITIVEX	= 0x00000400 ,//	Cubemap + X が含まれている
+	DDSCAPS2_CUBEMAP_NEGATIVEX	= 0x00000800 ,//	Cubemap - X が含まれている
+	DDSCAPS2_CUBEMAP_POSITIVEY	= 0x00001000 ,//	Cubemap + Y が含まれている
+	DDSCAPS2_CUBEMAP_NEGATIVEY	= 0x00002000 ,//	Cubemap - Y が含まれている
+	DDSCAPS2_CUBEMAP_POSITIVEZ	= 0x00004000 ,//	Cubemap + Z が含まれている
+	DDSCAPS2_CUBEMAP_NEGATIVEZ	= 0x00008000 ,//	Cubemap - Z が含まれている
+	DDSCAPS2_VOLUME				= 0x00400000 ,//	VolumeTexture の場合
+} ;
+
+int		TsImageCore::Load(const FString& fname, EImageFile fmt) {
+	FString	path = PROJPATH DEMODIR + fname;
+	FILE* fp;
+	if ((_tfopen_s(&fp, *path, TEXT("rb"))) == 0) {
+		switch (fmt) {
+		case EImageFile::Bmp:{
+				BITMAPFILEHEADER	bm_head;
+				BITMAPINFOHEADER	bm_info;
+				fread(&bm_head.bfType     , sizeof(char ), 2, fp);
+				fread(&bm_head.bfSize     , sizeof(int  ), 1, fp);
+				fread(&bm_head.bfReserved1, sizeof(short), 1, fp);
+				fread(&bm_head.bfReserved2, sizeof(short), 1, fp);
+				fread(&bm_head.bfOffBits  , sizeof(int  ), 1, fp);
+				fread(&bm_info, sizeof(bm_info), 1, fp);
+				mW = bm_info.biWidth;
+				mH = bm_info.biHeight;
+				//fread(mImage, sizeof(char), bm_info.biSizeImage, fp);
+				fclose(fp);
+			}
+			break;
+
+		case EImageFile::Png:{
+			}
+			break;
+		}
+	}
+	return 0;
+}
+
+int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat format, int x, int y, int w, int h ) const {
+	if (w == 0) w = mW;
+	if (h == 0) h = mH;
+
+	if (format & FmtDebug) {
+		UKismetSystemLibrary::PrintString(nullptr, fname, true, true, FColor::Red, 5.0f, TEXT("None"));
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("TsImageCore::Save xy=(%d,%d)   w,h=%d %d"), x, y, w, h);
+
+	FString	path = gDirName + fname;
+	FILE* fp;
+	if ((_tfopen_s(&fp, *path, TEXT("wb"))) == 0) {
+		switch (filetype) {
+		case EImageFile::Bmp:{
+				int imgoffs = 14 + sizeof(BITMAPINFOHEADER);
+				int imgbcc = GetStride(format) * 8;
+				int imgsize = w * h * (imgbcc / 8);
+				BITMAPFILEHEADER	bm_head = { {'B','M'}, imgoffs + imgsize, 0, 0, imgoffs };
+				BITMAPINFOHEADER	bm_info = { sizeof(BITMAPINFOHEADER), w, h , 1, imgbcc, 0, imgsize, 0,0,0,0 };
+				fwrite(&bm_head.bfType     , sizeof(UINT8 ), 2, fp);
+				fwrite(&bm_head.bfSize     , sizeof(UINT32), 1, fp);
+				fwrite(&bm_head.bfReserved1, sizeof(UINT16), 1, fp);
+				fwrite(&bm_head.bfReserved2, sizeof(UINT16), 1, fp);
+				fwrite(&bm_head.bfOffBits  , sizeof(UINT32), 1, fp);
+				fwrite(&bm_info, sizeof(bm_info), 1, fp);
+				SaveImage(fp, format,x,y,w,h);
+				//fwrite(mImage, sizeof(UINT8), bm_info.biSizeImage, fp);
+				UE_LOG(LogTemp, Log, TEXT("SaveFile done image  size=%d  BMPHEAD=%d   BMPINFO=%d  ImgOff=%d"), bm_info.biSizeImage, sizeof(BITMAPFILEHEADER), sizeof(BITMAPINFOHEADER), imgoffs);
+			}
+			break;
+		case EImageFile::Dds: {
+				int imgsize = w * h * GetStride(format);
+				DDSHEADER	ds_header = { 0x20534444, 124,
+										DDSD_HEIGHT | DDSD_WIDTH | DDSD_PITCH | DDSD_PIXELFORMAT, w, h, GetStride(format) * h, 1,
+										0, {0}, 32, 0,0, GetStride(format) * 8,  0,0,0,0, DDSCAPS_TEXTURE, 0, {0} ,0 };
+				switch (format & EImageFormat::FmtMask) {
+				case EImageFormat::FormatB8G8R8A8:
+					ds_header.dwPfFlags			= DDPF_RGB| DDPF_ALPHAPIXELS;
+					ds_header.dwRBitMask		= 0x00ff0000;
+					ds_header.dwGBitMask		= 0x0000ff00;
+					ds_header.dwBBitMask		= 0x000000ff;
+					ds_header.dwRGBAlphaBitMask	= 0xff000000;
+					break;
+				case EImageFormat::FormatG16R16:
+					ds_header.dwPfFlags  = DDPF_RGB ;
+					ds_header.dwRBitMask = 0x0000ffff;
+					ds_header.dwGBitMask = 0xffff0000;
+					break;
+				case EImageFormat::FormatR32:// unspported for dds
+				case EImageFormat::FormatR16:
+					return -1;
+				case EImageFormat::FormatL16:
+					ds_header.dwPfFlags = DDPF_LUMINANCE;
+					ds_header.dwRBitMask = 0x0000ffff;
+					break;
+				case EImageFormat::FormatF32:
+					ds_header.dwPfFlags = DDPF_FOURCC;
+					ds_header.dwFourCC	= 0x00000072  ;
+					break;
+				}
+				fwrite(&ds_header, sizeof(DDSHEADER), 1, fp);
+				SaveImage(fp, format, x, y, w, h);
+			}
+			break;
+
+		case EImageFile::Png:{
+				int imgsize  = w * h * GetStride(format);
+				PNGTYPE			pn_type = { {0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A} };
+				PNGChunkBegin	pn_head_chunk = { 13     , 0x49484452 };
+				PNGHEADER		pn_header     = { w, h, GetStride(format), 0,32,0,0,0 };
+				PNGChunkBegin	pn_data_chunk = { imgsize, 0x49444154 };
+				PNGChunkBegin	pn_end_chunk  = { 0      , 0x49454E44 };
+				PNGChunkEnd		pn_crc	= { 0 };
+
+				switch (format & EImageFormat::FmtMask) {
+				case EImageFormat::FormatB8G8R8A8:
+					pn_header.pnColorType = 6;
+					pn_header.pnDepth = GetStride(format) * 8;
+					break;
+				case EImageFormat::FormatR8:
+				case EImageFormat::FormatR16:
+				case EImageFormat::FormatR32:
+					pn_header.pnColorType = 0;
+					pn_header.pnDepth = GetStride(format) * 8 ;
+					break;
+				case EImageFormat::FormatF32:
+					return -1;
+				}
+
+				fwrite(&pn_type, sizeof(UINT8), 8, fp);
+				
+				fwrite(&pn_head_chunk, sizeof(PNGChunkBegin), 1, fp);
+				fwrite(&pn_header.pnWidth       , sizeof(UINT32), 1, fp);
+				fwrite(&pn_header.pnHeight      , sizeof(UINT32), 1, fp);
+				fwrite(&pn_header.pnDepth       , sizeof(UINT8), 1, fp);
+				fwrite(&pn_header.pnColorType   , sizeof(UINT8), 1, fp);
+				fwrite(&pn_header.pnCompressType, sizeof(UINT8), 1, fp);
+				fwrite(&pn_header.pnFilterType  , sizeof(UINT8), 1, fp);
+				fwrite(&pn_header.pnInteraceType, sizeof(UINT8), 1, fp);
+				fwrite(&pn_crc, sizeof(PNGChunkEnd), 1, fp);
+
+				fwrite(&pn_data_chunk, sizeof(PNGChunkBegin), 1, fp);
+				SaveImage(fp, format, x, y, w, h);
+				//fwrite(mImage, sizeof(UINT8), imgsize, fp);
+				fwrite(&pn_crc, sizeof(PNGChunkEnd), 1, fp);
+
+				fwrite(&pn_end_chunk , sizeof(PNGChunkBegin), 1, fp);
+				fwrite(&pn_crc, sizeof(PNGChunkEnd), 1, fp);
+			//	UE_LOG(LogTemp, Log, TEXT("SaveFile done image  size=%d  BMPHEAD=%d   BMPINFO=%d  ImgOff=%d"), bm_info.biSizeImage, sizeof(BITMAPFILEHEADER), sizeof(BITMAPINFOHEADER), imgoffs);
+			}
+			break;
+		}
+
+		fclose(fp);
+	}
+	return 0;
+}
+
+
+
+int			TsImageCore::GetStride(EImageFormat format) {
+	switch (format & EImageFormat::FmtMask) {
+	case EImageFormat::FormatB8G8R8A8:
+	case EImageFormat::FormatG16R16:
+	case EImageFormat::FormatR32:
+	case EImageFormat::FormatF32:	return 4;
+	case EImageFormat::FormatL16:
+	case EImageFormat::FormatR16:	return 2;
+	case EImageFormat::FormatR8:		return 1;
+	}
+	return 0;
+}
+
+void		TsImageCore::SetWorld(const FBox2D* bound) 
+{
+	FVector2D	size = bound->GetSize();
+	mStep = FVector2D((size.X + 1) / mW, (size.Y + 1) / mH);
+	mWorld = bound;
+}
+
+FVector2D	TsImageCore::GetWorldPos(int px, int py) const
+{
+	return FVector2D(mStep.X * px, mStep.Y * py) + mWorld->Min;
+}
+
+FIntVector2	TsImageCore::GetPixelPos(const FVector2D &p ) const
+{
+	FVector2D pix = p - mWorld->Min;
+	//pix.X -= gSx;
+	//pix.Y -= gSY;
+	return FIntVector2( (int)(pix.X/mStep.X+0.5f), (int)(pix.Y/mStep.Y + 0.5f) ) ;
+}
+
+bool		TsImageCore::IsWorld(const FVector2D& p) const
+{
+	return mWorld->IsInside(p);
+}
+
+void	TsImageCore::ForeachPixel( std::function< void(int,int) > func )
+{
+	for (int py = 0; py < mH ; py++) {
+		for (int px = 0; px < mW ; px++) {
+			func( px, py ) ;
+		}
+	}
+}
+
+int		TsImageMap<int>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
+{
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			int		v = GetPixel(sx + x, sy + y);
+			float	f;
+			switch (format & EImageFormat::FmtMask) {
+			case EImageFormat::FormatF32:
+				f = v;
+				fwrite(&f, GetStride(format), 1, fp);
+				break;
+			case EImageFormat::FormatG16R16:
+			case EImageFormat::FormatL16:
+			case EImageFormat::FormatR16:
+			case EImageFormat::FormatB8G8R8A8:
+			case EImageFormat::FormatR8:
+				fwrite(&v, GetStride(format), 1, fp);
+				break;
+			}
+		}
+	}
+	return 0;
+}
+
+int		TsImageMap<float>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
+{
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			float f = GetPixel(sx+x, sy+y) ;
+
+			if (format & EImageFormat::FmtDebug) UE_LOG(LogTemp, Log, TEXT("(%d,%d) %f[%d]"), x,y, f, (int)RemapImage(f, 65535));
+
+			switch (format & EImageFormat::FmtMask) {
+			case EImageFormat::FormatF32:
+				f = RemapImage( f, 1 );
+				fwrite(&f, GetStride(format), 1, fp);
+				break;
+
+			default:
+				int v;
+				switch (format & EImageFormat::FmtMask) {
+				case EImageFormat::FormatG16R16:
+				case EImageFormat::FormatL16:
+				case EImageFormat::FormatR16:
+					v = RemapImage(f, 65535);
+					break;
+				case EImageFormat::FormatB8G8R8A8:
+					v = (int)RemapImage(f, 255) | 0xff000000;
+					break;
+				case EImageFormat::FormatR8:
+					v = RemapImage(f, 255);
+					break;
+				default:
+					break;
+				}
+				fwrite(&v, GetStride(format), 1, fp);
+				break;
+			}
+		}
+	}
+	return 0;
+}

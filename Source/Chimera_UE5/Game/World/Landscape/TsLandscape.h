@@ -17,22 +17,25 @@ class CHIMERA_UE5_API UTsLandscape
 {
 	GENERATED_BODY()
 
+
 #if 0
+	//Builder
+#if WITH_EDITOR
 public:
 	TsBiomeSurface *				mBaseSurface;
 	TMap<BiomeSrfType,BiomeSurface>	mSurfaces;
 
-	TArray<Biome>					mBiomes;
+	//	TArray<Biome>					mBiomes;
 
-	void*							mShape;
+	TsLandShape *					mShape;
+
 	FBox2D							mBoundingbox;
 	float							mWaterLevel ;
 
-	OutputConfig					mOutConfig;
-
-	HeightMap *						mHeightMap;
-	HeightMap *						mNormalMap;
-	MaterialMap *					mMaterialMap;
+	TsMapOutput						mOutParam;
+	TsHeightMap *					mHeightMap;
+	TsHeightMap *					mNormalMap;
+	TsMaterialMap *					mMaterialMap;
 
 private:
 	float			GetHeight(const FVector2D& p);			// world-coord
@@ -48,11 +51,12 @@ public:
 
 	TsBiome*		SearchBiome(const FVector2D& p);		// world-coord
 
-	void			Generate(float _x, float _y, float radius,
-							 float	voronoi_size,
-							 float	voronoi_jitter,
-							 int	heightmap_reso,
-							 int	erode_cycle );
+	void			BuildLandscape(
+							float _x, float _y, float radius,
+							float	voronoi_size,
+							float	voronoi_jitter,
+							int		heightmap_reso,
+							int		erode_cycle );
 
 	void			SetOutputConfig(const OutputConfig& conf) { mOutConfig = conf; }
 
@@ -63,6 +67,9 @@ public:
 	void			Release();
 
 	void			Debug(UWorld* world);
-#endif
+#endif	//WITH_EDITOR
+
+#endif	
+
 };
 

@@ -2,8 +2,8 @@
 #include "TsLandscape.h"
 
 
-
 #if 0
+#if WITH_EDITOR
 
 #include "TsErosion.h"
 
@@ -70,168 +70,6 @@ static inline FVector2D sincos_pos(float ang) {
 
 
 
-
-
-
-
-
-
-// ---------------------------- LandscapeShape -------------------------
-
-class LandscapeShape : public TsValueMap {
-private:
-	struct Circle : public FVector2D {
-		float		r;			// radius
-		int			n;			// subdiv
-
-		Circle(const FVector2D& _v, float _r, int _n)
-			: FVector2D(_v), r(_r), n(_n) {}
-
-#define N 128
-		bool		IsInside(const FVector2D& p) {
-			float a = FMath::RandRange(0.7f, 1.2f);
-			float r = radius * a;
-			Circle cc(c + c.r * sincos_pos(angl), r, N * a);
-			mCircles.Add(cc);
-			if (count > 0) {
-				angl += (count & 2) ? FMath::RandRange(-40, 40) :
-					(count & 1) ? FMath::RandRange(-40, -20) :
-					FMath::RandRange(20, 40);
-				CreateChild(cc, radius, angl, count - 1);
-			}
-		}
-
-#define S 0.06f
-		FVector2D	GetOutline(int i) {
-			float ang = (i % n) * 360.0f / n;
-			float bias = FMath::PerlinNoise3D(FVector(X, Y, ang * 0.06f));
-			float l = (1 + bias * 0.5f) * r;
-			return *this + l * sincos_pos(ang);
-		}
-	};
-
-public:
-	float			mX, mY;
-	TArray<Circle>	mCircles;	// 
-
-	//------------------------------------------------------- Island
-private:
-	void			CreateChild(const Circle& c, float radius, float angl, int count);
-
-public:
-	LandscapeShape() : TsValueMap() {}
-	virtual			~LandscapeShape() {}
-
-	void			Generate(float _x, float _y, float radius) {
-		mX = _x;
-		mY = _y;
-		{// create main circles -----------------------------------------------------------------
-			float ra = FMath::RandRange(1.0f, 1.5f);
-			Circle center(FVector2D(mX, mY), radius * ra, N * ra);
-			mCircles.Add(center);
-
-			float angl = 0;
-			CreateChild(center, radius, angl, FMath::RandRange(1, 2));
-			angl += FMath::RandRange(90.0f, 120.0f);
-			CreateChild(center, radius, angl, FMath::RandRange(1, 2));
-		}
-	}
-
-	void			Release() {
-		mCircles.Empty();
-	}
-
-	// create boundingbox -------------------------------------------------------------------
-	void			UpdateBoundingbox(FBox2D& boundingbox) {
-		boundingbox = FBox2D(FVector2D(10000, 10000), FVector2D(-10000, -10000));
-		for (auto& c : mCircles) {
-			for (int i = 0; i < c.n; i++) {
-				boundingbox += c.GetOutline(i + 0);
-				boundingbox += c.GetOutline(i + 1);
-			}
-		}
-		FVector2D size = boundingbox.GetSize();
-		if (size.X > size.Y) boundingbox.Max.X += size.X - size.Y;
-		if (size.Y > size.X) boundingbox.Max.Y += size.Y - size.X;
-	}
-
-	bool			IsInside(const FVector2D& p) {
-		for (auto& c : mCircles) {
-			if (c.IsInside(p)) return true;
-		}
-		return false;
-	}
-
-	float			GetMaterialValue(const FVector2D& p) {
-		float h = 1;
-		for (auto& c : mCircles) {
-			if (c.IsInside(p)) return 0;
-
-			float hp = 1;
-			for (int i = 0; i < c.n; i++) {
-				FVector2D v0 = c.GetOutline(i + 0);
-				FVector2D v1 = c.GetOutline(i + 1);
-				hp = FMath::Min((near_point(v0, v1, p) - p).Length() / 50.0f, hp);
-			}
-			h = FMath::Min(h, hp);
-		}
-		return h;
-	}
-
-	float			Remap(float val) const override {
-		return 100 * (FMath::Pow(ValueMap::Remap(val), 2.0f) - 1);
-	}
-
-	float			GetValue(const FVector2D& p) override {
-		float h = -1000000;
-		for (auto& c : mCircles) {
-			if (c.IsInside(p)) {
-				h = 1.0f;
-			}
-			else {
-				float hc = -1000000.0f;
-				for (int i = 0; i < c.n; i++) {
-					FVector2D v0 = c.GetOutline(i + 0);
-					FVector2D v1 = c.GetOutline(i + 1);
-					float hp = 1.0f - (near_point(v0, v1, p) - p).Length() / 10;
-					hc = FMath::Max(hc, hp);
-				}
-				h = FMath::Max(h, hc);
-			}
-		}
-		return h;
-	}
-
-
-	//------------------------------------------------------- Debug
-	void			Debug(UWorld* world) {
-		for (auto c : mCircles) {
-			DrawDebugCircle(world, FVector(c.X, c.Y, 0), 10, 32, FColor(255, 0, 255), true, 10000);
-			for (int i = 0; i < c.n; i++) {
-				FVector2D	p0 = c.GetOutline(i + 0);
-				FVector2D	p1 = c.GetOutline(i + 1);
-				DrawDebugLine(world, FVector(p0.X, p0.Y, 0), FVector(p1.X, p1.Y, 0), FColor(255, 0, 0), true, 10000);
-			}
-		}
-	}
-
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // -------------------------------- UTsLandscape  --------------------------------
 
 UTsLandscape::UTsLandscape()
@@ -239,7 +77,6 @@ UTsLandscape::UTsLandscape()
 	, mHeightMap(nullptr)
 	, mNormalMap(nullptr)
 	, mMaterialMap(nullptr)
-	, mShape( new LandscapeShape() )
 {
 	gInstance = this;
 }
@@ -365,7 +202,7 @@ void		UTsLandscape::Release()
 }
 
 
-void	UTsLandscape::Generate(
+void	UTsLandscape::BuildLandscape(
 			float	_x, float _y, float radius,
 			float	voronoi_size,
 			float	voronoi_jitter,
@@ -835,6 +672,7 @@ void	UTsLandscape::Debug(UWorld* world)
 UTsLandscape* UTsLandscape::gInstance = nullptr;
 
 
+#endif	//WITH_EDITOR
 
+#endif	
 
-#endif
