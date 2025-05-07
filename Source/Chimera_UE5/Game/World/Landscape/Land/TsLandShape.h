@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-#include "Biome/TsImageMap.h"
+#include "TsImageMap.h"
 
 
 

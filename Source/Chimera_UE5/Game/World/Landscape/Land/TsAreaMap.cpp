@@ -1,5 +1,5 @@
 
-#include "TsBiomeMap.h"
+#include "TsAreaMap.h"
 
 
 
@@ -18,6 +18,16 @@ FVector2D near_point(const FVector2D& v1, const FVector2D& v2, const FVector2D& 
 
 
 
+
+
+// -------------------------------- TsMaterialValue  --------------------------------
+
+void	TsMaterialValue::Merge(const TsMaterialValue& a, float rate)
+{
+	for (auto d : a) {
+		Add( TsMaterialPixel(d.mA, d.mAlpha * rate));
+	}
+}
 
 
 

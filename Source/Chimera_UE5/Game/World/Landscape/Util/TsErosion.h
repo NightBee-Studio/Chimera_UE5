@@ -2,7 +2,7 @@
 
 
 #include "TsVoronoi.h"
-#include "../Biome/TsBiomeMap.h"
+#include "../Land/TsAreaMap.h"
 
 
 class TsHeightMap;
@@ -26,8 +26,8 @@ public:
 public:
 	TsErosion(
 		TsHeightMap*	heightmap,
-		TsBiomeMap*	flowmap,
-		TsBiomeMap*	pondmap
+		TsBiomeMap*		flowmap,
+		TsBiomeMap*		pondmap
 	) ;
 	~TsErosion() {}
 };

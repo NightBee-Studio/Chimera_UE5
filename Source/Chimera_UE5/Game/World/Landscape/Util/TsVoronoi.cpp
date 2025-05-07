@@ -71,8 +71,14 @@ bool	TsVoronoi::IsInside(const FVector2D& p ) const
 
 void	TsVoronoi::AddEdge(const Edge& edge)
 {
-	mMin = FMath::Min(edge.mP, mMin);
-	mMax = FMath::Max(edge.mP, mMax);
+	mMin = FVector2D(
+		FMath::Min(edge.mP.X, mMin.X),
+		FMath::Min(edge.mP.Y, mMin.Y)
+	);
+	mMax = FVector2D(
+		FMath::Max(edge.mP.X, mMax.X),
+		FMath::Max(edge.mP.Y, mMax.Y) 
+	);
 	mEdges.Add(edge);
 }
 
@@ -85,4 +91,19 @@ void	TsVoronoi::Debug(UWorld* world, const FColor& c ) const {
 		DrawDebugLine(world, FVector(p0.X, p0.Y, 0), FVector(p1.X, p1.Y, 0), c, true, 10000);
 	}
 }
+
+
+
+
+
+// -------------------------------- TsBuildVoronois --------------------------------
+//
+//
+
+
+
+
+
+
+
 

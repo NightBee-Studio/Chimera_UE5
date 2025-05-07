@@ -134,7 +134,6 @@ float	 TsLandShape::GetMaterialValue(const FVector2D& p)
 	return h;
 }
 
-
 float	TsLandShape::Remap(float val) const
 {
 	return 100 * (FMath::Pow(TsValueMap::Remap(val), 2.0f ) - 1 );

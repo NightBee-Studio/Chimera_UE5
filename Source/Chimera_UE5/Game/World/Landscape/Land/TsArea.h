@@ -3,9 +3,12 @@
 
 #include "CoreMinimal.h"
 
+#include "GameFramework/Actor.h"
+#include "Engine/DataTable.h"
+
 #include "../Util/TsVoronoi.h"
 
-#include "TsBiome.generated.h"
+#include "TsArea.generated.h"
 
 
 
@@ -19,6 +22,8 @@ enum class EBiomeType : uint8 {
 
 UENUM(BlueprintType)
 enum class EBiomeSrfType : uint8 {
+	SurfBase,
+
 	SurfMountain,
 	SurfField	,
 	SurfLake	,
@@ -50,20 +55,23 @@ public:
 	TObjectPtr<UStaticMesh>	mMesh;
 };
 
-// -------------------------------- Biome --------------------------------
-UCLASS(BlueprintType)
-class CHIMERA_UE5_API ATsBiome
-	: public AActor
-	, public TsVoronoi
-{
-	GENERATED_BODY()
 
+
+
+// -------------------------------- Biome --------------------------------
+//
+//
+//
+
+class TsBiome
+	: public TsVoronoi
+{
 private:
 	EBiomeType		mType;
 	EBiomeSrfType	mSurfType;//Å@Ç¢ÇÁÇ»Ç¢
 public:
-	//ATsBiome(float x, float y) : TsVoronoi(x, y) {}
-	virtual ~ATsBiome() {}
+	TsBiome(float x, float y) : TsVoronoi(x, y) {}
+	virtual ~TsBiome() {}
 
 	void			SetBiomeType(EBiomeType ty)	{ mType = ty; }
 	EBiomeType		GetBiomeType()				{ return mType; }
@@ -71,5 +79,5 @@ public:
 	EBiomeSrfType	GetBiomeSrfType()			{ return mSurfType; }
 };
 
-typedef TArray<ATsBiome*> FTsBiomeGroup;
+typedef TArray<TsBiome*> TsBiomeGroup;
 

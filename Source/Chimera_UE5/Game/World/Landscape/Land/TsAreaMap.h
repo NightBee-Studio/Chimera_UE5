@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CoreMinimal.h"
 
 #include "TsImageMap.h"
 
@@ -35,10 +36,9 @@ class TsBiomeMap
 private:
 	static
 	TMap<EBiomeMapType, TsBiomeMap*>	gBiomeMaps;
-
 public:
 	static TsBiomeMap*	GetBiomeMap(EBiomeMapType ty	              ) { return gBiomeMaps[ty]; }
-	static void			AddBiomeMap(EBiomeMapType ty, TsBiomeMap* map) { gBiomeMaps.Add(ty,map); }
+	static void			AddBiomeMap(EBiomeMapType ty, TsBiomeMap* map) { gBiomeMaps.Emplace( ty, map ); }
 
 public:
 	TsBiomeMap(int w, int h, const FBox2D* bound, const TsNoiseParam& cnf = TsNoiseParam())
@@ -122,9 +122,6 @@ enum EMaterialType {
 	MT_Moss_A,		//12
 	MT_Moss_B,
 };
-
-
-
 
 struct TsMaterialPixel {
 	EMaterialType	mA;// , mB;
