@@ -1,12 +1,12 @@
-#include "TsLandSurface.h"
-#include "TsArea.h"
-#include "TsAreaMap.h"
+#include "TsBiomeSurface.h"
+#include "TsBiome.h"
+#include "TsBiomeMap.h"
 
 
 
 // -------------------------------- Operators --------------------------------
 #define	DECLARE
-#include "TsBiomeOps.h"
+#include "TsOps.h"
 #undef	DECLARE
 
 
@@ -118,10 +118,10 @@ TsMaterialValue	TsBiomeMatFunc::GetMaterial(const FVector2D& p)
 		for (auto& l : c.mLayers) {
 			if (l.mMaterialType != EMaterialType::MT_None) {
 				if (l.mMin <= v && v < l.mMax) {
-					TsBiomeOp::gResultDone = false;
+					TsOp::gResultDone = false;
 					if (l.mOp && !l.mOp->Is(p)) continue;
-					if (TsBiomeOp::gResultDone) {
-						ml.Merge(TsBiomeOp::gMatResult);
+					if (TsOp::gResultDone) {
+						ml.Merge(TsOp::gMatResult);
 					} else {
 						float val;
 						if (type) {

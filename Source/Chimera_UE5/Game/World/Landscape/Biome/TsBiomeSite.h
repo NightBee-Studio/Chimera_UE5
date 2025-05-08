@@ -2,12 +2,12 @@
 
 #include "CoreMinimal.h"
 
-#include "TsImageMap.h"
+#include "../Util/TsImageMap.h"
 
 
 
 
-class TsLandShape
+class TsBiomeSite
 	: public TsValueMap
 {
 private:
@@ -31,8 +31,8 @@ private:
 	void			CreateChild(const Circle& c, float radius, float angl, int count);
 
 public:
-	TsLandShape() : TsValueMap(){}
-	virtual			~TsLandShape() {}
+	TsBiomeSite() : TsValueMap(){}
+	virtual			~TsBiomeSite() {}
 
 	void			Generate(float _x, float _y, float radius);
 	void			Release();

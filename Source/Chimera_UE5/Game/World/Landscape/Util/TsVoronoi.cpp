@@ -1,20 +1,20 @@
 
 
 #include "TsVoronoi.h"
+#include "TsUtility.h"
 
 
 // -------------------------------- ID --------------------------------
-static int gen_pos_id(float x0, float y0, float x1 = 0, float y1 = 0) {
+static int gen_voronoi_id(float x0, float y0, float x1 = 0, float y1 = 0) {
 	unsigned int code =
 		0x0fffffff & (unsigned int)(
-			 (int)(FMath::Min(x0, x1) + 0.5f)      
-			+(int)(FMath::Max(x0, x1) + 0.5f) *  10
-			+(int)(FMath::Min(y0, y1) + 0.5f) *  20
-			+(int)(FMath::Max(y0, y1) + 0.5f) * 200
-		) ;
+			(int)(FMath::Min(x0, x1) + 0.5f)
+			+ (int)(FMath::Max(x0, x1) + 0.5f) * 10
+			+ (int)(FMath::Min(y0, y1) + 0.5f) * 20
+			+ (int)(FMath::Max(y0, y1) + 0.5f) * 200
+			);
 	return (int)code + 1;
 }
-
 
 
 // -------------------------------- Edge  --------------------------------
@@ -22,10 +22,10 @@ static int gen_pos_id(float x0, float y0, float x1 = 0, float y1 = 0) {
 //
 
 TsVoronoi::Edge::Edge(const FVector2D& p0, const FVector2D& p1, int f)
-	: mP(p0 ), mD(p1 - p0), mFlag(f), mID(gen_pos_id(p0.X, p0.Y, p1.X, p1.Y)), mShared(nullptr) {}
+	: mP(p0 ), mD(p1 - p0), mFlag(f), mID(gen_voronoi_id(p0.X, p0.Y, p1.X, p1.Y)), mShared(nullptr) {}
 
 TsVoronoi::Edge::Edge(float x, float y, float dx, float dy, int f)
-	: mP(x,y), mD(dx, dy), mFlag(f), mID(gen_pos_id(x, y, x+dx, y+dy)), mShared(nullptr) {}
+	: mP(x,y), mD(dx, dy), mFlag(f), mID(gen_voronoi_id(x, y, x+dx, y+dy)), mShared(nullptr) {}
 
 float TsVoronoi::Edge::_Intersect(Edge& a, Edge& b) {
 	float delta = a.mD.X * b.mD.Y - a.mD.Y * b.mD.X;
@@ -50,8 +50,8 @@ bool TsVoronoi::Edge::Intersect(Edge& a, FVector2D& point) {//
 //
 //
 
-int		TsVoronoi::GetOwner() const {
-	return gen_pos_id(X, Y); 
+int		TsVoronoi::GetOwnerD() const {
+	return gen_voronoi_id(X, Y);
 }
 
 bool	TsVoronoi::IsInside(const FVector2D& p ) const

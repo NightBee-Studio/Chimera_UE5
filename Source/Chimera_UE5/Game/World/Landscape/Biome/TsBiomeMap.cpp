@@ -1,5 +1,5 @@
 
-#include "TsAreaMap.h"
+#include "TsBiomeMap.h"
 
 #include "../Util/TsUtility.h"
 
@@ -114,13 +114,13 @@ FVector TsHeightMap::CalcNormal(float x, float y, float grid_height, float grid_
 #define T   grid_size
 	if (FMath::Frac(x) < FMath::Frac(y)) {
 		return FVector::CrossProduct(
-			FVector(0, h00 - h01, T).GetSafeNormal(),
+			FVector( 0, h00 - h01, T).GetSafeNormal(),
 			FVector(-T, h11 - h01, 0).GetSafeNormal()).GetSafeNormal();
 	}
 	else {
 		return FVector::CrossProduct(
 			FVector(-T, h00 - h10, 0).GetSafeNormal(),
-			FVector(0, h11 - h10, T).GetSafeNormal()).GetSafeNormal();
+			FVector( 0, h11 - h10, T).GetSafeNormal()).GetSafeNormal();
 	}
 #else
 	/*

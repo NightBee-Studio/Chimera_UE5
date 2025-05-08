@@ -2,8 +2,8 @@
 
 #include "CoreMinimal.h"
 
-#include "TsArea.h"
-#include "TsAreaMap.h"
+#include "TsBiome.h"
+#include "TsBiomeMap.h"
 
 
 // -------------------------------- BiomeSurface  --------------------------------
@@ -28,14 +28,14 @@ public:
 #include "Surface/SurfMountain.h"
 #include "Surface/SurfNoise.h"
 
-struct TsBiomeOp;
+struct TsOp;
 
 class	TsBiomeMatFunc {
 protected:
 	struct Layer {
 		EMaterialType		mMaterialType;
 		float				mOccupancy;
-		TsBiomeOp*			mOp;
+		TsOp*				mOp;
 		float				mMin, mMax;	//// this will be updated...
 	};
 	struct Config {

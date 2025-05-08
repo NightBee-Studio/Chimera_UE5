@@ -8,7 +8,7 @@
 
 #include "../Util/TsVoronoi.h"
 
-#include "TsArea.generated.h"
+#include "TsBiome.generated.h"
 
 
 

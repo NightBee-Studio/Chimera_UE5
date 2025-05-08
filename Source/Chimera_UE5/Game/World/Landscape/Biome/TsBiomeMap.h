@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-#include "TsImageMap.h"
+#include "../Util/TsImageMap.h"
 
 
 

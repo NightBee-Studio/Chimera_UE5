@@ -1,10 +1,10 @@
 
 #include "TsLandBuilder.h"
 
-#include "Land/TsArea.h"
-#include "Land/TsAreaMap.h"
-#include "Land/TsLandShape.h"
-#include "Land/TsLandSurface.h"
+#include "Biome/TsBiome.h"
+#include "Biome/TsBiomeMap.h"
+#include "Biome/TsBiomeSite.h"
+#include "Biome/TsBiomeSurface.h"
 
 #include "Util/TsErosion.h"
 #include "Util/TsVoronoi.h"
@@ -51,7 +51,7 @@ public:
 
 	TArray<TsBiome>					mBiomes;
 
-	TsLandShape*					mShape;
+	TsBiomeSite*					mShape;
 
 	FBox2D							mBoundingbox;
 	float							mWaterLevel;
@@ -212,7 +212,7 @@ private:
 
 public:
 	Builder_Work()
-		: mShape( new TsLandShape() )
+		: mShape( new TsBiomeSite() )
 		, mHeightMap(nullptr)
 		, mNormalMap(nullptr)
 		, mMaterialMap(nullptr)

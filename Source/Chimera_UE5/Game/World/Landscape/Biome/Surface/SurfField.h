@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../TsLandSurface.h"
+#include "../TsBiomeSurface.h"
 
 
 class SurfaceField : public TsBiomeSrfFunc {

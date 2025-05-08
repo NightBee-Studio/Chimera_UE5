@@ -1,12 +1,12 @@
 
-#include "TsLandShape.h"
+#include "TsBiomeSite.h"
 #include "../Util/TsUtility.h"
 
 
 
 
 // ----------------------------- Circle ------------------------------
-bool	TsLandShape::Circle::IsInside( const FVector2D& p ) {
+bool	TsBiomeSite::Circle::IsInside( const FVector2D& p ) {
 	int cn = 0;											// the  crossing number counter
 	for (int i = 0; i < n; i++) {						// loop through all edges of the polygon
 		FVector2D a0 = GetOutline(i + 0);
@@ -23,7 +23,7 @@ bool	TsLandShape::Circle::IsInside( const FVector2D& p ) {
 }
 
 #define S 0.06f
-FVector2D TsLandShape::Circle::GetOutline(int i) {
+FVector2D TsBiomeSite::Circle::GetOutline(int i) {
 	float ang  = (i % n) * 360.0f / n;
 	float bias = FMath::PerlinNoise3D( FVector(X, Y, ang * 0.06f) );
 	float l = (1 + bias * 0.5f) * r;
@@ -31,7 +31,7 @@ FVector2D TsLandShape::Circle::GetOutline(int i) {
 }
 
 #define N 128
-void	TsLandShape::CreateChild(  const Circle& c, float radius, float angl, int count) {
+void	TsBiomeSite::CreateChild(  const Circle& c, float radius, float angl, int count) {
 	float a = FMath::RandRange(0.7f, 1.2f);
 	float r = radius * a;
 	Circle cc (	c + c.r * sincos_pos(angl), r, N * a);
@@ -44,7 +44,7 @@ void	TsLandShape::CreateChild(  const Circle& c, float radius, float angl, int c
 	}
 }
 
-void	TsLandShape::Generate(float _x, float _y, float radius)
+void	TsBiomeSite::Generate(float _x, float _y, float radius)
 {
 	mX = _x;
 	mY = _y;
@@ -63,13 +63,13 @@ void	TsLandShape::Generate(float _x, float _y, float radius)
 
 }
 
-void	TsLandShape::Release()
+void	TsBiomeSite::Release()
 {
 	mCircles.Empty();
 }
 
 
-void	TsLandShape::UpdateBoundingbox( FBox2D & boundingbox )
+void	TsBiomeSite::UpdateBoundingbox( FBox2D & boundingbox )
 {// create boundingbox -------------------------------------------------------------------
 	boundingbox = FBox2D(FVector2D(10000, 10000), FVector2D(-10000, -10000));
 	for (auto& c : mCircles) {
@@ -83,7 +83,7 @@ void	TsLandShape::UpdateBoundingbox( FBox2D & boundingbox )
 	if (size.Y > size.X) boundingbox.Max.Y += size.Y - size.X;
 }
 
-float	 TsLandShape::GetMaterialValue(const FVector2D& p)
+float	 TsBiomeSite::GetMaterialValue(const FVector2D& p)
 {
 	float h = 1;
 	for (auto& c : mCircles) {
@@ -100,12 +100,12 @@ float	 TsLandShape::GetMaterialValue(const FVector2D& p)
 	return h;
 }
 
-float	TsLandShape::Remap(float val) const
+float	TsBiomeSite::Remap(float val) const
 {
 	return 100 * (FMath::Pow(TsValueMap::Remap(val), 2.0f ) - 1 );
 }
 
-float	 TsLandShape::GetValue(const FVector2D &p )
+float	 TsBiomeSite::GetValue(const FVector2D &p )
 {
 	float h = -1000000;
 	for (auto& c : mCircles) {
@@ -146,7 +146,7 @@ float	 TsLandShape::GetValue(const FVector2D &p )
 
 
 
-bool	TsLandShape::IsInside( const FVector2D &p ) 
+bool	TsBiomeSite::IsInside( const FVector2D &p ) 
 {
 	for (auto& c : mCircles) {
 		if ( c.IsInside( p ) ) return true;
@@ -156,7 +156,7 @@ bool	TsLandShape::IsInside( const FVector2D &p )
 
 //------------------------------------------------------- Debug
 
-void	TsLandShape::Debug(UWorld* world) {
+void	TsBiomeSite::Debug(UWorld* world) {
 	for (auto c : mCircles) {
 		DrawDebugCircle(world, FVector(c.X, c.Y, 0), 10, 32, FColor(255, 0, 255), true, 10000);
 		for (int i = 0; i < c.n; i++) {

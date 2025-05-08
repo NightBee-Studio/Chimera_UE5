@@ -63,16 +63,23 @@ public:
 		, mMin( 1000000.0f,  1000000.0f)
 		, mMax(-1000000.0f, -1000000.0f) {}
 
-	int			GetOwner() const ;
+	int			GetOwnerD() const ;
 	bool		IsInside(const FVector2D& p) const ;
 
 	void		AddEdge(const Edge& edge);
 
 public:
 	void		Debug(UWorld* world, const FColor &c) const ;
-
-	static void GenerateTsVoronoiSite() {}
-	static void TesselateTsVoronoiSite() {}
 } ;
 
 
+
+// -------------------------------- TsVoronoiSite  --------------------------------
+//
+//
+struct TsVoronoiSite
+{
+	
+	void Generate() {}
+	void Tesselate() {}
+};

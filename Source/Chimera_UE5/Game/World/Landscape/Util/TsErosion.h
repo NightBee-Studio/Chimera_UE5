@@ -2,7 +2,7 @@
 
 
 #include "TsVoronoi.h"
-#include "../Land/TsAreaMap.h"
+#include "../Biome/TsBiomeMap.h"
 
 
 class TsHeightMap;

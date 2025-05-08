@@ -26,6 +26,8 @@ static int gen_pos_id(float x, float y, float dx = 0, float dy = 0) {
 	return (int)code + 1;
 }
 
+
+
 static float sigmoid(float x) {
 	return tanh(x / 2);
 	//	return (tanh(x/2) + 1)/2 - 0.5f ;

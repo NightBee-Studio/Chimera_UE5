@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../TsLandSurface.h"
+#include "../TsBiomeSurface.h"
 
 class SurfacePondNoise : public TsBiomeSrfFunc {
 private:
