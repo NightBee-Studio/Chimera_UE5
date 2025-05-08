@@ -84,11 +84,12 @@ void	TsVoronoi::AddEdge(const Edge& edge)
 
 
 void	TsVoronoi::Debug(UWorld* world, const FColor& c ) const {
-	DrawDebugCircle(world, FVector(X, Y, 0), 10, 8, FColor(155, 0, 0), true, 10000);
+#define UP 1.0f
+	DrawDebugCircle(world, FVector(X, Y, UP), 10, 8, FColor(155, 0, 0), true, 10000);
 	for (auto e : mEdges) {
-		FVector2D p0 = (*this) * 0.05f + (e.mP       ) * 0.95f;
-		FVector2D p1 = (*this) * 0.05f + (e.mP + e.mD) * 0.95f;
-		DrawDebugLine(world, FVector(p0.X, p0.Y, 0), FVector(p1.X, p1.Y, 0), c, true, 10000);
+		FVector p0 = FVector((*this) * 0.05f + (e.mP       ) * 0.95f, UP);
+		FVector p1 = FVector((*this) * 0.05f + (e.mP + e.mD) * 0.95f, UP);
+		DrawDebugLine(world, p0, p1, c, true, 10000);
 	}
 }
 

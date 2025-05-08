@@ -89,7 +89,7 @@ private:
 	TArray<TsVoronoi::Point>	mBoundpoints;
 public:
 
-	void Generate(
+	void GenerateSite(
 			TArray<T>&		voronois,
 			const FBox2D &	boundary,
 			float			voronoi_size,

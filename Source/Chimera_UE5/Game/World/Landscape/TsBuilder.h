@@ -18,13 +18,20 @@ private:
 public:
 	ATsBuilder();
 
-	UFUNCTION(BlueprintCallable)
-	void		Build(
-		float _x, float _y, float radius,
-		float	voronoi_size,
-		float	voronoi_jitter,
-		int		heightmap_reso,
-		int		erode_cycle);
-} ;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Seed"))
+	int			mSeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Radius"))
+	float		mRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "VoronoiSize"))
+	float		mVoronoiSize;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "VoronoiJitter"))
+	float		mVoronoiJitter;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Reso"))
+	int			mReso;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Erode Cycle"))
+	int			mErodeCycle;
 
+	UFUNCTION(BlueprintCallable)
+	void		Build();
+} ;
 

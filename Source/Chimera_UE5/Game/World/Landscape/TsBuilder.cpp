@@ -191,6 +191,7 @@ private:
 		SAFE_DELETE(mMaterialMap);
 	}
 
+public:
 	void			Debug(UWorld* world)
 	{
 //		SurfaceMountain::Debug(world);
@@ -210,7 +211,6 @@ private:
 	}
 
 
-public:
 	Builder_Work()
 		: mShape( new TsBiomeSite() )
 		, mHeightMap(nullptr)
@@ -230,8 +230,6 @@ public:
 
 		// create island shape
 		mShape->Generate(_x, _y, radius);
-
-
 
 #if 0
 		{//-------------------------------------------------------------------------------------- create voronois
@@ -387,7 +385,7 @@ public:
 			mBoundingbox.Max += FVector2D(500, 500);
 
 			TsVoronoiSite<TsBiome> voronoi_site;
-			voronoi_site.Generate(
+			voronoi_site.GenerateSite(
 					mBiomes, 
 					mBoundingbox,
 					voronoi_size,
@@ -397,6 +395,7 @@ public:
 		}
 #endif
 
+		return;
 
 		{///-------------------------------------------------------------------------------- Biome Group 		// you can access by 2d
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group"));
@@ -696,27 +695,37 @@ public:
 // -------------------------------- UTsLandscape  --------------------------------
 
 ATsBuilder::ATsBuilder()
+#if		WITH_EDITOR
+	: mImplement( new Builder_Work() )
+#else
+	: mImplement( nullptr )
+#endif	//WITH_EDITOR
 {
-	mImplement = new Builder_Work();
 }
 
-void	ATsBuilder::Build(
-		float _x, float _y, float radius,
-		float	voronoi_size,
-		float	voronoi_jitter,
-		int		heightmap_reso,
-		int		erode_cycle
-	)
+
+
+//Radius		700.0f
+//VoronoiSize	200.0f
+//VoronoiJitter	0.5f
+
+void	ATsBuilder::Build()
 {
+#if		WITH_EDITOR
 	Builder_Work * work = (Builder_Work*)mImplement;
 
+	FVector  pos = GetActorLocation();
+
 	work->BuildLandscape(
-		_x, _y, radius,
-		voronoi_size,
-		voronoi_jitter,
-		heightmap_reso,
-		erode_cycle	
+		pos.X, pos.Y, mRadius,
+		mVoronoiSize, mVoronoiJitter,
+		mReso,
+		mErodeCycle
 	);
+
+	work->Debug( GetWorld());
+
+#endif	//WITH_EDITOR
 
 }
 

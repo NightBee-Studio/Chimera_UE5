@@ -6,6 +6,7 @@
 
 
 
+// determine the shape of the Site itself.
 
 class TsBiomeSite
 	: public TsValueMap
