@@ -23,18 +23,15 @@ class CHIMERA_UE5_API ATsLandArea
 	GENERATED_BODY()
 
 private:
-	EBiomeType		mType;
-	EBiomeSrfType	mSurfType;//Å@Ç¢ÇÁÇ»Ç¢
+	EBiomeType			mType;
 
-	TsBiome	*		mBiome;// 
+	TArray<TsBiome*>	mBiome;// 
 
 public:
 	virtual ~ATsLandArea() {}
 
 	void			SetBiomeType(EBiomeType ty) { mType = ty; }
 	EBiomeType		GetBiomeType() { return mType; }
-	void			SetBiomeSrfType(EBiomeSrfType ty) { mSurfType = ty; }
-	EBiomeSrfType	GetBiomeSrfType() { return mSurfType; }
 };
 
 

@@ -106,7 +106,7 @@ private:
 				}
 			}
 		} else {
-			mv.Add(TsMaterialPixel(EEMaterialType::MT_OceanSoil_A, r));
+			mv.Add(TsMaterialPixel(EMaterialType::MT_OceanSoil_A, r));
 		}
 		return  mv;
 	}
@@ -483,9 +483,9 @@ public:
 				EBiomeSrfType surf = EBiomeSrfType::SurfOcean;		//, { 0.1f, 0.55f, 0.35f,}
 				if (mShape->GetValue(b) > 0.99999f) {
 					float h = surfs_map->GetValue(b);
-					if (h < samples[(samples.Num() - 1) * 0.05f])  surf = BiomeSrfType::SurfLake;
-					else if (h < samples[(samples.Num() - 1) * 0.50f])  surf = BiomeSrfType::SurfField;
-					else 												surf = BiomeSrfType::SurfMountain;
+					if      (h < samples[(samples.Num() - 1) * 0.05f])  surf = EBiomeSrfType::SurfLake;
+					else if (h < samples[(samples.Num() - 1) * 0.50f])  surf = EBiomeSrfType::SurfField;
+					else 												surf = EBiomeSrfType::SurfMountain;
 				}
 
 				b.SetBiomeSrfType(surf);
@@ -504,7 +504,7 @@ public:
 			TsBiomeMap::AddBiomeMap(EBiomeMapType::BiomeMapPlant, plant_map);	//plant
 
 			for (auto& surf : mSurfaces) {// init surface 
-				ImageMap<float>* maskmap = surf.Value.CreateMask(IMG_SIZE, mBoundingbox);
+				TsImageMap<float>* maskmap = surf.Value.CreateMask(IMG_SIZE, mBoundingbox);
 				maskmap->ForeachPixel([&](int px, int py) {
 					FVector2D	p = maskmap->GetWorldPos(px, py);
 					maskmap->SetPixel(px, py, GetMaskValue(p, surf.Key));
@@ -539,15 +539,15 @@ public:
 				int		reso = mMapOutParam.LocalReso();
 				FBox2D	bound = mMapOutParam.LocalBound(mBoundingbox);
 
-				TsBiomeMap* flow_map = new TsBiomeMap(reso, reso, &bound);
-				TsBiomeMap* pond_map = new TsBiomeMap(reso, reso, &bound);
+				TsBiomeMap* flow_map  = new TsBiomeMap(reso, reso, &bound);
+				TsBiomeMap* pond_map  = new TsBiomeMap(reso, reso, &bound);
 				TsMountMap* mount_map = new TsMountMap(reso, reso, &bound);
 				TsBiomeMap::AddBiomeMap(EBiomeMapType::BiomeMapFlow, flow_map);	//flow
 				TsBiomeMap::AddBiomeMap(EBiomeMapType::BiomeMapPond, pond_map);	//pond
 				TsBiomeMap::AddBiomeMap(EBiomeMapType::BiomeMapMountain, mount_map);	//mount_map
 
-				mHeightMap = new HeightMap(reso, reso, &bound);
-				mMaterialMap = new MaterialMap(reso, reso, &bound);
+				mHeightMap   = new TsHeightMap(reso, reso, &bound);
+				mMaterialMap = new TsMaterialMap(reso, reso, &bound);
 				int sy = mMapOutParam.x * mMapOutParam.reso;
 				int sx = mMapOutParam.y * mMapOutParam.reso;
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape::    start create region[%d,%d]..."), sx, sy);
@@ -567,7 +567,7 @@ public:
 				// create the mask for each BiomeSurf types
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape::    creating surface-mask ..."));
 				for (auto& surf : mSurfaces) {
-					ImageMap<float>* maskmap = surf.Value.CreateMask(reso, bound);
+					TsImageMap<float>* maskmap = surf.Value.CreateMask(reso, bound);
 					maskmap->ForeachPixel([&](int px, int py) {
 						maskmap->SetPixel(px, py, GetMaskValue(maskmap->GetWorldPos(px, py), surf.Key));
 						});
@@ -602,11 +602,11 @@ public:
 				}
 
 				{///--------------------------------------------------- Erosion
-					TArray<Voronoi> v_list;
+					TArray<TsVoronoi> v_list;
 					SurfaceMountain::GetMountains(v_list);
 					UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: creating Erosion  mountinas %d ..."), v_list.Num());
 
-					Erosion(mHeightMap, flow_map, pond_map).Simulate(erode_cycle);
+					TsErosion(mHeightMap, flow_map, pond_map).Simulate(erode_cycle);
 
 					UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Erosion done."));
 				}
@@ -638,17 +638,17 @@ public:
 				}
 
 				{///--------------------------------------------------- File Exporting 
-					ImageCore::SetDir("Landscape\\Island\\BiomeMaps\\", mMapOutParam.x, mMapOutParam.y);
+					TsImageCore::SetDir("Landscape\\Island\\BiomeMaps\\", mMapOutParam.x, mMapOutParam.y);
 
 					UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: file exporting ..."));
-					moist_map->Save("MoistMap.dds", ImageFile::Dds, ImageFormat::FormatL16);
-					genre_map->Save("GenreMap.dds", ImageFile::Dds, ImageFormat::FormatL16);
-					tempr_map->Save("TemprMap.dds", ImageFile::Dds, ImageFormat::FormatL16);
-					plant_map->Save("PlantMap.dds", ImageFile::Dds, ImageFormat::FormatL16);
-					flow_map ->Save("FlowMap.dds" , ImageFile::Dds, ImageFormat::FormatL16);
-					pond_map ->Save("PondMap.dds" , ImageFile::Dds, ImageFormat::FormatL16);
-					slope_map->Save("SlopeMap.dds", ImageFile::Dds, ImageFormat::FormatL16);
-					mount_map->Save("MountMap.dds", ImageFile::Dds, ImageFormat::FormatL16);
+					moist_map->Save("MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					genre_map->Save("GenreMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					tempr_map->Save("TemprMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					plant_map->Save("PlantMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					flow_map ->Save("FlowMap.dds" , EImageFile::Dds, EImageFormat::FormatL16);
+					pond_map ->Save("PondMap.dds" , EImageFile::Dds, EImageFormat::FormatL16);
+					slope_map->Save("SlopeMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					mount_map->Save("MountMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
 					UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: file export done."));
 				}
 
@@ -683,7 +683,7 @@ void	UTsLandBuilder::Build(
 	int		heightmap_reso,
 	int		erode_cycle)
 {
-	Builder_Work * work = mImplement ;
+	Builder_Work * work = (Builder_Work*)mImplement ;
 
 	work->BuildLandscape(
 		_x, _y, radius,

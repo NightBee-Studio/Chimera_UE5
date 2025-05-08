@@ -1,20 +1,7 @@
 
 #include "TsAreaMap.h"
 
-
-
-
-static
-FVector2D near_point(const FVector2D& v1, const FVector2D& v2, const FVector2D& pp)
-{
-	FVector2D ap = pp - v1;
-	FVector2D ab = v2 - v1;
-	if (ap.Dot(ab) < 0) return v1;
-	FVector2D bp = pp - v2;
-	FVector2D ba = v1 - v2;
-	if (bp.Dot(ba) < 0) return v2;
-	return v1 + ab / ab.Length() * (ap.Dot(ab) / ab.Length());
-}
+#include "../Util/TsUtility.h"
 
 
 
@@ -325,7 +312,7 @@ void	MarchingSquareMap::SaveAll()
 					//UE_LOG(LogTemp, Log, TEXT("MarchingSquareMap::<%d> [%d %d %d %d] "), file_no, i0, i1, i2, i3);
 
 					char filename[512];
-					sprintf(filename, "Landscape/Island/Materials/MarchingSquare/march_sq_%03d.dds", file_no++);
+					sprintf_s(filename, sizeof(filename), "Landscape/Island/Materials/MarchingSquare/march_sq_%03d.dds", file_no++);
 					mMap.Save(filename, EImageFile::Dds, EImageFormat::FormatL16);
 				}
 			}

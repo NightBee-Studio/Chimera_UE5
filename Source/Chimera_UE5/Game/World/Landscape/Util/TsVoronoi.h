@@ -33,7 +33,7 @@ public:
 		FVector2D	mP, mD;
 		int			mFlag;
 		int			mID ;
-		TsVoronoi	*	mShared ;// the edge is shared with other TsVoronoi
+		TsVoronoi*	mShared ;// the edge is shared with other TsVoronoi
 
 		Edge() : mP(0, 0), mD(0, 0), mFlag(EFlag::None), mID(0), mShared(nullptr) {}
 		Edge(const FVector2D& p0, const FVector2D& p1, int f = EFlag::None);
@@ -46,7 +46,7 @@ public:
 
 		FVector2D	GetPoint(float d) const		{ return mP + d * mD; }
 		float		Cross(const FVector2D& v)	{ return mD.X * (v.Y - mP.Y) - mD.Y * (v.X - mP.X); }
-		void		SetTsVoronoi(TsVoronoi* ed)		{ mShared = ed; }
+		void		SetVoronoi(TsVoronoi* ed)	{ mShared = ed; }
 	};
 
 public:
