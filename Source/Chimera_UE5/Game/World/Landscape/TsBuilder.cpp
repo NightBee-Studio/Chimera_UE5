@@ -1,5 +1,5 @@
 
-#include "TsLandBuilder.h"
+#include "TsBuilder.h"
 
 #include "Biome/TsBiome.h"
 #include "Biome/TsBiomeMap.h"
@@ -231,6 +231,9 @@ public:
 		// create island shape
 		mShape->Generate(_x, _y, radius);
 
+
+
+#if 0
 		{//-------------------------------------------------------------------------------------- create voronois
 			TArray<TsVoronoi::Edge >	boundedges;
 			TArray<TsVoronoi::Point>	boundpoints;
@@ -377,6 +380,22 @@ public:
 
 			//-------------------------------------------------------------------------------------- create voronois, done.
 		}
+#else
+		{//-------------------------------------------------------------------------------------- create voronois
+			mShape->UpdateBoundingbox(mBoundingbox);
+			mBoundingbox.Min -= FVector2D(500, 500);
+			mBoundingbox.Max += FVector2D(500, 500);
+
+			TsVoronoiSite<TsBiome> voronoi_site;
+			voronoi_site.Generate(
+					mBiomes, 
+					mBoundingbox,
+					voronoi_size,
+					voronoi_jitter
+				);
+			voronoi_site.Tesselate( mBiomes );
+		}
+#endif
 
 
 		{///-------------------------------------------------------------------------------- Biome Group 		// you can access by 2d
@@ -659,6 +678,11 @@ public:
 				mMaterialMap->SaveAll(out_x, out_y, out_reso, out_reso);
 
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: FileOut %d %d reso%d "), out_x, out_y, out_reso);
+
+
+				//AActor* actor = GetWorld()->SpawnActor<AActor>(...);
+				//if ( actor ) actor->SetFolderPath("MyFolder/SubFolder");
+
 			}
 		}
 
@@ -671,19 +695,20 @@ public:
 
 // -------------------------------- UTsLandscape  --------------------------------
 
-UTsLandBuilder::UTsLandBuilder()
+ATsBuilder::ATsBuilder()
 {
 	mImplement = new Builder_Work();
 }
 
-void	UTsLandBuilder::Build(
-	float _x, float _y, float radius,
-	float	voronoi_size,
-	float	voronoi_jitter,
-	int		heightmap_reso,
-	int		erode_cycle)
+void	ATsBuilder::Build(
+		float _x, float _y, float radius,
+		float	voronoi_size,
+		float	voronoi_jitter,
+		int		heightmap_reso,
+		int		erode_cycle
+	)
 {
-	Builder_Work * work = (Builder_Work*)mImplement ;
+	Builder_Work * work = (Builder_Work*)mImplement;
 
 	work->BuildLandscape(
 		_x, _y, radius,
@@ -692,5 +717,6 @@ void	UTsLandBuilder::Build(
 		heightmap_reso,
 		erode_cycle	
 	);
+
 }
 

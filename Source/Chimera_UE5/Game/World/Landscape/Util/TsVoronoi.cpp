@@ -96,13 +96,6 @@ void	TsVoronoi::Debug(UWorld* world, const FColor& c ) const {
 
 
 
-// -------------------------------- TsBuildVoronois --------------------------------
-//
-//
-
-
-
-
 
 
 
