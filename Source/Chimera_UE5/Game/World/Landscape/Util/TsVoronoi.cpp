@@ -16,7 +16,6 @@ static int gen_voronoi_id(float x0, float y0, float x1 = 0, float y1 = 0) {
 	return (int)code + 1;
 }
 
-
 // -------------------------------- Edge  --------------------------------
 //
 //
@@ -68,7 +67,6 @@ bool	TsVoronoi::IsInside(const FVector2D& p ) const
 	return true;
 }
 
-
 void	TsVoronoi::AddEdge(const Edge& edge)
 {
 	mMin = FVector2D(
@@ -89,7 +87,6 @@ void	TsVoronoi::ForeachEdge( std::function< void(const Edge &) > func)
 	}
 }
 
-
 void	TsVoronoi::Debug(UWorld* world, const FColor& c ) const {
 #define UP 1.0f
 	DrawDebugCircle(world, FVector(X, Y, UP), 10, 8, FColor(155, 0, 0), true, 10000);
@@ -99,12 +96,4 @@ void	TsVoronoi::Debug(UWorld* world, const FColor& c ) const {
 		DrawDebugLine(world, p0, p1, c, true, 10000);
 	}
 }
-
-
-
-
-
-
-
-
 

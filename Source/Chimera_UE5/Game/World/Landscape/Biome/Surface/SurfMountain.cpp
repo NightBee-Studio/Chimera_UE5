@@ -42,6 +42,13 @@ struct MtShapeB : public MtShape {
 		shape->mGroup    = list;
 		for (auto b : list) {
 			boundingbox += *b;
+
+			//b->ForeachEdge([&shape,list]( const TsVoronoi::Edge& e ) {
+			//		TsBiome* bm = (TsBiome*)e.mShared;
+			//		if ( bm && list.Find(bm) != INDEX_NONE) continue;
+			//		shape->mEdges.Add(e);
+			//	});
+
 			for ( auto& ed : b->mEdges){
 				TsBiome* bm = (TsBiome*)ed.mShared;
 				if (bm && list.Find(bm) != INDEX_NONE) continue;
@@ -67,15 +74,15 @@ struct MtShapeB : public MtShape {
 			if (b->IsInside(p)) {
 				float h = 100000.0f;
 
-				//b->ForeachEdge([ h, p ](const TsVoronoi::Edge& e) {
-				//		float hc = (TsUtil::NearPoint(e.mP, e.mP + e.mD, p) - p).Length();
-				//		h = FMath::Min(hc, h);
-				//	});
+				b->ForeachEdge([&h, p ](const TsVoronoi::Edge& e) {
+						float hc = (TsUtil::NearPoint(e.mP, e.mP + e.mD, p) - p).Length();
+						h = FMath::Min(hc, h);
+					});
 
-				for (auto e : mEdges) {
-					float hc = (TsUtil::NearPoint(e->mP, e->mP + e->mD, p) - p).Length();
-					h = FMath::Min(hc, h);
-				}
+				//for (auto e : mEdges) {
+				//	float hc = (TsUtil::NearPoint(e->mP, e->mP + e->mD, p) - p).Length();
+				//	h = FMath::Min(hc, h);
+				//}
 				return h / mGradient ;
 			}
 		}

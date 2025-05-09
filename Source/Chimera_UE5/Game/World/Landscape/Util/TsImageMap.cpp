@@ -348,7 +348,7 @@ int			TsImageCore::GetStride(EImageFormat format) {
 	case EImageFormat::FormatF32:	return 4;
 	case EImageFormat::FormatL16:
 	case EImageFormat::FormatR16:	return 2;
-	case EImageFormat::FormatR8:		return 1;
+	case EImageFormat::FormatR8:	return 1;
 	}
 	return 0;
 }
