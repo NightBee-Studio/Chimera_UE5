@@ -15,48 +15,79 @@
 // -------------------------------- TsBiome  --------------------------------
 
 UENUM(BlueprintType)
-enum class EBiomeType : uint8 {
-	BiomeTropicalField,	//Field
-	BiomeTropicalMount,	//Mount
+enum class EBiomeSType : uint8 {	// Surface(Height)
+	E_SurfBase,
+
+	E_SurfMountain,
+	E_SurfField	,
+	E_SurfLake	,
+	E_SurfOcean	,	// out of continent
 };
 
 UENUM(BlueprintType)
-enum class EBiomeSrfType : uint8 {
-	SurfBase,
-
-	SurfMountain,
-	SurfField	,
-	SurfLake	,
-	SurfOcean	,	// out of continent
+enum class EBiomeMType : uint8 {	// Moist(Water)
+	E_Soil,
+	E_Field,	//Field
+	E_Tree,
+	E_Forest,
 };
 
 UENUM(BlueprintType)
-enum class	EBiomeFuncType : uint8 {
-	FuncField,
-	FuncMountain,
-	FuncTropicalForest,
-	FuncDesert,
-	FuncWilderness,
+enum class EBiomeGType : uint8 {	// Genre
+	E_GenreTropical,
+	E_GenreDessert,
+	E_GenreWilderness,
+	E_GenreSavanna,
 };
-
 
 
 USTRUCT(BlueprintType)
-struct CHIMERA_UE5_API FBiomeSpec
+struct CHIMERA_UE5_API FTsBiomeModel
+{
+	GENERATED_BODY()
+public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Material"))
+	TObjectPtr<UMaterialInstanceConstant>	mMaterial;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Textures"))
+	TArray<TObjectPtr<UTexture2D>>			mTextures;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Mask"))
+	TObjectPtr<UTexture2D>					mMask;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "HeightMap"))
+	TObjectPtr<UTexture2D>					mHeightMap;
+};
+
+USTRUCT(BlueprintType)
+struct CHIMERA_UE5_API FTsBiomeSpec
 	: public FTableRowBase
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Type"))
-	EBiomeType				mType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Bitmask, BitmaskEnum = "EItemFlag", DisplayName = "Flag"))
-	int32					mFlag;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Mesh"))
-	TObjectPtr<UStaticMesh>	mMesh;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeSurf"))
+	EBiomeSType				mSType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeMoist"))
+	EBiomeMType				mMType;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeGenre"))
+	EBiomeGType				mGType;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Bitmask, BitmaskEnum = "EItemFlag", DisplayName = "Flag"))
+	//int32					mFlag;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Models"))
+	TArray<FTsBiomeModel>	Models;
+
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "SurfaceFuncs"))
+	//TArray<TsBiomeSrfFunc*>	mSurfaceFuncs;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "MaterialFuncs"))
+	//TArray<TsBiomeMatFunc*>	mMaterialFuncs;
 };
 
-
-
+//
+// Surface materail must be changed for following parameters.
+//	- Height
+//  - Moist(Water?),
+//  - Genre (Atmosphere?)
+//
 
 // -------------------------------- Biome --------------------------------
 //
@@ -67,16 +98,18 @@ class TsBiome
 	: public TsVoronoi
 {
 private:
-	EBiomeType		mType;
-	EBiomeSrfType	mSurfType;//Å@Ç¢ÇÁÇ»Ç¢
+	EBiomeSType		mSType;
+	EBiomeMType		mMType;
+	EBiomeGType		mGType;// ç°âÒÇÕÇ»Çµ
+
 public:
 	TsBiome(float x, float y) : TsVoronoi(x, y) {}
 	virtual ~TsBiome() {}
 
-	void			SetBiomeType(EBiomeType ty)	{ mType = ty; }
-	EBiomeType		GetBiomeType()				{ return mType; }
-	void			SetBiomeSrfType(EBiomeSrfType ty) { mSurfType = ty; }
-	EBiomeSrfType	GetBiomeSrfType()			{ return mSurfType; }
+	void			SetMType(EBiomeMType ty)	{ mMType = ty; }
+	EBiomeMType		GetMType()					{ return mMType; }
+	void			SetSType(EBiomeSType ty)	{ mSType = ty; }
+	EBiomeSType		GetSType()					{ return mSType; }
 };
 
 typedef TArray<TsBiome*> TsBiomeGroup;

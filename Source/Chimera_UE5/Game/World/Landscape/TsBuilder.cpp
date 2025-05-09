@@ -8,38 +8,8 @@
 
 #include "Util/TsErosion.h"
 #include "Util/TsVoronoi.h"
+#include "Util/TsUtility.h"
 
-
-// ---------------------------- Utillity -------------------------
-
-// nearest point 
-static FVector2D near_point(const FVector2D& v1, const FVector2D& v2, const FVector2D& pt)
-{
-	FVector2D ap = pt - v1;
-	FVector2D ab = v2 - v1;
-	if (ap.Dot(ab) < 0) return v1;
-	FVector2D bp = pt - v2;
-	FVector2D ba = v1 - v2;
-	if (bp.Dot(ba) < 0) return v2;
-	return v1 + ab / ab.Length() * (ap.Dot(ab) / ab.Length());
-}
-
-// ID 
-static int gen_pos_id(float x, float y, float dx = 0, float dy = 0) {
-	unsigned int code = 0x0fffffff & (unsigned int)(x + 100 * y + dx + dy * 20);
-	return (int)code + 1;
-}
-
-static float sigmoid(float x) {
-	return tanh(x / 2);
-	//	return (tanh(x/2) + 1)/2 - 0.5f ;
-}
-
-static inline FVector2D sincos_pos(float ang) {
-	float x, y;
-	FMath::SinCos(&y, &x, FMath::DegreesToRadians(ang));
-	return FVector2D(x, y);
-}
 
 
 
@@ -47,7 +17,7 @@ static inline FVector2D sincos_pos(float ang) {
 
 class Builder_Work {
 public:
-	TMap<EBiomeSrfType, TsBiomeSurface>	mSurfaces;
+	TMap<EBiomeSType, TsBiomeSurface>	mSurfaces;
 
 	TArray<TsBiome>					mBiomes;
 
@@ -64,7 +34,7 @@ public:
 
 private:
 	float			GetHeight(const FVector2D& p) {
-		float h = mSurfaces[EBiomeSrfType::SurfBase].GetHeight(p);
+		float h = mSurfaces[EBiomeSType::E_SurfBase].GetHeight(p);
 
 		if (mShape->GetValue(p) > 0.9999999f) {
 			struct Tuple {
@@ -95,7 +65,7 @@ private:
 
 	TsMaterialValue	GetMaterial(const FVector2D& p)		// world-coord
 	{
-		TsMaterialValue mv = mSurfaces[EBiomeSrfType::SurfBase].GetMaterial(p);
+		TsMaterialValue mv = mSurfaces[EBiomeSType::E_SurfBase].GetMaterial(p);
 		float r = mShape->GetMaterialValue(p);
 		if (r == 0) {
 			for (auto& sf : mSurfaces) {
@@ -113,7 +83,7 @@ private:
 
 	void			UpdateRemap(const FVector2D& p)		// world-coord
 	{
-		mSurfaces[EBiomeSrfType::SurfBase].UpdateRemap(p);
+		mSurfaces[EBiomeSType::E_SurfBase].UpdateRemap(p);
 
 		if (mShape->GetValue(p) > 0.9999999f) {
 			for (auto& sf : mSurfaces) {
@@ -130,13 +100,13 @@ private:
 		}
 	}
 
-	void			GetVoronoiList(TsBiomeGroup& list, TArray<TsVoronoi::Edge*>& edges, TsBiome* b, EBiomeSrfType typ, int lvl)
+	void			GetVoronoiList(TsBiomeGroup& list, TArray<TsVoronoi::Edge*>& edges, TsBiome* b, EBiomeSType typ, int lvl)
 	{
 		list.AddUnique(b);
 		for (auto& ed : b->mEdges) {
 			if (ed.mShared) {
 				TsBiome* bm = (TsBiome*)ed.mShared;
-				if (bm->GetBiomeSrfType() == typ) edges.Add(&ed);
+				if (bm->GetSType() == typ) edges.Add(&ed);
 				if (lvl > 0 && !list.Contains(bm)) {
 					GetVoronoiList(list, edges, bm, typ, lvl - 1);
 				}
@@ -144,19 +114,19 @@ private:
 		}
 	}
 
-	float			GetMaskValue(const FVector2D& p, EBiomeSrfType biome_sf)
+	float			GetMaskValue(const FVector2D& p, EBiomeSType biome_sf)
 	{
 		TsBiome* b = SearchBiome(p);
 		float h = 0;
 		if (b) {
-			if (b->GetBiomeSrfType() == biome_sf) {
+			if (b->GetSType() == biome_sf) {
 				h = 1;
 			} else {
 				TsBiomeGroup				bmlist;
 				TArray<TsVoronoi::Edge*>	edlist;
 				GetVoronoiList(bmlist, edlist, b, biome_sf, 2);
 				for (auto ed : edlist) {
-					float hc = 1 - (near_point(ed->mP, ed->mP + ed->mD, p) - p).Length() / 100;
+					float hc = 1 - (TsUtil::NearPoint(ed->mP, ed->mP + ed->mD, p) - p).Length() / 100;
 					hc = FMath::Pow(FMath::Clamp(hc, 0, 1), 2.0f);
 					h = FMath::Max(hc, h);
 				}
@@ -200,11 +170,11 @@ public:
 
 		for (auto b : mBiomes) {
 			FColor c(0, 0, 0);
-			switch (b.GetBiomeSrfType()) {
-			case EBiomeSrfType::SurfOcean:		c = FColor(0, 0, 180); break;
-			case EBiomeSrfType::SurfLake:		c = FColor(100, 120, 255); break;
-			case EBiomeSrfType::SurfField:		c = FColor(125, 255, 0); break;
-			case EBiomeSrfType::SurfMountain:	c = FColor(120, 60, 20); break;
+			switch (b.GetSType()) {
+			case EBiomeSType::E_SurfOcean:		c = FColor(0, 0, 180); break;
+			case EBiomeSType::E_SurfLake:		c = FColor(100, 120, 255); break;
+			case EBiomeSType::E_SurfField:		c = FColor(125, 255, 0); break;
+			case EBiomeSType::E_SurfMountain:	c = FColor(120, 60, 20); break;
 			}
 			b.Debug(world, c);
 		}
@@ -254,11 +224,11 @@ public:
 #define IMG_SIZE heightmap_reso
 
 			mMapOutParam = TsMapOutput(0, 0, 512, 1);
-
-			mSurfaces = TMap<EBiomeSrfType, TsBiomeSurface>{
-				//{ BiomeSrfType::SurfField, }
-				//{ BiomeSrfType::SurfOcean, TsBiomeSurface(512, mBoundingbox, "Demo/Landscape/Island/Masks/MaskOcean.dds", -1, { new SurfaceOcean(-5.0f) }, {}) },
-				{ EBiomeSrfType::SurfBase, TsBiomeSurface(
+#if 0
+			mSurfaces = TMap<EBiomeSType, TsBiomeSurface>{
+				//{ BiomeSrfType::E_SurfField, }
+				//{ BiomeSrfType::E_SurfOcean, TsBiomeSurface(512, mBoundingbox, "Demo/Landscape/Island/Masks/MaskOcean.dds", -1, { new SurfaceOcean(-5.0f) }, {}) },
+				{ EBiomeSType::E_SurfBase, TsBiomeSurface(
 						TsBiomeSurface::Flag::FL_BaseHeight,
 						mMapOutParam.reso, mBoundingbox, "Landscape/Island/Masks/MaskField.dds",
 						-1,
@@ -291,7 +261,7 @@ public:
 						})
 						}
 					) },
-				{ EBiomeSrfType::SurfLake, TsBiomeSurface(
+				{ EBiomeSType::E_SurfLake, TsBiomeSurface(
 						TsBiomeSurface::Flag::FL_None,
 						IMG_SIZE, mBoundingbox, "Landscape\\Island\\Masks\\MaskLake.dds",
 						-1,
@@ -305,7 +275,7 @@ public:
 							}),
 						}
 					) },
-				{ EBiomeSrfType::SurfMountain, TsBiomeSurface(
+				{ EBiomeSType::E_SurfMountain, TsBiomeSurface(
 						TsBiomeSurface::Flag::FL_None,
 						IMG_SIZE, mBoundingbox, "Landscape\\Island\\Masks\\MaskMount.dds",
 						18,
@@ -329,13 +299,16 @@ public:
 						}
 					) },
 			};
-
-			TMap<EBiomeSrfType, TsBiomeGroup>	surf_biomes = {
-				{ EBiomeSrfType::SurfOcean   , TsBiomeGroup{} },
-				{ EBiomeSrfType::SurfLake    , TsBiomeGroup{} },
-				{ EBiomeSrfType::SurfField   , TsBiomeGroup{} },
-				{ EBiomeSrfType::SurfMountain, TsBiomeGroup{} },
+#endif
+			TMap<EBiomeSType, TsBiomeGroup>	surf_biomes = {
+				{ EBiomeSType::E_SurfOcean   , TsBiomeGroup{} },
+				{ EBiomeSType::E_SurfLake    , TsBiomeGroup{} },
+				{ EBiomeSType::E_SurfField   , TsBiomeGroup{} },
+				{ EBiomeSType::E_SurfMountain, TsBiomeGroup{} },
 			};
+
+			////// apply the biome from PerlinNoise
+			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Apply Surface ..."));
 
 			// world once
 			TsBiomeMap* surfs_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam(1.0f, 0.0010f, 0.2f, 0.0030f));
@@ -346,18 +319,19 @@ public:
 			}
 			samples.Sort();		// sort to determine the ratio of the group.
 			for (auto& b : mBiomes) {
-				EBiomeSrfType surf = EBiomeSrfType::SurfOcean;		//, { 0.1f, 0.55f, 0.35f,}
+				EBiomeSType surf = EBiomeSType::E_SurfOcean;		//, { 0.1f, 0.55f, 0.35f,}
 				if (mShape->GetValue(b) > 0.99999f) {
 					float h = surfs_map->GetValue(b);
-					if      (h < samples[(samples.Num() - 1) * 0.05f])  surf = EBiomeSrfType::SurfLake;
-					else if (h < samples[(samples.Num() - 1) * 0.50f])  surf = EBiomeSrfType::SurfField;
-					else 												surf = EBiomeSrfType::SurfMountain;
+					if      (h < samples[(samples.Num() - 1) * 0.05f])  surf = EBiomeSType::E_SurfLake;
+					else if (h < samples[(samples.Num() - 1) * 0.50f])  surf = EBiomeSType::E_SurfField;
+					else 												surf = EBiomeSType::E_SurfMountain;
 				}
 
-				b.SetBiomeSrfType(surf);
+				b.SetSType(surf);
 				surf_biomes[surf].Add(&b);
 			}
 
+#if 0
 			TsBiomeMap* moist_map  = new TsBiomeMap (IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam(1.0f, 0.001f, 0.2f, 0.003f));
 			TsGenreMap* genre_map  = new TsGenreMap (IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam(1.0f, 0.001f, 0.2f, 0.003f));
 			TsHeightMap* tempr_map = new TsHeightMap(IMG_SIZE, IMG_SIZE, &mBoundingbox);
@@ -531,6 +505,8 @@ public:
 				//if ( actor ) actor->SetFolderPath("MyFolder/SubFolder");
 
 			}
+#endif
+
 		}
 
 	}

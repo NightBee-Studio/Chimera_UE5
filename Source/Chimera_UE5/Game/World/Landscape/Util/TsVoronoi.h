@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include "CoreMinimal.h"
 
 
@@ -7,7 +8,7 @@
 //
 //
 struct TsVoronoi
-	: public FVector2D
+	: public FVector2D		// center position
 {
 public:
 	enum EFlag {
@@ -63,10 +64,10 @@ public:
 		, mMin( 1000000.0f,  1000000.0f)
 		, mMax(-1000000.0f, -1000000.0f) {}
 
-	int			GetOwnerD() const ;
 	bool		IsInside(const FVector2D& p) const ;
 
 	void		AddEdge(const Edge& edge);
+	void		ForeachEdge( std::function< void(const Edge &) >);
 
 public:
 	void		Debug(UWorld* world, const FColor &c) const ;

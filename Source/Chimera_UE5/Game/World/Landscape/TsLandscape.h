@@ -23,15 +23,15 @@ class CHIMERA_UE5_API ATsBiome
 	GENERATED_BODY()
 
 private:
-	EBiomeType			mType;
+	EBiomeSType			mType;
 
 	TArray<TsBiome*>	mBiome;// 
 
 public:
 	virtual ~ATsBiome() {}
 
-	void			SetBiomeType(EBiomeType ty) { mType = ty; }
-	EBiomeType		GetBiomeType() { return mType; }
+	//void			SetSType(EBiomeType ty) { mType = ty; }
+	//EBiomeSType		GetSType() { return mType; }
 };
 
 

@@ -27,14 +27,14 @@ FVector2D TsBiomeSite::Circle::GetOutline(int i) {
 	float ang  = (i % n) * 360.0f / n;
 	float bias = FMath::PerlinNoise3D( FVector(X, Y, ang * 0.06f) );
 	float l = (1 + bias * 0.5f) * r;
-	return *this + l * sincos_pos(ang);
+	return *this + l * TsUtil::SinCosPos(ang);
 }
 
 #define N 128
 void	TsBiomeSite::CreateChild(  const Circle& c, float radius, float angl, int count) {
 	float a = FMath::RandRange(0.7f, 1.2f);
 	float r = radius * a;
-	Circle cc (	c + c.r * sincos_pos(angl), r, N * a);
+	Circle cc (	c + c.r * TsUtil::SinCosPos(angl), r, N * a);
 	mCircles.Add(cc);
 	if ( count > 0 ) {
 		angl += (count & 2) ?	FMath::RandRange(-40, 40) :
@@ -58,9 +58,9 @@ void	TsBiomeSite::Generate(float _x, float _y, float radius)
 		CreateChild(center, radius, angl, FMath::RandRange(1, 2));
 		angl += FMath::RandRange(90.0f, 120.0f);
 		CreateChild(center, radius, angl, FMath::RandRange(1, 2));
+		angl += FMath::RandRange(90.0f, 120.0f);
+		CreateChild(center, radius, angl, FMath::RandRange(1, 2));
 	}
-
-
 }
 
 void	TsBiomeSite::Release()
@@ -93,7 +93,7 @@ float	 TsBiomeSite::GetMaterialValue(const FVector2D& p)
 		for (int i = 0; i < c.n; i++) {
 			FVector2D v0 = c.GetOutline(i + 0);
 			FVector2D v1 = c.GetOutline(i + 1);
-			hp = FMath::Min( (near_point(v0, v1, p) - p).Length() / 50.0f, hp ) ;
+			hp = FMath::Min( (TsUtil::NearPoint(v0, v1, p) - p).Length() / 50.0f, hp ) ;
 		}
 		h = FMath::Min(h, hp);
 	}
@@ -116,7 +116,7 @@ float	 TsBiomeSite::GetValue(const FVector2D &p )
 			for (int i = 0; i < c.n; i++) {
 				FVector2D v0 = c.GetOutline(i + 0);
 				FVector2D v1 = c.GetOutline(i + 1);
-				float hp = 1.0f - (near_point(v0, v1, p) - p).Length() / 10;
+				float hp = 1.0f - (TsUtil::NearPoint(v0, v1, p) - p).Length() / 10;
 				hc = FMath::Max(hc, hp) ;
 			}
 			h = FMath::Max(h, hc);

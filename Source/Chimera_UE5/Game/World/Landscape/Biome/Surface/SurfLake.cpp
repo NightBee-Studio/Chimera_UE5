@@ -33,24 +33,7 @@ struct LakeShape {
 			if (b->IsInside(p)) {
 				float h = 100000.0f;
 				for (auto e : mEdges) {
-#if 0
-#define SL	5.0f
-#define JL	8.0f
-					FVector2D	step = e->mD;
-					int			n = (int)(step.Length() / SL) + 1;
-					for (int i = 0; i < n; i++) {
-						auto jitter = [&](const FVector2D& pp) {
-#define JS	0.015f
-							return	pp + JL * FVector2D(
-								FMath::PerlinNoise1D(pp.X * JS + 205.0f),
-								FMath::PerlinNoise1D(pp.Y * JS - 652.0f));
-						};
-						FVector2D	v0 = jitter(e->mP + step * (i + 0) / n);
-						FVector2D	v1 = jitter(e->mP + step * (i + 1) / n);
-						h = FMath::Min(h, (near_point(v0, v1, p) - p).Length());
-					}
-#endif
-					float hc = (near_point(e->mP, e->mP + e->mD, p) - p).Length();
+					float hc = (TsUtil::NearPoint(e->mP, e->mP + e->mD, p) - p).Length();
 					h = FMath::Min(hc, h);
 				}
 				return h / 50;
