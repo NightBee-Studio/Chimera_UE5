@@ -21,7 +21,7 @@ enum class EBiomeSType : uint8 {	// Surface(Height)
 	E_SurfMountain,
 	E_SurfField	,
 	E_SurfLake	,
-	E_SurfOcean	,	// out of continent
+	E_SurfNone	,	// out of continent
 };
 
 UENUM(BlueprintType)
@@ -103,7 +103,12 @@ private:
 	EBiomeGType		mGType;// ç°âÒÇÕÇ»Çµ
 
 public:
-	TsBiome(float x, float y) : TsVoronoi(x, y) {}
+	TsBiome(float x, float y)
+		: TsVoronoi(x, y)
+		, mSType(EBiomeSType::E_SurfNone)
+		, mMType(EBiomeMType::E_Soil)
+		
+	{}
 	virtual ~TsBiome() {}
 
 	void			SetMType(EBiomeMType ty)	{ mMType = ty; }
@@ -111,6 +116,12 @@ public:
 	void			SetSType(EBiomeSType ty)	{ mSType = ty; }
 	EBiomeSType		GetSType()					{ return mSType; }
 };
+
+//class TsBiomeGroup
+//	: public TArray<TsBiome*>
+//{
+//
+//};
 
 typedef TArray<TsBiome*> TsBiomeGroup;
 

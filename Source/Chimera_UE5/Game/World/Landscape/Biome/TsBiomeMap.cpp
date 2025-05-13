@@ -77,7 +77,6 @@ float	TsMountMap::GetValue(const FVector2D& p)
 
 
 
-
 //calc normal
 // 
 // Triangle(h01,h10,h00)

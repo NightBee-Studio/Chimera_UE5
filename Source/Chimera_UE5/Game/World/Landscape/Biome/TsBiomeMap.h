@@ -26,9 +26,10 @@ enum EBiomeMapType {
 };
 
 
+template <typename T>
+concept DerivedFromTsFVector2D = std::is_base_of_v<FVector2D, T>;
 
 //	Hue Sat Val		=>	 	Genre Temp Moist
-
 class TsBiomeMap
 	: public TsImageMap<float>
 	, public TsNoiseMap {
@@ -40,6 +41,8 @@ public:
 	static TsBiomeMap*	GetBiomeMap(EBiomeMapType ty	              ) { return gBiomeMaps[ty]; }
 	static void			AddBiomeMap(EBiomeMapType ty, TsBiomeMap* map) { gBiomeMaps.Emplace( ty, map ); }
 
+
+
 public:
 	TsBiomeMap(int w, int h, const FBox2D* bound, const TsNoiseParam& cnf = TsNoiseParam())
 		: TsImageMap<float>(w, h, bound)
@@ -49,7 +52,37 @@ public:
 	virtual float	RemapImage(float v, float range) const override;
 	virtual float	GetValue(const FVector2D& p) override;
 	virtual void	SetPixel(int x, int y, float v)override;
+
+	// Items
+public:
+	struct Item {
+		int		mItem;
+		float	mRatio;
+		float	mThresold;
+	};
+
+	template<DerivedFromTsFVector2D Tpoint>
+	void SetupItems(TArray<Tpoint>& points, TArray<Item>& items) {
+		TArray<float>	samples;
+		for (const auto& p : points) samples.Add(GetValue(p));
+		samples.Sort();		// sort to determine the ratio of the group.
+		for (auto& it : items) {
+			it.mThresold = samples[(samples.Num() - 1) * it.mRatio];
+		}
+	}
+
+	template<DerivedFromTsFVector2D Tpoint>
+	void SelectItem(const Tpoint& point, TArray<Item>& items, std::function<void(const Item&)>func) {
+		float h = GetValue(point);
+		for (auto& it : items) {
+			if (h < it.mThresold) {
+				func( it );
+				break;
+			}
+		}
+	}
 };
+
 
 
 class TsHeightMap

@@ -171,7 +171,7 @@ public:
 		for (auto b : mBiomes) {
 			FColor c(0, 0, 0);
 			switch (b.GetSType()) {
-			case EBiomeSType::E_SurfOcean:		c = FColor(0, 0, 180); break;
+			case EBiomeSType::E_SurfNone:		c = FColor(0, 0, 180); break;
 			case EBiomeSType::E_SurfLake:		c = FColor(100, 120, 255); break;
 			case EBiomeSType::E_SurfField:		c = FColor(125, 255, 0); break;
 			case EBiomeSType::E_SurfMountain:	c = FColor(120, 60, 20); break;
@@ -200,6 +200,7 @@ public:
 
 		// create island shape
 		mShape->Generate(_x, _y, radius);
+
 		{//-------------------------------------------------------------------------------------- create voronois
 			mShape->UpdateBoundingbox(mBoundingbox);
 			mBoundingbox.Min -= FVector2D(500, 500);
@@ -227,7 +228,7 @@ public:
 #if 0
 			mSurfaces = TMap<EBiomeSType, TsBiomeSurface>{
 				//{ BiomeSrfType::E_SurfField, }
-				//{ BiomeSrfType::E_SurfOcean, TsBiomeSurface(512, mBoundingbox, "Demo/Landscape/Island/Masks/MaskOcean.dds", -1, { new SurfaceOcean(-5.0f) }, {}) },
+				//{ BiomeSrfType::E_SurfNone, TsBiomeSurface(512, mBoundingbox, "Demo/Landscape/Island/Masks/MaskOcean.dds", -1, { new SurfaceOcean(-5.0f) }, {}) },
 				{ EBiomeSType::E_SurfBase, TsBiomeSurface(
 						TsBiomeSurface::Flag::FL_BaseHeight,
 						mMapOutParam.reso, mBoundingbox, "Landscape/Island/Masks/MaskField.dds",
@@ -301,7 +302,7 @@ public:
 			};
 #endif
 			TMap<EBiomeSType, TsBiomeGroup>	surf_biomes = {
-				{ EBiomeSType::E_SurfOcean   , TsBiomeGroup{} },
+				{ EBiomeSType::E_SurfNone   , TsBiomeGroup{} },
 				{ EBiomeSType::E_SurfLake    , TsBiomeGroup{} },
 				{ EBiomeSType::E_SurfField   , TsBiomeGroup{} },
 				{ EBiomeSType::E_SurfMountain, TsBiomeGroup{} },
@@ -312,6 +313,8 @@ public:
 
 			// world once
 			TsBiomeMap* surfs_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam(1.0f, 0.0010f, 0.2f, 0.0030f));
+
+#if 0
 			// generate BiomeSrfType for determine the shape of biome group
 			TArray<float>	samples;
 			for (auto& b : mBiomes) {
@@ -319,7 +322,7 @@ public:
 			}
 			samples.Sort();		// sort to determine the ratio of the group.
 			for (auto& b : mBiomes) {
-				EBiomeSType surf = EBiomeSType::E_SurfOcean;		//, { 0.1f, 0.55f, 0.35f,}
+				EBiomeSType surf = EBiomeSType::E_SurfNone;		//, { 0.1f, 0.55f, 0.35f,}
 				if (mShape->GetValue(b) > 0.99999f) {
 					float h = surfs_map->GetValue(b);
 					if      (h < samples[(samples.Num() - 1) * 0.05f])  surf = EBiomeSType::E_SurfLake;
@@ -330,6 +333,38 @@ public:
 				b.SetSType(surf);
 				surf_biomes[surf].Add(&b);
 			}
+#endif
+
+			TArray<TsBiomeMap::Item> surf_items = {
+				{ (int)EBiomeSType::E_SurfLake    , 0.05f, 0.0f },
+				{ (int)EBiomeSType::E_SurfField   , 0.50f, 0.0f },
+				{ (int)EBiomeSType::E_SurfMountain, 0.45f, 0.0f },
+			};
+			
+			surfs_map->SetupItems<TsBiome>( mBiomes, surf_items );
+			for (auto& b : mBiomes) {
+				if (mShape->GetValue(b) > 0.99999f) {
+					surfs_map->SelectItem<TsBiome>(b, surf_items,
+						[&b](const TsBiomeMap::Item& it) {
+							b.SetSType( (EBiomeSType)it.mItem );
+						});
+				}
+			}
+
+			//{///---------------------------------------- HeightMap
+			//	UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: HeightMap exporting..."));
+			//	mHeightMap->ForeachPixel([&](int px, int py) {
+			//		FVector2D p = mHeightMap->GetWorldPos(px, py);
+			//		if (mHeightMap->IsWorld(p)) {
+			//			UpdateRemap(p);
+			//		}
+			//		});
+			//	mHeightMap->ForeachPixel([&](int px, int py) {
+			//		FVector2D p = mHeightMap->GetWorldPos(px, py);
+			//		mHeightMap->SetPixel(px, py, GetHeight(p));
+			//		});
+			//	UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: HeightMap done."));
+			//}
 
 #if 0
 			TsBiomeMap* moist_map  = new TsBiomeMap (IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam(1.0f, 0.001f, 0.2f, 0.003f));
