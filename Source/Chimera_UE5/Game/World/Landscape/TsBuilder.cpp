@@ -312,41 +312,26 @@ public:
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Apply Surface ..."));
 
 			// world once
-			TsBiomeMap* surfs_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam(1.0f, 0.0010f, 0.2f, 0.0030f));
-
-#if 0
-			// generate BiomeSrfType for determine the shape of biome group
-			TArray<float>	samples;
-			for (auto& b : mBiomes) {
-				samples.Add(surfs_map->GetValue(b));
-			}
-			samples.Sort();		// sort to determine the ratio of the group.
-			for (auto& b : mBiomes) {
-				EBiomeSType surf = EBiomeSType::E_SurfNone;		//, { 0.1f, 0.55f, 0.35f,}
-				if (mShape->GetValue(b) > 0.99999f) {
-					float h = surfs_map->GetValue(b);
-					if      (h < samples[(samples.Num() - 1) * 0.05f])  surf = EBiomeSType::E_SurfLake;
-					else if (h < samples[(samples.Num() - 1) * 0.50f])  surf = EBiomeSType::E_SurfField;
-					else 												surf = EBiomeSType::E_SurfMountain;
-				}
-
-				b.SetSType(surf);
-				surf_biomes[surf].Add(&b);
-			}
-#endif
-
-			TArray<TsBiomeMap::Item> surf_items = {
-				{ (int)EBiomeSType::E_SurfLake    , 0.05f, 0.0f },
-				{ (int)EBiomeSType::E_SurfField   , 0.50f, 0.0f },
-				{ (int)EBiomeSType::E_SurfMountain, 0.45f, 0.0f },
+			TArray<TsBiomeItem_SType> surf_items = {
+				{ 0.05f, 0.0f, EBiomeSType::E_SurfLake    },
+				{ 0.50f, 0.0f, EBiomeSType::E_SurfField   },
+				{ 0.45f, 0.0f, EBiomeSType::E_SurfMountain},
 			};
-			
-			surfs_map->SetupItems<TsBiome>( mBiomes, surf_items );
+			TArray<TsBiomeItem_MType> mois_items = {
+				{ 0.05f, 0.0f, EBiomeMType::E_Soil		},
+				{ 0.50f, 0.0f, EBiomeMType::E_Field		},
+				{ 0.45f, 0.0f, EBiomeMType::E_Tree		},
+				{ 0.05f, 0.0f, EBiomeMType::E_Forest	},
+			};
+
+			TsBiomeMap* surfs_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam(1.0f, 0.0010f, 0.2f, 0.0030f));
+			surfs_map->SetupItems<TsBiome, TsBiomeItem_SType>( mBiomes, surf_items );
+			surfs_map->SetupItems<TsBiome, TsBiomeItem_MType>( mBiomes, mois_items);
 			for (auto& b : mBiomes) {
 				if (mShape->GetValue(b) > 0.99999f) {
-					surfs_map->SelectItem<TsBiome>(b, surf_items,
-						[&b](const TsBiomeMap::Item& it) {
-							b.SetSType( (EBiomeSType)it.mItem );
+					surfs_map->SelectItem<TsBiome, TsBiomeItem_SType>(b, surf_items,
+						[&b](const TsBiomeItem_SType& it) {
+							b.SetSType( it.mItem );
 						});
 				}
 			}

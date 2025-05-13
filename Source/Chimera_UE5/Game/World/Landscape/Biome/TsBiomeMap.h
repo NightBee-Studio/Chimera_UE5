@@ -2,7 +2,33 @@
 
 #include "CoreMinimal.h"
 
+#include "TsBiome.h"
 #include "../Util/TsImageMap.h"
+
+
+
+// -------------------------------- TsBiomeItem  --------------------------------
+
+struct TsBiomeItem {
+	float		mRatio;
+	float		mThresold;
+};
+
+struct TsBiomeItem_MType : public TsBiomeItem {
+	EBiomeMType	mItem;
+};
+
+struct TsBiomeItem_SType : public TsBiomeItem {
+	EBiomeSType	mItem;
+};
+
+template <typename T>
+concept DerivedFromTsFVector2D = std::is_base_of_v<FVector2D, T>;
+
+template <typename T>
+concept DerivedFromTsBiomeItem = std::is_base_of_v<TsBiomeItem, T>;
+
+
 
 
 
@@ -26,8 +52,6 @@ enum EBiomeMapType {
 };
 
 
-template <typename T>
-concept DerivedFromTsFVector2D = std::is_base_of_v<FVector2D, T>;
 
 //	Hue Sat Val		=>	 	Genre Temp Moist
 class TsBiomeMap
@@ -55,14 +79,8 @@ public:
 
 	// Items
 public:
-	struct Item {
-		int		mItem;
-		float	mRatio;
-		float	mThresold;
-	};
-
-	template<DerivedFromTsFVector2D Tpoint>
-	void SetupItems(TArray<Tpoint>& points, TArray<Item>& items) {
+	template<DerivedFromTsFVector2D Tpoint, DerivedFromTsBiomeItem Titem>
+	void SetupItems(TArray<Tpoint>& points, TArray<Titem>& items) {
 		TArray<float>	samples;
 		for (const auto& p : points) samples.Add(GetValue(p));
 		samples.Sort();		// sort to determine the ratio of the group.
@@ -71,8 +89,8 @@ public:
 		}
 	}
 
-	template<DerivedFromTsFVector2D Tpoint>
-	void SelectItem(const Tpoint& point, TArray<Item>& items, std::function<void(const Item&)>func) {
+	template<DerivedFromTsFVector2D Tpoint, DerivedFromTsBiomeItem Titem>
+	void SelectItem(const Tpoint& point, TArray<Titem>& items, std::function<void(const Titem&)>func) {
 		float h = GetValue(point);
 		for (auto& it : items) {
 			if (h < it.mThresold) {
