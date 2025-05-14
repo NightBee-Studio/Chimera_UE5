@@ -4,7 +4,7 @@
 
 
 
-
+#if 0
 
 struct MtShape : public TsNoiseMap {
 	static TArray<MtShape*>	gShapes;
@@ -92,8 +92,13 @@ struct MtShapeB : public MtShape {
 
 TArray<MtShape*>	MtShape::gShapes;
 
+#endif
+
+
+
 // -------------------------------- SurfaceMountain --------------------------------
 
+#if 0
 SurfaceMountain*	SurfaceMountain::gInstance = nullptr;
 TsNoiseMap*			SurfaceMountain::gNoiseMap = nullptr;
 
@@ -114,15 +119,17 @@ float	SurfaceMountain::GetMountValue(const FVector2D& p)
 	}
 	return 0;
 }
+#endif
 
-float	SurfaceMountain::GetValue(const FVector2D& p) 
-{
-	float h = 0;
-	for (auto &shape : MtShape::gShapes) {
-		h = FMath::Max( h, shape->GetValue(p) );
-	}
-	return h;
-}
+
+//float	SurfaceMountain::GetValue(const FVector2D& p) 
+//{
+//	float h = 0;
+//	for (auto &shape : MtShape::gShapes) {
+//		h = FMath::Max( h, shape->GetValue(p) );
+//	}
+//	return h;
+//}
 
 float	SurfaceMountain::Remap(float val) const
 {
@@ -130,34 +137,47 @@ float	SurfaceMountain::Remap(float val) const
 }
 
 
-void	SurfaceMountain::Exec_UpdateRemap(const FVector2D& p)
+//void	SurfaceMountain::Exec_UpdateRemap(const FVector2D& p)
+//{
+////	gNoiseMap->UpdateRemap(p);
+//	for (auto& shape : MtShape::gShapes) {
+//		shape->UpdateRemap(p);
+//	}
+//}
+//
+//void	SurfaceMountain::Exec_EachGroup( TsBiomeGroup& grp)
+//{
+////	CreateMountainB (grp );
+//}
+
+float	SurfaceMountain::GetHeight(TsBiome* b, const FVector2D& p)
 {
-	gNoiseMap->UpdateRemap(p);
-	for (auto& shape : MtShape::gShapes) {
-		shape->UpdateRemap(p);
-	}
+	float h = 0;
+	b->ForeachEdge([&h, p](const TsVoronoi::Edge& e) {
+			float hc = (TsUtil::NearPoint(e.mP, e.mP + e.mD, p) - p).Length();
+			h = FMath::Max(hc, h);
+		});
+	UE_LOG(LogTemp, Log, TEXT("Mnt[%d,%d] %f"), (int)p.X, (int)p.Y, h);
+
+	UpdateRemap( h );
+	return h;
 }
 
-void	SurfaceMountain::Exec_EachGroup( TsBiomeGroup& grp)
-{
-	CreateMountainB (grp );
-}
-
-
-void	SurfaceMountain::CreateMountainA(FVector2D pos, float radius, int branch_max )
-{
-	//MtShape::gShapes.Add( MtShapeA::Create( pos, radius, branch_max ) );
-}
-
-void	SurfaceMountain::CreateMountainB(TArray<TsBiome*>& list )
-{
-	MtShape::gShapes.Add( MtShapeB::Create(list) );
-}
-
-void SurfaceMountain::Debug( UWorld *world ){
-	for (auto s : MtShape::gShapes) {
-//		s->mKnots->DebugMountShape( world );
-	}
-}
-
+//
+//void	SurfaceMountain::CreateMountainA(FVector2D pos, float radius, int branch_max )
+//{
+//	//MtShape::gShapes.Add( MtShapeA::Create( pos, radius, branch_max ) );
+//}
+//
+//void	SurfaceMountain::CreateMountainB(TArray<TsBiome*>& list )
+//{
+//	MtShape::gShapes.Add( MtShapeB::Create(list) );
+//}
+//
+//void SurfaceMountain::Debug( UWorld *world ){
+//	for (auto s : MtShape::gShapes) {
+////		s->mKnots->DebugMountShape( world );
+//	}
+//}
+//
 

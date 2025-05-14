@@ -36,16 +36,16 @@ void			TsBiomeSurface::UpdateRemap(const FVector2D& p)
 	//for (auto s : mMaterialFuncs) s->UpdateRemap(p);
 }
 
-float			TsBiomeSurface::GetHeight(const FVector2D& p)
+float			TsBiomeSurface::GetHeight(TsBiome* b, const FVector2D& p)
 {
 	float h = 0;
 	for (auto s : mSurfaceFuncs) {
-		h += s->Remap(s->GetValue(p));
+		h += s->Remap(s->GetHeight(b, p));
 	}
 	return h;
 }
 
-TsMaterialValue	TsBiomeSurface::GetMaterial(const FVector2D& p)
+TsMaterialValue	TsBiomeSurface::GetMaterial(TsBiome* b, const FVector2D& p)
 {
 	TsMaterialValue mv;
 	for (auto fn : mMaterialFuncs) {

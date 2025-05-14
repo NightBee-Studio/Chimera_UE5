@@ -50,31 +50,6 @@ float	TsBiomeMap::RemapImage(float v, float range) const {
 	return range * (v - mMin) / (mMax - mMin);
 }
 
-float	TsPlantMap::GetValue(const FVector2D& p)
-{
-	return TsBiomeMap::GetValue(p);
-}
-
-float	TsGenreMap::GetValue(const FVector2D& p) {
-	return	FMath::Frac(TsBiomeMap::GetValue(p));
-}
-
-
-TsMountMap::TsMountMap(int w, int h, const FBox2D* bound)
-	: TsBiomeMap(w, h, bound, TsNoiseParam()) {
-	//SurfaceMountain::gInstance->SetNoiseConfig(TsNoiseParam(1.0f, 0.02f, 0.2f, 0.06f));
-}
-
-void	TsMountMap::UpdateRemap(const FVector2D& p)
-{
-	//SurfaceMountain::gInstance->Exec_UpdateRemap(p);
-}
-
-float	TsMountMap::GetValue(const FVector2D& p)
-{
-	return 0.0f;// SurfaceMountain::gInstance->GetMountValue(p);
-}
-
 
 
 //calc normal
@@ -153,9 +128,8 @@ float		TsHeightMap::RemapImage(float v, float range ) const {
 
 void	TsHeightMap::SaveAll( int x, int y,int w, int h )
 {
-	Save("TsHeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16_D, x, y, w, h);
+	Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16, x, y, w, h);	//EImageFormat::FormatL16_Debug
 }
-
 
 
 
@@ -288,33 +262,3 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 }
 
 
-
-
-void	MarchingSquareMap::SaveAll()
-{
-	float levels[] = { 0.0f, 0.3333f, 0.6667f, 1.0f };
-
-	int file_no = 0;
-	for (int i0 = 0; i0 < 4; i0++) {
-		for (int i1 = 0; i1 < 4; i1++) {
-			for (int i2 = 0; i2 < 4; i2++) {
-				for (int i3 = 0; i3 < 4; i3++) {
-					mMap.ForeachPixel([&](int px, int py) {
-							float dx = (float)px / mMap.GetW();
-							float dy = (float)py / mMap.GetW();
-							mMap.SetPixel(	px, py, 
-											(levels[i0] * (1 - dx) + levels[i1] * dx)*(1-dy) +
-											(levels[i2] * (1 - dx) + levels[i3] * dx)*( dy ) 
-								);
-						});
-
-					//UE_LOG(LogTemp, Log, TEXT("MarchingSquareMap::<%d> [%d %d %d %d] "), file_no, i0, i1, i2, i3);
-
-					char filename[512];
-					sprintf_s(filename, sizeof(filename), "Landscape/Island/Materials/MarchingSquare/march_sq_%03d.dds", file_no++);
-					mMap.Save(filename, EImageFile::Dds, EImageFormat::FormatL16);
-				}
-			}
-		}
-	}
-}

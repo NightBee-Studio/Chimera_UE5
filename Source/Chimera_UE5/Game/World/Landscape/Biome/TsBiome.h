@@ -16,12 +16,10 @@
 
 UENUM(BlueprintType)
 enum class EBiomeSType : uint8 {	// Surface(Height)
-	E_SurfBase,
-
-	E_SurfMountain,
+	E_SurfNone,	// out of continent
+	E_SurfLake,
 	E_SurfField	,
-	E_SurfLake	,
-	E_SurfNone	,	// out of continent
+	E_SurfMountain,
 };
 
 UENUM(BlueprintType)
@@ -115,6 +113,8 @@ public:
 	EBiomeMType		GetMType()					{ return mMType; }
 	void			SetSType(EBiomeSType ty)	{ mSType = ty; }
 	EBiomeSType		GetSType()					{ return mSType; }
+
+	float			GetMask(const FVector2D& p);
 };
 
 //class TsBiomeGroup

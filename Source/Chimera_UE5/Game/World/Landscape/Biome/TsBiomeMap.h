@@ -11,7 +11,7 @@
 
 struct TsBiomeItem {
 	float		mRatio;
-	float		mThresold;
+	float		mThreshold;
 };
 
 struct TsBiomeItem_MType : public TsBiomeItem {
@@ -82,10 +82,13 @@ public:
 	template<DerivedFromTsFVector2D Tpoint, DerivedFromTsBiomeItem Titem>
 	void SetupItems(TArray<Tpoint>& points, TArray<Titem>& items) {
 		TArray<float>	samples;
+		float			ratio = 0.0f;
 		for (const auto& p : points) samples.Add(GetValue(p));
 		samples.Sort();		// sort to determine the ratio of the group.
+		int max_idx = (samples.Num() - 1);
 		for (auto& it : items) {
-			it.mThresold = samples[(samples.Num() - 1) * it.mRatio];
+			ratio += it.mRatio;
+			it.mThreshold = samples[max_idx * FMath::Min(1, ratio)];
 		}
 	}
 
@@ -93,7 +96,7 @@ public:
 	void SelectItem(const Tpoint& point, TArray<Titem>& items, std::function<void(const Titem&)>func) {
 		float h = GetValue(point);
 		for (auto& it : items) {
-			if (h < it.mThresold) {
+			if (h < it.mThreshold) {
 				func( it );
 				break;
 			}
@@ -119,42 +122,6 @@ public:
 
 	float	RemapImage(float v, float range ) const override;
 };
-
-
-
-//	Hue Sat Val		=>	 	Genre Temp Moist
-class TsPlantMap
-	: public TsBiomeMap 
-{
-public:
-	TsPlantMap(int w, int h, const FBox2D* bound) : TsBiomeMap(w, h, bound) {}
-	virtual ~TsPlantMap() {}
-
-	float	GetValue(const FVector2D& p) override;
-};
-
-class TsGenreMap
-	: public TsBiomeMap
-{
-public:
-	TsGenreMap(int w, int h, const FBox2D* bound, const TsNoiseParam& cnf) : TsBiomeMap(w, h, bound, cnf) {}
-	virtual ~TsGenreMap() {}
-
-	float	GetValue(const FVector2D& p) override;
-};
-
-class TsMountMap
-	: public TsBiomeMap 
-{
-public:
-	TsMountMap(int w, int h, const FBox2D* bound);
-	virtual ~TsMountMap() {}
-
-	void	UpdateRemap(const FVector2D& p) override;
-	float	GetValue(const FVector2D& p) override;
-};
-
-
 
 
 enum EMaterialType {
@@ -209,16 +176,5 @@ public:
 
 	void			SetMaterial(int x, int y, const TsMaterialValue& mv);
 	void			SaveAll(int x, int y, int w, int h);
-};
-
-
-class MarchingSquareMap {
-	TsImageMap<float>	mMap ;
-	
-public:
-	MarchingSquareMap() : mMap(32, 32) {
-		mMap.AllocImage();
-	}
-	void			SaveAll();
 };
 

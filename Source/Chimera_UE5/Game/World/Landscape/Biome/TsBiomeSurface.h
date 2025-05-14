@@ -21,6 +21,10 @@ public:
 	virtual void	Exec_UpdateRemap(const FVector2D& p) {}
 
 	virtual float	Remap(float val) const override { return  mHeight * (val - mMin) / (mMax - mMin); }
+
+public:
+	// SurfFunc must access by GetHeight() not GetValue() ;
+	virtual float	GetHeight(TsBiome* b, const FVector2D& p){ return GetValue(p) ;	}
 };
 
 #include "Surface/SurfField.h"
@@ -66,10 +70,10 @@ public:
 class	TsBiomeSurface {
 public:
 	enum Flag {
-		FL_None = 0,
-		FL_BaseHeight = (1 << 0),
+		FL_None			= 0,
+		FL_BaseHeight	= (1 << 0),
 		FL_BaseMaterial = (1 << 1),
-		FL_BaseShape = (1 << 2),
+		FL_BaseShape	= (1 << 2),
 	};
 
 public:
@@ -78,6 +82,7 @@ public:
 
 	TArray<TsBiomeSrfFunc*>	mSurfaceFuncs;
 	TArray<TsBiomeMatFunc*>	mMaterialFuncs;
+	
 	TsImageMap<float>*		mMask;
 
 	TArray<TsBiomeGroup>	mGroups;
@@ -98,8 +103,8 @@ public:
 public:
 	TsImageMap<float>*		CreateMask(int reso, const FBox2D& bound);
 
-	float					GetHeight(const FVector2D& p);		// world-coord
-	TsMaterialValue			GetMaterial(const FVector2D& p);	// world-coord
+	float					GetHeight  ( TsBiome *b, const FVector2D& p );		// world-coord
+	TsMaterialValue			GetMaterial( TsBiome* b, const FVector2D& p );	// world-coord
 
 	void					UpdateRemap(const FVector2D& p);	// world-coord
 

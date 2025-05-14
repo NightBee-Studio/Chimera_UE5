@@ -1,6 +1,24 @@
 
 #include "TsBiome.h"
 
+#include "../Util/TsUtility.h"
+
+
+
+
+
+float	TsBiome::GetMask(const FVector2D& p)
+{
+	if ( IsInside(p) ) return 1;
+	float h = 0;
+	for (auto &ed : mEdges) {
+		float hc = 1 - (TsUtil::NearPoint(ed.mP, ed.mP+ed.mD, p) - p).Length() / 100;
+		hc = FMath::Pow(FMath::Clamp(hc, 0, 1), 2.0f);
+		h = FMath::Max(hc, h);
+	}
+	return h;
+}
+
 
 //テクスチャをセーブする
 

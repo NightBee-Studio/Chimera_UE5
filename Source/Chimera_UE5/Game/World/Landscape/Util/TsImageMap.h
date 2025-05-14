@@ -29,13 +29,14 @@ protected:
 	public:
 	float			mMin, mMax;
 public:
-	TsValueMap()			{ ResetRemap(); }
+	TsValueMap()				{ ResetRemap(); }
 
-	float	GetGap()	{ return mMax - mMin; }
+	float			GetGap()	{ return mMax - mMin; }
 
 	virtual void	ResetRemap();
 	virtual float	Remap(float val) const ;
 	virtual void	UpdateRemap(const FVector2D& p);
+	virtual void	UpdateRemap(float v);
 
 	virtual float	GetValue(const FVector2D& p) = 0;	// world-coord
 };
@@ -85,7 +86,7 @@ enum EImageFormat {
 	FmtMask  = 0x0000ffff,
 	FmtDebug = 0x10000000,
 
-	FormatL16_D = FormatL16 | FmtDebug,
+	FormatL16_Debug = FormatL16 | FmtDebug,
 };
 
 enum EImageFile{
@@ -148,7 +149,7 @@ private:
 public:
 	virtual	float	RemapImage(float v, float range = 1.0f) const { return v * range; }
 
-	static void		SetDir(const FString& path, int no_x=-1, int no_y=-1);
+	static void		SetDirectory(const FString& path, int no_x=-1, int no_y=-1);
 
 	int				Load(const FString& fname, EImageFile file) ;
 	int				Save(const FString& fname, EImageFile file, EImageFormat format,int x=0, int y=0,int w=0, int h=0 ) const;

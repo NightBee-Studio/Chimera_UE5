@@ -31,19 +31,26 @@ FBox2D	TsMapOutput::LocalBound(const FBox2D& world_bound)
 
 
 // -------------------------------- TsValueMap  --------------------------------
-void	TsValueMap::ResetRemap() {
-	mMin = 10000.0f;
+void	TsValueMap::ResetRemap() 
+{
+	mMin =  10000.0f;
 	mMax = -10000.0f;
 }
 
-float	TsValueMap::Remap(float val) const {
+float	TsValueMap::Remap(float val) const 
+{
 	return  (mMax - mMin) > 0 ? (val - mMin) / (mMax - mMin) : 1;
 }
 
-void	TsValueMap::UpdateRemap(const FVector2D& p) {
-	float h = GetValue(p);
-	mMin = FMath::Min(mMin, h);
-	mMax = FMath::Max(mMax, h);
+void	TsValueMap::UpdateRemap(const FVector2D& p) 
+{
+	TsValueMap::UpdateRemap( GetValue(p) );
+}
+
+void	TsValueMap::UpdateRemap(float v)
+{
+	mMin = FMath::Min(mMin, v);
+	mMax = FMath::Max(mMax, v);
 }
 
 
@@ -61,7 +68,6 @@ float	TsNoiseMap::GetValue(const FVector2D& p) {
 }
 
 
-
 // -------------------------------- TsImageMap  --------------------------------
 
 float	TsImageCore::gSx = 0;
@@ -69,11 +75,10 @@ float	TsImageCore::gSY = 0;
 
 FString TsImageCore::gDirName;
 
-#define PROJPATH	"D:\\Works\\Projects\\LandscapeGen\\Content\\"
-#define DEMODIR		"Demo\\"
-void	TsImageCore::SetDir(const FString& path, int no_x, int no_y)
+#define PROJPATH	"D:\\Works\\Projects\\Chimera\\01_Project\\Chimera_UE5\\Content\\"
+void	TsImageCore::SetDirectory(const FString& path, int no_x, int no_y)
 {
-	gDirName = PROJPATH DEMODIR + path;
+	gDirName = PROJPATH + path;
 	if (no_x >= 0 && no_y >= 0) {
 		gDirName += FString::Printf(TEXT("%02d_%02d"), no_x, no_y);
 	}
@@ -191,7 +196,7 @@ enum {
 } ;
 
 int		TsImageCore::Load(const FString& fname, EImageFile fmt) {
-	FString	path = PROJPATH DEMODIR + fname;
+	FString	path = PROJPATH + fname;
 	FILE* fp;
 	if ((_tfopen_s(&fp, *path, TEXT("rb"))) == 0) {
 		switch (fmt) {
@@ -218,6 +223,7 @@ int		TsImageCore::Load(const FString& fname, EImageFile fmt) {
 	}
 	return 0;
 }
+
 
 int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat format, int x, int y, int w, int h ) const {
 	if (w == 0) w = mW;
