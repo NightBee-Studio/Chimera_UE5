@@ -9,5 +9,7 @@ public:
 		: TsBiomeSrfFunc(cnf, h) {}
 
 	float	GetValue(const FVector2D& p) override;
+
+//	float	GetHeight(TsBiome* b, const FVector2D& p) override;
 };
 

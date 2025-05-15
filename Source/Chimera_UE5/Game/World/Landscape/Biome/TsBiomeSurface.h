@@ -24,7 +24,7 @@ public:
 
 public:
 	// SurfFunc must access by GetHeight() not GetValue() ;
-	virtual float	GetHeight(TsBiome* b, const FVector2D& p){ return GetValue(p) ;	}
+	virtual float	GetHeight(TsBiome* b, const FVector2D& p) { return GetValue(p) ; }
 };
 
 #include "Surface/SurfField.h"

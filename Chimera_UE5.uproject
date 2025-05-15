@@ -157,6 +157,10 @@
 		{
 			"Name": "ResonanceAudio",
 			"Enabled": false
+		},
+		{
+			"Name": "NaniteDisplacedMesh",
+			"Enabled": true
 		}
 	]
 }

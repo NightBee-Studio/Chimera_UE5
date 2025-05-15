@@ -160,6 +160,7 @@ float	SurfaceMountain::GetHeight(TsBiome* b, const FVector2D& p)
 	UE_LOG(LogTemp, Log, TEXT("Mnt[%d,%d] %f"), (int)p.X, (int)p.Y, h);
 
 	UpdateRemap( h );
+
 	return h;
 }
 

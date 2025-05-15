@@ -117,7 +117,7 @@ public:
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group"));
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: BiomeMap creating ..."));
 
-			heightmap_reso = 64;
+			heightmap_reso = 512;
 			if (heightmap_reso == 0) heightmap_reso = 512;
 #define IMG_SIZE heightmap_reso
 
@@ -235,7 +235,7 @@ public:
 							TsBiome*  b = SearchBiome(p);
 							if ( b ) {
 								mHeightMap->SetPixel(px, py, mSurfaces[b->GetSType()].GetHeight(b,p));
-								UE_LOG(LogTemp, Log, TEXT("[%d,%d](%d) %f"), (int)px, (int)py, b->GetSType(), mSurfaces[b->GetSType()].GetHeight(b, p));
+							//	UE_LOG(LogTemp, Log, TEXT("[%d,%d](%d) %f"), (int)px, (int)py, b->GetSType(), mSurfaces[b->GetSType()].GetHeight(b, p));
 							}
 						});
 					UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: HeightMap done."));
