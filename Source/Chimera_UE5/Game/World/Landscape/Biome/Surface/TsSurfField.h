@@ -3,9 +3,10 @@
 #include "../TsBiomeSurface.h"
 
 
-class SurfaceField : public TsBiomeSrfFunc {
+class TsSurfaceField
+	: public TsBiomeSrfFunc {
 public:
-	SurfaceField(const TsNoiseParam& cnf, float h = 0.2f)
+	TsSurfaceField(const TsNoiseParam& cnf, float h = 0.2f)
 		: TsBiomeSrfFunc(cnf, h) {}
 
 	float	GetValue(const FVector2D& p) override;

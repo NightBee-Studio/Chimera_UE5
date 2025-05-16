@@ -107,6 +107,13 @@ float	TsBiomeSite::Remap(float val) const
 
 float	 TsBiomeSite::GetValue(const FVector2D &p )
 {
+	return	( 1.00f * FMath::PerlinNoise2D(0.001f * mN0 * p + mNoisePos)
+			+ 0.50f * FMath::PerlinNoise2D(0.002f * mN0 * p + mNoisePos)
+			+ 0.25f * FMath::PerlinNoise2D(0.004f * mN0 * p + mNoisePos)
+			+ 0.13f * FMath::PerlinNoise2D(0.008f * mN0 * p + mNoisePos)
+			+ 0.06f * FMath::PerlinNoise2D(0.016f * mN0 * p + mNoisePos)
+			+ 0.03f * FMath::PerlinNoise2D(0.032f * mN0 * p + mNoisePos));
+#if 0
 	float h = -1000000;
 	for (auto& c : mCircles) {
 		if ( c.IsInside( p ) ){
@@ -123,7 +130,14 @@ float	 TsBiomeSite::GetValue(const FVector2D &p )
 		}
 	}
 	return h;
+#endif
 }
+
+TsBiomeSite::TsBiomeSite()
+	: TsBiomeSrfFunc(TsNoiseParam(1.0f, 0, 0, 0), 1.0f )
+	//: TsValueMap()
+{}
+
 
 	//for (uint32 RegionIndex = 0; RegionIndex < region_data->NumRegions; ++RegionIndex) {
 	//	int32 CurrentFirstMip = region_data->Texture2DResource->GetCurrentFirstMip();

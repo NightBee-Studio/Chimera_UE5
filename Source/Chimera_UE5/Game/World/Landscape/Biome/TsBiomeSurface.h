@@ -8,29 +8,36 @@
 
 // -------------------------------- BiomeSurface  --------------------------------
 
-class	TsBiomeSrfFunc : public TsNoiseMap {
+enum EOp {
+	EOp_Set,
+	EOp_Add,
+	EOp_Sub,
+	EOp_Max,
+	EOp_Min,
+};
+
+class	TsBiomeSrfFunc
+	: public TsNoiseMap {
 protected:
 	float			mHeight;
+	EOp				mOp;
+public:
+	TsBiomeSrfFunc( const TsNoiseParam& cnf, float h = 1)
+		: TsNoiseMap(cnf), mHeight(h), mOp(EOp_Add) {}
 
 public:
-	TsBiomeSrfFunc(const TsNoiseParam& cnf, float h = 1)
-		: TsNoiseMap(cnf), mHeight(h) {}
-
-public:
-	virtual void	Exec_EachGroup(TsBiomeGroup& grp) {}
-	virtual void	Exec_UpdateRemap(const FVector2D& p) {}
-
 	virtual float	Remap(float val) const override { return  mHeight * (val - mMin) / (mMax - mMin); }
 
-public:
 	// SurfFunc must access by GetHeight() not GetValue() ;
+public:
+	virtual void	RemapHeight(TsBiome* b, const FVector2D& p);
 	virtual float	GetHeight(TsBiome* b, const FVector2D& p) { return GetValue(p) ; }
 };
 
-#include "Surface/SurfField.h"
-#include "Surface/SurfLake.h"
-#include "Surface/SurfMountain.h"
-#include "Surface/SurfNoise.h"
+#include "Surface/TsSurfField.h"
+#include "Surface/TsSurfLake.h"
+#include "Surface/TsSurfMountain.h"
+#include "Surface/TsSurfNoise.h"
 
 struct TsOp;
 
@@ -48,20 +55,12 @@ protected:
 	};
 	TArray<Config>			mConfigs;
 
-	static
-	TArray<TsBiomeMatFunc*>	gList;
-
 public:
 	TsBiomeMatFunc(TArray<Config> cnfs)
 		: mConfigs(cnfs) {
-		gList.Add(this);
 	}
 	~TsBiomeMatFunc() {
-		gList.Remove(this);
 	}
-
-	static
-	void			UpdateOccupancy();
 
 	TsMaterialValue	GetMaterial(const FVector2D& p);
 };
@@ -69,48 +68,33 @@ public:
 
 class	TsBiomeSurface {
 public:
-	enum Flag {
-		FL_None			= 0,
-		FL_BaseHeight	= (1 << 0),
-		FL_BaseMaterial = (1 << 1),
-		FL_BaseShape	= (1 << 2),
-	};
-
-public:
 //private:
-	Flag					mFlag;
-
 	TArray<TsBiomeSrfFunc*>	mSurfaceFuncs;
 	TArray<TsBiomeMatFunc*>	mMaterialFuncs;
 	
-	TsImageMap<float>*		mMask;
+	//TsImageMap<float>*		mMask;			// going to be depricated
 
-	TArray<TsBiomeGroup>	mGroups;
-	int						mGroupNum;
+	//TArray<TsBiomeGroup>	mGroups;		// going to be depricated
+	//int						mGroupNum;		// going to be depricated
 
 public:
-	TsBiomeSurface(Flag f
-		, int reso, const FBox2D& bound, const FString& name
-		, int group_num
-		, TArray<TsBiomeSrfFunc*> s_funcs
+	TsBiomeSurface(
+		  TArray<TsBiomeSrfFunc*> s_funcs
 		, TArray<TsBiomeMatFunc*> m_funcs)
-		: mFlag(f)
-		, mSurfaceFuncs(s_funcs)
+		: mSurfaceFuncs(s_funcs)
 		, mMaterialFuncs(m_funcs)
-		, mMask(nullptr)
-		, mGroupNum(group_num)	{}
+		//, mMask(nullptr)
+		//, mGroupNum(group_num)	
+	{}
 
 public:
-	TsImageMap<float>*		CreateMask(int reso, const FBox2D& bound);
+	//TsImageMap<float>*		CreateMask(int reso, const FBox2D& bound);
 
 	float					GetHeight  ( TsBiome *b, const FVector2D& p );		// world-coord
 	TsMaterialValue			GetMaterial( TsBiome* b, const FVector2D& p );	// world-coord
+	void					RemapHeight(TsBiome* b, const FVector2D& p);	// world-coord
 
-	void					UpdateRemap(const FVector2D& p);	// world-coord
+	//void					ForeachGroup();
 
-	bool					IsBase(){ return mFlag & (FL_BaseHeight | FL_BaseMaterial) ;}
-
-	void					ForeachGroup();
-
-	void					GatherBiome(TsBiome* b);
+	//void					GatherBiome(TsBiome* b);
 };

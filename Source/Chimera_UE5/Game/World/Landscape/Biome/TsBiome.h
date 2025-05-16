@@ -95,26 +95,27 @@ public:
 class TsBiome
 	: public TsVoronoi
 {
-private:
+//private:
+public:
+
 	EBiomeSType		mSType;
 	EBiomeMType		mMType;
 	EBiomeGType		mGType;// ç°âÒÇÕÇ»Çµ
 
 public:
-	TsBiome(float x, float y)
-		: TsVoronoi(x, y)
-		, mSType(EBiomeSType::E_SurfNone)
-		, mMType(EBiomeMType::E_Soil)
-		
-	{}
+	TsBiome(float x, float y);
 	virtual ~TsBiome() {}
 
 	void			SetMType(EBiomeMType ty)	{ mMType = ty; }
 	EBiomeMType		GetMType()					{ return mMType; }
 	void			SetSType(EBiomeSType ty)	{ mSType = ty; }
 	EBiomeSType		GetSType()					{ return mSType; }
+	void			SetOwner()					{ mOwner = this; 
+	UE_LOG(LogTemp, Log, TEXT("Biome Owner [%p][%d,%d]"), this, (int)X, (int)Y);
+	}
 
 	float			GetMask(const FVector2D& p);
+
 };
 
 //class TsBiomeGroup

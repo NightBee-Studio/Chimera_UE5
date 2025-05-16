@@ -44,15 +44,10 @@ float	TsValueMap::Remap(float val) const
 
 void	TsValueMap::UpdateRemap(const FVector2D& p) 
 {
-	TsValueMap::UpdateRemap( GetValue(p) );
-}
-
-void	TsValueMap::UpdateRemap(float v)
-{
+	float v = GetValue(p) ;
 	mMin = FMath::Min(mMin, v);
 	mMax = FMath::Max(mMax, v);
 }
-
 
 
 // -------------------------------- TsNoiseMap  --------------------------------

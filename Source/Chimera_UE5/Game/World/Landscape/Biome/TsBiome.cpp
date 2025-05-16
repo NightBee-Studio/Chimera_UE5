@@ -5,15 +5,28 @@
 
 
 
+TsBiome::TsBiome(float x, float y)
+	: TsVoronoi(x, y, this)
+	, mSType(EBiomeSType::E_SurfNone)
+	, mMType(EBiomeMType::E_Soil)
+{
+}
 
 
 float	TsBiome::GetMask(const FVector2D& p)
 {
-	if ( IsInside(p) ) return 1;
+//	if ( IsInside(p) ) return 1;
 	float h = 0;
 	for (auto &ed : mEdges) {
-		float hc = 1 - (TsUtil::NearPoint(ed.mP, ed.mP+ed.mD, p) - p).Length() / 100;
-		hc = FMath::Pow(FMath::Clamp(hc, 0, 1), 2.0f);
+		float hc;
+		hc  = ed.GetDistance(p) / 100;
+		hc  = FMath::Clamp(hc, 0, 0.5f);
+		hc *= (IsInside(p) ? 1 : -1);
+		hc += 0.5f;
+
+		//float hc =  - ed.GetDistance(p) / 100;
+		//hc = FMath::Pow(FMath::Clamp(hc, 0, 1), 2.0f);
+
 		h = FMath::Max(hc, h);
 	}
 	return h;

@@ -13,26 +13,32 @@
 
 // -------------------------------- Surfaces  --------------------------------
 
-//class SurfaceWilderness : public TsBiomeSrfFunc {
-//public:
-//	SurfaceWilderness(const NoiseConfig& cnf)
-//		: TsBiomeSrfFunc(cnf, 0.1f) {}
-//};
+
+// -------------------------------- TsBiomeSrfFunc --------------------------------
+
+void	TsBiomeSrfFunc::RemapHeight(TsBiome* b, const FVector2D& p)
+{
+	float v = GetHeight( b, p );
+	mMin = FMath::Min(mMin, v);
+	mMax = FMath::Max(mMax, v);
+}
 
 
 
 // -------------------------------- TsBiomeSurface  --------------------------------
 
-TsImageMap<float>* TsBiomeSurface::CreateMask(int reso, const FBox2D& bound)
-{
-	if (mMask != nullptr) delete mMask;
-	mMask = new TsImageMap<float>( reso, reso, &bound );
-	return mMask;
-}
+//TsImageMap<float>* TsBiomeSurface::CreateMask(int reso, const FBox2D& bound)
+//{
+//	if (mMask != nullptr) delete mMask;
+//	mMask = new TsImageMap<float>( reso, reso, &bound );
+//	return mMask;
+//}
 
-void			TsBiomeSurface::UpdateRemap(const FVector2D& p)
+void			TsBiomeSurface::RemapHeight(TsBiome* b, const FVector2D& p)
 {
-	for (auto s : mSurfaceFuncs) s->UpdateRemap(p);
+	for (auto s : mSurfaceFuncs) {
+		s->RemapHeight(b, p);
+	}
 	//for (auto s : mMaterialFuncs) s->UpdateRemap(p);
 }
 
@@ -54,54 +60,54 @@ TsMaterialValue	TsBiomeSurface::GetMaterial(TsBiome* b, const FVector2D& p)
 	return mv;
 }
 
-void	TsBiomeSurface::GatherBiome(TsBiome* b)
-{
-	bool done = false;
-	for (TsBiomeGroup& gp : mGroups) {
-		if (mGroupNum < 0 || gp.Num() < mGroupNum) {
-			for (TsBiome* bm : gp) {
-				for (auto& ed : bm->mEdges) {
-					if (ed.mShared == b) {
-						gp.Add(b);
-						done = true;
-						break;
-					}
-				}
-				if (done) break;
-			}
-		}
-		if (done) break;
-	}
-	if (!done) mGroups.Add(TsBiomeGroup{ b });
-}
+//void	TsBiomeSurface::GatherBiome(TsBiome* b)
+//{
+//	bool done = false;
+//	for (TsBiomeGroup& gp : mGroups) {
+//		if (mGroupNum < 0 || gp.Num() < mGroupNum) {
+//			for (TsBiome* bm : gp) {
+//				for (auto& ed : bm->mEdges) {
+//					if (ed.mShared == b) {
+//						gp.Add(b);
+//						done = true;
+//						break;
+//					}
+//				}
+//				if (done) break;
+//			}
+//		}
+//		if (done) break;
+//	}
+//	if (!done) mGroups.Add(TsBiomeGroup{ b });
+//}
+//
 
 
 
-
-TArray<TsBiomeMatFunc*>	TsBiomeMatFunc::gList;
-
-void	TsBiomeMatFunc::UpdateOccupancy()
-{
-	for (auto& fn : gList) {
-		for (auto& c : fn->mConfigs) {
-			TsBiomeMap* bm = TsBiomeMap::GetBiomeMap(c.mMapSource);
-			TArray<float> img(bm->GetImage(), bm->GetW() * bm->GetH());
-			img.Sort();
-			float occupancy = 0;
-			float min = img[0];
-			for (auto& l : c.mLayers) {
-				l.mMin = min;
-				l.mMax = min = img[(img.Num() - 1) * FMath::Min(occupancy += l.mOccupancy, 1)];
-			}
-		}
-
-		for (auto& c : fn->mConfigs) {
-			for (auto& l : c.mLayers) {
-				UE_LOG(LogTemp, Log, TEXT("GetMaterial [%d] Occ%f Range[%f %f]"), l.mMaterialType, l.mOccupancy, l.mMin, l.mMax);
-			}
-		}
-	}
-}
+//TArray<TsBiomeMatFunc*>	TsBiomeMatFunc::gList;
+//
+//void	TsBiomeMatFunc::UpdateOccupancy()
+//{
+//	for (auto& fn : gList) {
+//		for (auto& c : fn->mConfigs) {
+//			TsBiomeMap* bm = TsBiomeMap::GetBiomeMap(c.mMapSource);
+//			TArray<float> img(bm->GetImage(), bm->GetW() * bm->GetH());
+//			img.Sort();
+//			float occupancy = 0;
+//			float min = img[0];
+//			for (auto& l : c.mLayers) {
+//				l.mMin = min;
+//				l.mMax = min = img[(img.Num() - 1) * FMath::Min(occupancy += l.mOccupancy, 1)];
+//			}
+//		}
+//
+//		for (auto& c : fn->mConfigs) {
+//			for (auto& l : c.mLayers) {
+//				UE_LOG(LogTemp, Log, TEXT("GetMaterial [%d] Occ%f Range[%f %f]"), l.mMaterialType, l.mOccupancy, l.mMin, l.mMax);
+//			}
+//		}
+//	}
+//}
 
 
 TsMaterialValue	TsBiomeMatFunc::GetMaterial(const FVector2D& p)
@@ -147,13 +153,13 @@ TsMaterialValue	TsBiomeMatFunc::GetMaterial(const FVector2D& p)
 
 
 
-
-
-void	TsBiomeSurface::ForeachGroup() {
-	for (auto bg : mGroups) {
-		for (auto fn : mSurfaceFuncs) {
-			fn->Exec_EachGroup(bg);
-		}
-	}
-}
-
+//
+//
+//void	TsBiomeSurface::ForeachGroup() {
+//	for (auto bg : mGroups) {
+//		for (auto fn : mSurfaceFuncs) {
+//			fn->Exec_EachGroup(bg);
+//		}
+//	}
+//}
+//

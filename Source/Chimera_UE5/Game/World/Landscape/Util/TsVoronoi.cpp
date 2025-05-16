@@ -30,7 +30,9 @@ TsVoronoi::Edge::Edge(float x, float y, float dx, float dy, int f)
 	, mID(gen_voronoi_id(x, y, x+dx, y+dy))			// ID will be calced by position
 	, mShared(nullptr) {}
 
-float TsVoronoi::Edge::_Intersect(Edge& a, Edge& b) {
+
+float intersect(const TsVoronoi::Edge& a, const TsVoronoi::Edge& b)
+{
 	float delta = a.mD.X * b.mD.Y - a.mD.Y * b.mD.X;
 	if (delta != 0.0f) {
 		return (b.mD.X * (a.mP.Y - b.mP.Y) - b.mD.Y * (a.mP.X - b.mP.X)) / delta;
@@ -38,13 +40,19 @@ float TsVoronoi::Edge::_Intersect(Edge& a, Edge& b) {
 	return 0.0f;
 }
 
-bool TsVoronoi::Edge::Intersect(Edge& a, FVector2D& point) {// 
-	float d = _Intersect(*this, a);
+bool TsVoronoi::Edge::Intersect(const Edge& a, FVector2D& point) const 
+{ 
+	float d = intersect(*this, a);
 	if (d != 0.0f) {
 		point = GetPoint(d);
 		return true;
 	}
 	return false;
+}
+
+float	TsVoronoi::Edge::GetDistance(const FVector2D& p) const 
+{
+	return (TsUtil::NearPoint(mP, mP + mD, p) - p).Length();
 }
 
 

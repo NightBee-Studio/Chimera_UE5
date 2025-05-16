@@ -36,7 +36,6 @@ public:
 	virtual void	ResetRemap();
 	virtual float	Remap(float val) const ;
 	virtual void	UpdateRemap(const FVector2D& p);
-	virtual void	UpdateRemap(float v);
 
 	virtual float	GetValue(const FVector2D& p) = 0;	// world-coord
 };

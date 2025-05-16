@@ -2,14 +2,15 @@
 
 #include "CoreMinimal.h"
 
-#include "../Util/TsImageMap.h"
+//#include "../Util/TsImageMap.h"
 
+#include "TsBiomeSurface.h"
 
 
 // determine the shape of the Site itself.
 
 class TsBiomeSite
-	: public TsValueMap
+	: public TsBiomeSrfFunc
 {
 private:
 	struct Circle : public FVector2D {
@@ -27,12 +28,14 @@ public:
 	float			mX, mY;
 	TArray<Circle>	mCircles;	// 
 
+//	TsValueMap		mBiomeType
+
 	//------------------------------------------------------- Island
 private:
 	void			CreateChild(const Circle& c, float radius, float angl, int count);
 
 public:
-	TsBiomeSite() : TsValueMap(){}
+	TsBiomeSite();
 	virtual			~TsBiomeSite() {}
 
 	void			Generate(float _x, float _y, float radius);

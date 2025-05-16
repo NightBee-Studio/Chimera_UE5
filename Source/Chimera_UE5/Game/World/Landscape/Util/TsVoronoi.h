@@ -40,29 +40,33 @@ public:
 		Edge(const FVector2D& p0, const FVector2D& p1, int f = EFlag::None);
 		Edge(float x, float y, float _dx, float _dy, int f = EFlag::None);
 
-		static float _Intersect(Edge& a, Edge& b);
-		bool		Intersect(Edge& a, FVector2D& point);
+		//static float _Intersect(const Edge& a, const Edge& b) const ;
+		bool		Intersect(const Edge& a, FVector2D& point) const ;
 
-		bool operator == (const Edge& a) const	{ return mP == a.mP && mD == a.mD; }
+		bool operator == (const Edge& a) const		{ return mP == a.mP && mD == a.mD; }
 
-		FVector2D	GetPoint(float d) const		{ return mP + d * mD; }
-		float		Cross(const FVector2D& v)	{ return mD.X * (v.Y - mP.Y) - mD.Y * (v.X - mP.X); }
+		FVector2D	GetPoint(float d) const			{ return mP + d * mD; }
+		float		Cross(const FVector2D& v) const	{ return mD.X * (v.Y - mP.Y) - mD.Y * (v.X - mP.X); }
 		void		SetVoronoi(TsVoronoi* ed)	{ mShared = ed; }
+		float		GetDistance(const FVector2D& p) const ;
 	};
 
 public:
 	TArray<Edge>		mEdges;
 	FVector2D			mMin, mMax;
-
+	void*				mOwner ;
 public:
 	TsVoronoi()
 		: FVector2D(0, 0)
 		, mMin( 1000000.0f,  1000000.0f)
-		, mMax(-1000000.0f, -1000000.0f) {}
-	TsVoronoi(float x, float y)
+		, mMax(-1000000.0f, -1000000.0f)
+		, mOwner(nullptr) {}
+
+	TsVoronoi(float x, float y, void *owner)
 		: FVector2D(x, y)
 		, mMin( 1000000.0f,  1000000.0f)
-		, mMax(-1000000.0f, -1000000.0f) {}
+		, mMax(-1000000.0f, -1000000.0f)
+		, mOwner(owner) {}
 
 	bool		IsInside(const FVector2D& p) const ;
 
@@ -212,7 +216,7 @@ public:
 
 			{// adjacent voronoi
 				for (auto& ea : v.mEdges) {
-					for (auto& vb : voronois) {
+					for (auto& vb : voronoi_list) {
 						if (v == vb) continue;
 						bool done = false;
 						for (auto& eb : vb.mEdges) {
