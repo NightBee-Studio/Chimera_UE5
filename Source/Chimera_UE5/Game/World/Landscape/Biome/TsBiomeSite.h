@@ -10,7 +10,7 @@
 // determine the shape of the Site itself.
 
 class TsBiomeSite
-	: public TsBiomeSrfFunc
+	: public TsBiomeSFunc
 {
 private:
 	struct Circle : public FVector2D {

@@ -7,29 +7,28 @@
 
 TsBiome::TsBiome(float x, float y)
 	: TsVoronoi(x, y, this)
-	, mSType(EBiomeSType::E_SurfNone)
-	, mMType(EBiomeMType::E_Soil)
+	, mSType( EBiomeSType::E_SurfNone )
+	, mMType( EBiomeMType::E_Soil     )
 {
 }
 
-
 float	TsBiome::GetMask(const FVector2D& p)
 {
-//	if ( IsInside(p) ) return 1;
-	float h = 0;
-	for (auto &ed : mEdges) {
-		float hc;
-		hc  = ed.GetDistance(p) / 100;
-		hc  = FMath::Clamp(hc, 0, 0.5f);
-		hc *= (IsInside(p) ? 1 : -1);
-		hc += 0.5f;
+	float msk = 0 ;
 
-		//float hc =  - ed.GetDistance(p) / 100;
-		//hc = FMath::Pow(FMath::Clamp(hc, 0, 1), 2.0f);
-
-		h = FMath::Max(hc, h);
+	if ( IsInside( p ) ){
+		msk = 1.0f ;
+		ForeachEdge(
+			[&](const TsVoronoi::Edge& e) {
+				float m = FMath::Clamp(e.GetDistance(p) / 100, 0.0f, 1.0f);
+				if ( e.mShared && e.mShared->mOwner ) {		// check the adjecent voronois.
+					TsBiome* nxt = (TsBiome*)e.mShared->mOwner;
+					if (nxt->GetSType() == GetSType()) m = msk;
+				}
+				msk = FMath::Min(m, msk);
+			} );
 	}
-	return h;
+	return msk;
 }
 
 

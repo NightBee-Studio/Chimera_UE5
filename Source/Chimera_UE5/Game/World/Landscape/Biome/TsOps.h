@@ -9,12 +9,12 @@ struct TsOp {
 		TsOp*		op;
 		float			f;
 		int				i;
-		TsBiomeMatFunc*	task;
+		TsBiomeMFunc*	task;
 
 		Val(float         _v) : f   (_v) {}
 		Val(int           _v) : i   (_v) {}
 		Val(TsOp*    _v) : op  (_v) {}
-		Val(TsBiomeMatFunc* _v) : task(_v) {}
+		Val(TsBiomeMFunc* _v) : task(_v) {}
 	};
 	TArray<Val>				mArgs;
 
@@ -83,7 +83,7 @@ struct TsOp_PixelRange : public TsOp {
 };
 
 struct TsOp_ExecTask : public TsOp {
-	TsOp_ExecTask(TsBiomeMatFunc* task) : TsOp({ Val(task) }) {}
+	TsOp_ExecTask(TsBiomeMFunc* task) : TsOp({ Val(task) }) {}
 	virtual ~TsOp_ExecTask() {}
 	bool Is(const FVector2D& p) const override {
 		gMatResult = mArgs[0].task->GetMaterial(p);

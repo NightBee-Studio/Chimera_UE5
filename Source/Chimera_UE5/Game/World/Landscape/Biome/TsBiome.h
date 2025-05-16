@@ -73,11 +73,6 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Models"))
 	TArray<FTsBiomeModel>	Models;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "SurfaceFuncs"))
-	//TArray<TsBiomeSrfFunc*>	mSurfaceFuncs;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "MaterialFuncs"))
-	//TArray<TsBiomeMatFunc*>	mMaterialFuncs;
 };
 
 //
@@ -97,7 +92,6 @@ class TsBiome
 {
 //private:
 public:
-
 	EBiomeSType		mSType;
 	EBiomeMType		mMType;
 	EBiomeGType		mGType;// ç°âÒÇÕÇ»Çµ
@@ -110,12 +104,9 @@ public:
 	EBiomeMType		GetMType()					{ return mMType; }
 	void			SetSType(EBiomeSType ty)	{ mSType = ty; }
 	EBiomeSType		GetSType()					{ return mSType; }
-	void			SetOwner()					{ mOwner = this; 
-	UE_LOG(LogTemp, Log, TEXT("Biome Owner [%p][%d,%d]"), this, (int)X, (int)Y);
-	}
+	void			SetOwner()					{ mOwner = this; }
 
 	float			GetMask(const FVector2D& p);
-
 };
 
 //class TsBiomeGroup

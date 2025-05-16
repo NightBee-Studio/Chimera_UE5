@@ -134,7 +134,7 @@ float	 TsBiomeSite::GetValue(const FVector2D &p )
 }
 
 TsBiomeSite::TsBiomeSite()
-	: TsBiomeSrfFunc(TsNoiseParam(1.0f, 0, 0, 0), 1.0f )
+	: TsBiomeSFunc(TsNoiseParam(1.0f, 0, 0, 0), 1.0f )
 	//: TsValueMap()
 {}
 
