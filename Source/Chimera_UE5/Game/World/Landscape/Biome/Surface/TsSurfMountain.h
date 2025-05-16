@@ -4,13 +4,13 @@
 
 
 class TsSurfaceMountain
-	: public TsBiomeSrfFunc {
+	: public TsBiomeSFunc {
 private:
 	float				mPowerFactor ;
 
 public:
 	TsSurfaceMountain(const TsNoiseParam& cnf, float h, float pw = 2.0f)
-		: TsBiomeSrfFunc(cnf, h), mPowerFactor(pw) {
+		: TsBiomeSFunc(cnf, h), mPowerFactor(pw) {
 		//gInstance = this;
 	}
 

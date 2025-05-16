@@ -16,13 +16,13 @@ enum EOp {
 	EOp_Min,
 };
 
-class	TsBiomeSrfFunc
+class	TsBiomeSFunc
 	: public TsNoiseMap {
 protected:
 	float			mHeight;
 	EOp				mOp;
 public:
-	TsBiomeSrfFunc( const TsNoiseParam& cnf, float h = 1)
+	TsBiomeSFunc( const TsNoiseParam& cnf, float h = 1)
 		: TsNoiseMap(cnf), mHeight(h), mOp(EOp_Add) {}
 
 public:
@@ -41,26 +41,23 @@ public:
 
 struct TsOp;
 
-class	TsBiomeMatFunc {
+class	TsBiomeMFunc {
 protected:
-	struct Layer {
+	struct Layer {						// maybe need to be refactored....
 		EMaterialType		mMaterialType;
 		float				mOccupancy;
 		TsOp*				mOp;
-		float				mMin, mMax;	//// this will be updated...
+		float				mMin, mMax;	// this will be updated...
 	};
-	struct Config {
+	struct Config {						// maybe need to be refactored....
 		EBiomeMapType		mMapSource;
 		TArray<Layer>		mLayers;
 	};
 	TArray<Config>			mConfigs;
 
 public:
-	TsBiomeMatFunc(TArray<Config> cnfs)
-		: mConfigs(cnfs) {
-	}
-	~TsBiomeMatFunc() {
-	}
+	TsBiomeMFunc(TArray<Config> cnfs)
+		: mConfigs(cnfs) {}
 
 	TsMaterialValue	GetMaterial(const FVector2D& p);
 };
@@ -69,32 +66,20 @@ public:
 class	TsBiomeSurface {
 public:
 //private:
-	TArray<TsBiomeSrfFunc*>	mSurfaceFuncs;
-	TArray<TsBiomeMatFunc*>	mMaterialFuncs;
-	
-	//TsImageMap<float>*		mMask;			// going to be depricated
-
-	//TArray<TsBiomeGroup>	mGroups;		// going to be depricated
-	//int						mGroupNum;		// going to be depricated
+	TArray<TsBiomeSFunc*>	mSFuncs;
+	TArray<TsBiomeMFunc*>	mMFuncs;
 
 public:
 	TsBiomeSurface(
-		  TArray<TsBiomeSrfFunc*> s_funcs
-		, TArray<TsBiomeMatFunc*> m_funcs)
-		: mSurfaceFuncs(s_funcs)
-		, mMaterialFuncs(m_funcs)
-		//, mMask(nullptr)
-		//, mGroupNum(group_num)	
+			TArray<TsBiomeSFunc*> s_funcs
+		,	TArray<TsBiomeMFunc*> m_funcs
+		)
+		: mSFuncs(s_funcs)
+		, mMFuncs(m_funcs)
 	{}
 
 public:
-	//TsImageMap<float>*		CreateMask(int reso, const FBox2D& bound);
-
-	float					GetHeight  ( TsBiome *b, const FVector2D& p );		// world-coord
+	float					GetHeight  ( TsBiome *b, const FVector2D& p );	// world-coord
 	TsMaterialValue			GetMaterial( TsBiome* b, const FVector2D& p );	// world-coord
-	void					RemapHeight(TsBiome* b, const FVector2D& p);	// world-coord
-
-	//void					ForeachGroup();
-
-	//void					GatherBiome(TsBiome* b);
+	void					RemapHeight( TsBiome* b, const FVector2D& p );	// world-coord
 };

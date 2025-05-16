@@ -4,10 +4,10 @@
 
 
 class TsSurfaceField
-	: public TsBiomeSrfFunc {
+	: public TsBiomeSFunc {
 public:
 	TsSurfaceField(const TsNoiseParam& cnf, float h = 0.2f)
-		: TsBiomeSrfFunc(cnf, h) {}
+		: TsBiomeSFunc(cnf, h) {}
 
 	float	GetValue(const FVector2D& p) override;
 

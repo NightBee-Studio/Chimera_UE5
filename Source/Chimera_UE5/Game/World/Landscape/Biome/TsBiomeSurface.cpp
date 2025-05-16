@@ -27,13 +27,6 @@ void	TsBiomeSrfFunc::RemapHeight(TsBiome* b, const FVector2D& p)
 
 // -------------------------------- TsBiomeSurface  --------------------------------
 
-//TsImageMap<float>* TsBiomeSurface::CreateMask(int reso, const FBox2D& bound)
-//{
-//	if (mMask != nullptr) delete mMask;
-//	mMask = new TsImageMap<float>( reso, reso, &bound );
-//	return mMask;
-//}
-
 void			TsBiomeSurface::RemapHeight(TsBiome* b, const FVector2D& p)
 {
 	for (auto s : mSurfaceFuncs) {
