@@ -23,12 +23,46 @@ float	TsBiome::GetMask(const FVector2D& p)
 				float m = FMath::Clamp(e.GetDistance(p) / 100, 0.0f, 1.0f);
 				if ( e.mShared && e.mShared->mOwner ) {		// check the adjecent voronois.
 					TsBiome* nxt = (TsBiome*)e.mShared->mOwner;
-					if (nxt->GetSType() == GetSType()) m = msk;
+					if (nxt->GetSType() >= GetSType()) m = msk;
 				}
 				msk = FMath::Min(m, msk);
 			} );
 	}
 	return msk;
+}
+
+
+void TsBiome::GetBlend(TMap<TsBiome*,float>& blend_map, const FVector2D& p)
+{
+	blend_map.Empty();
+
+//	TMap<EBiomeSType, float > blend_map;
+	//float bmax = 0.0f;
+	//float bsum = 0.0f;
+	ForeachEdge(
+		[&](const TsVoronoi::Edge& e) {
+			if (e.mShared && e.mShared->mOwner) {		// check the adjecent voronois.
+				float d = FMath::Pow(e.GetDistance(p)/100, 0.5f);
+				float r = FMath::Clamp(d, 0.0f, 1.0f);
+				if (r < 1.0f) {
+					TsBiome* nxt = (TsBiome*)e.mShared->mOwner;
+					if (nxt->GetSType() < GetSType()) {
+						blend_map.Emplace( nxt, 1-r );
+					}
+				}
+			}
+		});
+
+	//UE_LOG(LogTemp, Log, TEXT("BLMap[%d] --------------------"), blend_map.Num() );
+
+	//for (auto& bl : blend_map) {
+	//	UE_LOG(LogTemp, Log, TEXT("  [%d]%f"), bl.Key->GetSType(), bl.Value);
+	//}
+	
+	//for (auto& bl : blend_array) {
+	//	bl.mRatio = bmax * bl.mRatio / bsum;
+	//}
+	//blend_array.Add({ this, 1.0f - bmax });
 }
 
 

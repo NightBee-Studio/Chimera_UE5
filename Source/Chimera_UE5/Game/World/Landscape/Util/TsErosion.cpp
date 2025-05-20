@@ -1,4 +1,5 @@
 #include "TsErosion.h"
+#include "TsUtility.h"
 
 #include "CoreMinimal.h"
 
@@ -82,7 +83,7 @@ void TsErosion::Simulate( int cycles)
         // drop the rain-particle all over the world.
         for (int y = 0; y < mHeightMap->GetH(); y += DD) {
             for (int x = 0; x < mHeightMap->GetW(); x += DD) {
-                auto rand = [&](int v) { return v + FMath::RandRange(-DG, DG) ; } ;
+                auto rand = [&](int v) { return v + TsUtil::RandRange(-DG, DG) ; } ;
                 Particle( rand(x), rand(y) ).
                     Simulate( 1.2f, mHeightMap, mFlowMap, mPondMap) ;
             }

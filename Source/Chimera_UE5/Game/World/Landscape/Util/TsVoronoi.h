@@ -2,6 +2,7 @@
 
 #include <functional>
 #include "CoreMinimal.h"
+#include "TsUtility.h"
 
 
 // -------------------------------- TsVoronoi  --------------------------------
@@ -101,8 +102,7 @@ public:
 			float			voronoi_jitter
 		)	
 	{
-
-		UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Create Voronoi"));
+		UE_LOG(LogTemp, Log, TEXT("UTsLandscape::Create Voronoi   voronoi_jitter=%f voronoi_size=%f"), voronoi_jitter, voronoi_size);
 
 		{//-------------------------------------------- boundary
 			FVector2D
@@ -125,8 +125,8 @@ public:
 		{//-------------------------------------------- generate random site.
 			for (float x = boundary.Min.X; x < boundary.Max.X; x += voronoi_size) {
 				for (float y = boundary.Min.Y; y < boundary.Max.Y; y += voronoi_size) {
-					float px = x + FMath::RandRange(-voronoi_jitter, voronoi_jitter) * voronoi_size;
-					float py = y + FMath::RandRange(-voronoi_jitter, voronoi_jitter) * voronoi_size;
+					float px = x + TsUtil::RandRange(-voronoi_jitter, voronoi_jitter) * voronoi_size;
+					float py = y + TsUtil::RandRange(-voronoi_jitter, voronoi_jitter) * voronoi_size;
 
 					if ( boundary.IsInside(FVector2D(px, py)) ) {
 						voronois.Add(T(px, py));

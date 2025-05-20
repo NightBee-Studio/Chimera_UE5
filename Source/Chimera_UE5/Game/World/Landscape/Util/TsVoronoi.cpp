@@ -52,7 +52,7 @@ bool TsVoronoi::Edge::Intersect(const Edge& a, FVector2D& point) const
 
 float	TsVoronoi::Edge::GetDistance(const FVector2D& p) const 
 {
-	return (TsUtil::NearPoint(mP, mP + mD, p) - p).Length();
+	return (TsUtil::LinePoint(mP,mD,p) - p).Length();
 }
 
 

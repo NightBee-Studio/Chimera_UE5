@@ -72,7 +72,7 @@ TsMaterialValue	TsBiomeMFunc::GetMaterial(const FVector2D& p)
 
 // -------------------------------- TsBiomeSurface  --------------------------------
 
-void			TsBiomeSurface::RemapHeight(TsBiome* b, const FVector2D& p)
+void			TsBiomeSurface::UpdateRemap(TsBiome* b, const FVector2D& p)
 {
 	for (auto s : mSFuncs) {
 		s->RemapHeight(b, p);

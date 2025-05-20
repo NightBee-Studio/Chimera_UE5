@@ -107,13 +107,7 @@ public:
 	void			SetOwner()					{ mOwner = this; }
 
 	float			GetMask(const FVector2D& p);
+
+	void 			GetBlend(TMap<TsBiome*,float>& array, const FVector2D& p);
 };
-
-//class TsBiomeGroup
-//	: public TArray<TsBiome*>
-//{
-//
-//};
-
-typedef TArray<TsBiome*> TsBiomeGroup;
 

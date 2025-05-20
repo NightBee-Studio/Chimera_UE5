@@ -1,5 +1,6 @@
 
 #include "TsImageMap.h"
+#include "TsUtility.h"
 
 #include <stdio.h>
 
@@ -53,8 +54,8 @@ void	TsValueMap::UpdateRemap(const FVector2D& p)
 // -------------------------------- TsNoiseMap  --------------------------------
 void TsNoiseParam::Setup(int seed )
 {
-	if ( seed != -1) FMath::RandInit(seed);
-	mNoisePos = FVector2D(FMath::RandRange(0, 1024), FMath::RandRange(0, 1024));
+	//if (seed != -1) TsUtil::RandSeed(seed);
+	mNoisePos = FVector2D(TsUtil::RandRange(0, 1024), TsUtil::RandRange(0, 1024));
 }
 
 float	TsNoiseMap::GetValue(const FVector2D& p) {

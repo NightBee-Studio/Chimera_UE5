@@ -32,14 +32,14 @@ FVector2D TsBiomeSite::Circle::GetOutline(int i) {
 
 #define N 128
 void	TsBiomeSite::CreateChild(  const Circle& c, float radius, float angl, int count) {
-	float a = FMath::RandRange(0.7f, 1.2f);
+	float a = TsUtil::RandRange(0.7f, 1.2f);
 	float r = radius * a;
 	Circle cc (	c + c.r * TsUtil::SinCosPos(angl), r, N * a);
 	mCircles.Add(cc);
 	if ( count > 0 ) {
-		angl += (count & 2) ?	FMath::RandRange(-40, 40) :
-				(count & 1) ?	FMath::RandRange(-40,-20) :
-								FMath::RandRange( 20, 40) ;
+		angl += (count & 2) ?	TsUtil::RandRange(-40, 40) :
+				(count & 1) ?	TsUtil::RandRange(-40,-20) :
+								TsUtil::RandRange( 20, 40) ;
 		CreateChild(cc, radius, angl, count - 1);
 	}
 }
@@ -50,16 +50,16 @@ void	TsBiomeSite::Generate(float _x, float _y, float radius)
 	mY = _y;
 
 	{// create main circles -----------------------------------------------------------------
-		float ra = FMath::RandRange(1.0f, 1.5f);
+		float ra = TsUtil::RandRange(1.0f, 1.5f);
 		Circle center(FVector2D(mX, mY), radius * ra, N * ra);
 		mCircles.Add(center);
 
 		float angl = 0;
-		CreateChild(center, radius, angl, FMath::RandRange(1, 2));
-		angl += FMath::RandRange(90.0f, 120.0f);
-		CreateChild(center, radius, angl, FMath::RandRange(1, 2));
-		angl += FMath::RandRange(90.0f, 120.0f);
-		CreateChild(center, radius, angl, FMath::RandRange(1, 2));
+		CreateChild(center, radius, angl, TsUtil::RandRange(1, 2));
+		angl += TsUtil::RandRange(90.0f, 120.0f);
+		CreateChild(center, radius, angl, TsUtil::RandRange(1, 2));
+		angl += TsUtil::RandRange(90.0f, 120.0f);
+		CreateChild(center, radius, angl, TsUtil::RandRange(1, 2));
 	}
 }
 
