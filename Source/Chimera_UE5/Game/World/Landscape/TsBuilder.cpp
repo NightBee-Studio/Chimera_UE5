@@ -25,7 +25,7 @@ public:
 
 	TsMapOutput							mMapOutParam;
 	TsHeightMap*						mHeightMap;
-	TsHeightMap*						mNormalMap;
+	TsNormalMap*						mNormalMap;
 	TsMaterialMap*						mMaterialMap;
 
 private:
@@ -57,22 +57,19 @@ private:
 public:
 	void			Debug(UWorld* world)
 	{
-//		SurfaceMountain::Debug(world);
-
 		mShape->Debug(world);
 
 		for (auto &b : mBiomes) {
 			FColor c(0, 0, 0);
 			switch (b.GetSType()) {
-			case EBiomeSType::E_SurfNone:		c = FColor(0, 0, 180); break;
+			case EBiomeSType::E_SurfNone:		c = FColor(  0,   0, 180); break;
 			case EBiomeSType::E_SurfLake:		c = FColor(100, 120, 255); break;
-			case EBiomeSType::E_SurfField:		c = FColor(125, 255, 0); break;
-			case EBiomeSType::E_SurfMountain:	c = FColor(120, 60, 20); break;
+			case EBiomeSType::E_SurfField:		c = FColor(125, 255,   0); break;
+			case EBiomeSType::E_SurfMountain:	c = FColor(120,  60,  20); break;
 			}
 			b.Debug(world, c);
 		}
 	}
-
 
 	Builder_Work()
 		: mShape( new TsBiomeSite() )
@@ -120,7 +117,7 @@ public:
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group"));
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: BiomeMap creating ..."));
 
-			heightmap_reso = 256;
+			heightmap_reso = 1024 ;
 			if (heightmap_reso == 0) heightmap_reso = 512;
 #define IMG_SIZE heightmap_reso
 
@@ -137,8 +134,8 @@ public:
 				},
 				{ EBiomeSType::E_SurfField,
 					TsBiomeSurface({
-							new TsSurfaceField	  (TsNoiseParam(1.0f,0    ,0   ,0    ), 10.0f     ),
-							new TsSurfacePondNoise(TsNoiseParam(0.8f,0.01f,0.2f,0.03f), 0.5f, 0.4f),
+							new TsSurfaceField	  (TsNoiseParam(1.00f,0    ,0    ,0    ), 10.0f     ),
+							new TsSurfacePondNoise(TsNoiseParam(0.40f,0.01f,0.15f,0.03f), 0.5f, 0.4f),
 						},{
 						})
 				},
@@ -146,14 +143,33 @@ public:
 					TsBiomeSurface({
 							new TsSurfaceLake	  (TsNoiseParam(1.0f, 0.001f, 0.2f, 0.003f), -10.0f	),
 						},{
+							new TsBiomeMFunc({
+								{	EBiomeMapType::E_Plant,
+									{	{ EMaterialType::MT_LakeSoil_A , 1.0f, nullptr, },
+									}
+								}
+							}),
 						})
 				},
 				{ EBiomeSType::E_SurfMountain,
 					TsBiomeSurface({
 							new TsSurfaceMountain (TsNoiseParam(1.0f , 0.001f, 0.2f, 0.003f), 20       ),
-							new TsSurfacePondNoise(TsNoiseParam(0.8f , 0.010f, 0.2f, 0.030f), 0.5f, 0.5f),
-							new TsSurfaceNoise    (TsNoiseParam(10.0f, 0     , 0   , 0     ), 2.0f, 1.4f),
+							//new TsSurfacePondNoise(TsNoiseParam(0.8f , 0.010f, 0.2f, 0.030f), 0.5f, 0.5f),
+							//new TsSurfaceNoise    (TsNoiseParam(10.0f, 0     , 0   , 0     ), 2.0f, 1.4f),
 						},{
+							new TsBiomeMFunc({
+								{	EBiomeMapType::E_Mountain,
+									{	{ EMaterialType::MT_Grass_A, 0.50f, nullptr, },//new Op_PixelLt(BiomeMapType::E_Flow,0.3f)
+										{ EMaterialType::MT_Grass_B, 0.35f, nullptr, },//new Op_PixelLt(BiomeMapType::E_Flow,0.3f)
+										{ EMaterialType::MT_Soil_B , 0.10f, nullptr, },
+										{ EMaterialType::MT_Soil_A , 0.05f, nullptr, },
+									},
+								},
+								{	EBiomeMapType::E_Flow,
+									{	{ EMaterialType::MT_Moss_B , 1.10f, nullptr, },
+									},
+								},
+							}),
 						})
 				},
 			} ;
@@ -199,51 +215,105 @@ public:
 			}
 
 			{///---------------------------------------- Generate Mapping
-				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: HeightMap exporting..."));
+				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Generate Mappings ..."));
 				int		reso  = mMapOutParam.LocalReso();
 				FBox2D	bound = mMapOutParam.LocalBound(mBoundingbox);
 
 				mHeightMap    = new TsHeightMap  (reso, reso, &bound);
+				mNormalMap	  = new TsNormalMap  (reso, reso, &bound);
 				mMaterialMap  = new TsMaterialMap(reso, reso, &bound);
 
+				TsBiomeMap* norm_map = new TsBiomeMap(reso, reso, &bound);
+				TsBiomeMap* flow_map = new TsBiomeMap(reso, reso, &bound);
+				TsBiomeMap* pond_map = new TsBiomeMap(reso, reso, &bound);
+				TsBiomeMap::AddBiomeMap(EBiomeMapType::E_Normal, norm_map);	//norm
+				TsBiomeMap::AddBiomeMap(EBiomeMapType::E_Flow  , flow_map);	//flow
+				TsBiomeMap::AddBiomeMap(EBiomeMapType::E_Pond  , pond_map);	//pond
+
 				{///---------------------------------------- HeightMap
-					TMap<TsBiome*,float> blend_map;
-					mHeightMap->ForeachPixel(
-						[&](int px, int py) {
-							FVector2D p = mHeightMap->GetWorldPos(px, py);
-							if (mHeightMap->IsWorld(p)) {
-								TsBiome* b = SearchBiome(p);
-								if (b) {
-									mSurfaces[b->GetSType()].UpdateRemap(b, p);
-									b->GetBlend(blend_map, p);
-									for (auto& bl : blend_map) {
-										mSurfaces[bl.Key->GetSType()].UpdateRemap(b, p);
+					{///--------------------------------------------------- Create BaseHeightmap
+						UE_LOG(LogTemp, Log, TEXT("   Base Heightmap start ...."));
+						mHeightMap->ForeachPixel(
+							[&](int px, int py) {
+								FVector2D p = mHeightMap->GetWorldPos(px, py);
+								if (mHeightMap->IsWorld(p)) {
+									if (TsBiome* b = SearchBiome(p)) {
+										mSurfaces[b->GetSType()].UpdateRemap(b, p);
+										if (b->GetSType() == EBiomeSType::E_SurfMountain || b->GetSType() == EBiomeSType::E_SurfLake) {
+											mSurfaces[EBiomeSType::E_SurfField].UpdateRemap(b, p);
+										}
 									}
 								}
-								mShape->UpdateRemap(p);
-							}
-						});
-					mHeightMap->ForeachPixel(
-						[&](int px, int py) {
-							FVector2D p = mHeightMap->GetWorldPos(px, py);
-							TsBiome*  b = SearchBiome(p);
-							if ( b ) {
-								float h = mSurfaces[b->GetSType()].GetHeight(b, p);
-								if (b->GetSType() == EBiomeSType::E_SurfMountain || b->GetSType() == EBiomeSType::E_SurfLake) {
-									h += mSurfaces[EBiomeSType::E_SurfField].GetHeight(b, p);
+							} );
+						UE_LOG(LogTemp, Log, TEXT("   Base Heightmap remap done."));
+						mHeightMap->ForeachPixel(
+							[&](int px, int py) {
+								FVector2D p = mHeightMap->GetWorldPos(px, py);
+								if (TsBiome* b = SearchBiome(p)) {
+									float h = mSurfaces[b->GetSType()].GetHeight(b, p);
+									if (b->GetSType() == EBiomeSType::E_SurfMountain || b->GetSType() == EBiomeSType::E_SurfLake) {
+										h += mSurfaces[EBiomeSType::E_SurfField].GetHeight(b, p);
+									}
+//if (b->GetSType() == EBiomeSType::E_SurfMountain)
+									mHeightMap->SetPixel(px, py, h);
 								}
-								mHeightMap->SetPixel(px, py, h );
-							}
-						});
-					UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: HeightMap done."));
+							});
+						mHeightMap->Normalize();		// normalize to 0-1
 
-					int out_reso = mMapOutParam.reso;
-					int out_x    = mMapOutParam.LocalX();
-					int out_y    = mMapOutParam.LocalY();
-					mHeightMap->SaveAll(out_x, out_y, out_reso, out_reso);
+						UE_LOG(LogTemp, Log, TEXT("   Base Heightmap done."));
+					}
+
+					{///--------------------------------------------------- Erosion
+						UE_LOG(LogTemp, Log, TEXT("   Erosion start..."));
+
+						erode_cycle = 1;
+						TsErosion( mHeightMap, flow_map, pond_map ).Simulate( erode_cycle );
+
+						UE_LOG(LogTemp, Log, TEXT("   Erosion done."));
+					}
+
+					{///--------------------------------------------------- Normal
+						UE_LOG(LogTemp, Log, TEXT("   Normal start..."));
+
+						mHeightMap->ForeachPixel(
+							[&](int px, int py) {
+								mNormalMap->SetPixel(px, py, mHeightMap->CalcNormal(px, py, 4));
+							});
+
+						UE_LOG(LogTemp, Log, TEXT("   Normal done."));
+					}
+
+					mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16     );
+					mNormalMap->Save("NormalMap.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8);
+
+					UE_LOG(LogTemp, Log, TEXT("    HeightMap done."));
 				}
-			}
 
+				{///--------------------------------------------------- MaterialMap
+
+				}
+
+				{///--------------------------------------------------- File Exporting 
+					UE_LOG(LogTemp, Log, TEXT("    File exporting ..."));
+
+					TsImageCore::SetDirectory("Resources\\World\\Landscape\\Surface\\", mMapOutParam.x, mMapOutParam.y);
+
+					moist_map->ForeachPixel([&](int px, int py) {
+						moist_map->SetPixel(px, py, moist_map->GetValue( moist_map->GetWorldPos(px, py) ));
+						});
+					surfc_map->ForeachPixel([&](int px, int py) {
+						surfc_map->SetPixel(px, py, surfc_map->GetValue(surfc_map->GetWorldPos(px, py)));
+						});
+
+					moist_map->Save("BM_MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					surfc_map->Save("BM_SurfcMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					flow_map ->Save("BM_FlowMap.dds" , EImageFile::Dds, EImageFormat::FormatL16);
+					pond_map ->Save("BM_PondMap.dds" , EImageFile::Dds, EImageFormat::FormatL16);
+
+					UE_LOG(LogTemp, Log, TEXT("    File exporting done."));
+				}
+				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Generate Mappings  done."));
+			}
 		}
 	}
 };

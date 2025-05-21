@@ -11,6 +11,7 @@
 
 
 
+#define PROJPATH	"D:\\Works\\Projects\\Chimera\\01_Project\\Chimera_UE5\\Content\\"
 
 
 // -------------------------------- TsMapOutput  --------------------------------
@@ -43,6 +44,11 @@ float	TsValueMap::Remap(float val) const
 	return  (mMax - mMin) > 0 ? (val - mMin) / (mMax - mMin) : 1;
 }
 
+void	TsValueMap::RemapDone() 
+{
+	mMax = mMin = 0 ;
+}
+
 void	TsValueMap::UpdateRemap(const FVector2D& p) 
 {
 	float v = GetValue(p) ;
@@ -64,28 +70,11 @@ float	TsNoiseMap::GetValue(const FVector2D& p) {
 }
 
 
-// -------------------------------- TsImageMap  --------------------------------
+// -------------------------------- TsImageCore  --------------------------------
 
-float	TsImageCore::gSx = 0;
-float	TsImageCore::gSY = 0;
 
-FString TsImageCore::gDirName;
-
-#define PROJPATH	"D:\\Works\\Projects\\Chimera\\01_Project\\Chimera_UE5\\Content\\"
-void	TsImageCore::SetDirectory(const FString& path, int no_x, int no_y)
-{
-	gDirName = PROJPATH + path;
-	if (no_x >= 0 && no_y >= 0) {
-		gDirName += FString::Printf(TEXT("%02d_%02d"), no_x, no_y);
-	}
-	gDirName += FString("\\");
-
-	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
-	if (!pf.DirectoryExists(*gDirName)) {		// Directory Exists?
-		pf.CreateDirectory(*gDirName);
-	}
-}
-
+// Format                                    -------------------------------- BMP 
+//
 struct	BITMAPFILEHEADER {	// BMP struct size will be 16, but Bmp-Format must be 14...
 	char    bfType[2];
 	int		bfSize;
@@ -109,6 +98,8 @@ struct	BITMAPINFOHEADER {
 };
 
 
+// Format                                    -------------------------------- PNG 
+//
 struct	PNGTYPE {	// BMP struct size will be 16, but Bmp-Format must be 14...
 	UINT8    pnType[8];
 };
@@ -131,6 +122,8 @@ struct	PNGChunkEnd {
 };
 
 
+// Format                                    -------------------------------- DDS
+//
 struct DDSHEADER {
 	DWORD   dwMagic				;// == í‚É 0x20534444  ' SDD'
 	DWORD   dwSize				;// == í‚É 124
@@ -224,12 +217,12 @@ int		TsImageCore::Load(const FString& fname, EImageFile fmt) {
 int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat format, int x, int y, int w, int h ) const {
 	if (w == 0) w = mW;
 	if (h == 0) h = mH;
+	UE_LOG(LogTemp, Log, TEXT("        Save[%hs]    xy=(%d,%d) w,h=%d %d"), TCHAR_TO_UTF8(*fname), x, y, w, h);
 
 	if (format & FmtDebug) {
 		UKismetSystemLibrary::PrintString(nullptr, fname, true, true, FColor::Red, 5.0f, TEXT("None"));
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("TsImageCore::Save xy=(%d,%d)   w,h=%d %d"), x, y, w, h);
 
 	FString	path = gDirName + fname;
 	FILE* fp;
@@ -301,6 +294,10 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 					pn_header.pnColorType = 6;
 					pn_header.pnDepth = GetStride(format) * 8;
 					break;
+				case EImageFormat::FormatB8G8R8:
+					pn_header.pnColorType = 2;
+					pn_header.pnDepth = GetStride(format) * 8;
+					break;
 				case EImageFormat::FormatR8:
 				case EImageFormat::FormatR16:
 				case EImageFormat::FormatR32:
@@ -316,11 +313,11 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 				fwrite(&pn_head_chunk, sizeof(PNGChunkBegin), 1, fp);
 				fwrite(&pn_header.pnWidth       , sizeof(UINT32), 1, fp);
 				fwrite(&pn_header.pnHeight      , sizeof(UINT32), 1, fp);
-				fwrite(&pn_header.pnDepth       , sizeof(UINT8), 1, fp);
-				fwrite(&pn_header.pnColorType   , sizeof(UINT8), 1, fp);
-				fwrite(&pn_header.pnCompressType, sizeof(UINT8), 1, fp);
-				fwrite(&pn_header.pnFilterType  , sizeof(UINT8), 1, fp);
-				fwrite(&pn_header.pnInteraceType, sizeof(UINT8), 1, fp);
+				fwrite(&pn_header.pnDepth       , sizeof(UINT8 ), 1, fp);
+				fwrite(&pn_header.pnColorType   , sizeof(UINT8 ), 1, fp);
+				fwrite(&pn_header.pnCompressType, sizeof(UINT8 ), 1, fp);
+				fwrite(&pn_header.pnFilterType  , sizeof(UINT8 ), 1, fp);
+				fwrite(&pn_header.pnInteraceType, sizeof(UINT8 ), 1, fp);
 				fwrite(&pn_crc, sizeof(PNGChunkEnd), 1, fp);
 
 				fwrite(&pn_data_chunk, sizeof(PNGChunkBegin), 1, fp);
@@ -330,7 +327,6 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 
 				fwrite(&pn_end_chunk , sizeof(PNGChunkBegin), 1, fp);
 				fwrite(&pn_crc, sizeof(PNGChunkEnd), 1, fp);
-			//	UE_LOG(LogTemp, Log, TEXT("SaveFile done image  size=%d  BMPHEAD=%d   BMPINFO=%d  ImgOff=%d"), bm_info.biSizeImage, sizeof(BITMAPFILEHEADER), sizeof(BITMAPINFOHEADER), imgoffs);
 			}
 			break;
 		}
@@ -341,10 +337,30 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 }
 
 
+float	TsImageCore::gSx = 0;
+float	TsImageCore::gSY = 0;
+
+FString TsImageCore::gDirName;
+
+void	TsImageCore::SetDirectory(const FString& path, int no_x, int no_y)
+{
+	gDirName = PROJPATH + path;
+	if (no_x >= 0 && no_y >= 0) {
+		gDirName += FString::Printf(TEXT("%02d_%02d"), no_x, no_y);
+	}
+	gDirName += FString("\\");
+
+	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
+	if (!pf.DirectoryExists(*gDirName)) {		// Directory Exists?
+		pf.CreateDirectory(*gDirName);
+	}
+}
+
 
 int			TsImageCore::GetStride(EImageFormat format) {
 	switch (format & EImageFormat::FmtMask) {
 	case EImageFormat::FormatB8G8R8A8:
+	case EImageFormat::FormatB8G8R8:	// no alpha
 	case EImageFormat::FormatG16R16:
 	case EImageFormat::FormatR32:
 	case EImageFormat::FormatF32:	return 4;
@@ -380,16 +396,19 @@ bool		TsImageCore::IsWorld(const FVector2D& p) const
 	return mWorld->IsInside(p);
 }
 
-void	TsImageCore::ForeachPixel( std::function< void(int,int) > func )
+void		TsImageCore::ForeachPixel( std::function< void(int,int) > func, int inc )
 {
-	for (int py = 0; py < mH ; py++) {
-		for (int px = 0; px < mW ; px++) {
+	for (int py = 0; py < mH ; py += inc) {
+		for (int px = 0; px < mW ; px += inc) {
 			func( px, py ) ;
 		}
 	}
 }
 
-int		TsImageMap<int>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
+
+// -------------------------------- TsImageMap  --------------------------------
+
+int			TsImageMap<int>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
 {
 	for (int y = 0; y < h; y++) {
 		for (int x = 0; x < w; x++) {
@@ -413,38 +432,70 @@ int		TsImageMap<int>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, i
 	return 0;
 }
 
-int		TsImageMap<float>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
+
+int			TsImageMap<float>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
 {
 	for (int y = 0; y < h; y++) {
 		for (int x = 0; x < w; x++) {
 			float f = GetPixel(sx+x, sy+y) ;
 
-			if (format & EImageFormat::FmtDebug) UE_LOG(LogTemp, Log, TEXT("(%d,%d) %f[%d]"), x,y, f, (int)RemapImage(f, 65535));
-
 			switch (format & EImageFormat::FmtMask) {
 			case EImageFormat::FormatF32:
+				if (format & EImageFormat::FmtDebug) UE_LOG(LogTemp, Log, TEXT("(%d,%d) %f[%f]"), x, y, f, RemapImage(f, 1));
 				f = RemapImage( f, 1 );
 				fwrite(&f, GetStride(format), 1, fp);
 				break;
 
 			default:
-				int v;
+				int v=0;
 				switch (format & EImageFormat::FmtMask) {
 				case EImageFormat::FormatG16R16:
 				case EImageFormat::FormatL16:
 				case EImageFormat::FormatR16:
-					v = RemapImage(f, 65535);
+					v = (int)RemapImage(f, 65535);
 					break;
 				case EImageFormat::FormatB8G8R8A8:
 					v = (int)RemapImage(f, 255) | 0xff000000;
 					break;
 				case EImageFormat::FormatR8:
-					v = RemapImage(f, 255);
+					v = (int)RemapImage(f, 255);
 					break;
 				default:
 					break;
 				}
+				if (v<0) v=0 ;
+				if (format & EImageFormat::FmtDebug) UE_LOG(LogTemp, Log, TEXT("(%d,%d) %f[%d]"), x, y, f, v);
+
 				fwrite(&v, GetStride(format), 1, fp);
+				break;
+			}
+		}
+	}
+	return 0;
+}
+
+
+int			TsImageMap<FVector>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
+{
+	for (int y = 0; y < h; y++) {
+		for (int x = 0; x < w; x++) {
+			FVector		v = GetPixel(sx + x, sy + y);
+			int			i = 0;
+			switch (format & EImageFormat::FmtMask) {
+			case EImageFormat::FormatG16R16:
+				i = ((int)(v.X * 32767.0f)) | ((int)(v.Z * 32767.0f) << 16);
+				fwrite(&i, GetStride(format), 1, fp);
+				break;
+			case EImageFormat::FormatB8G8R8A8:
+			case EImageFormat::FormatB8G8R8:			//break through
+				i = ((int)(v.X * 255.0f  )) | ((int)(v.Y * 255.0f  ) << 8) | ((int)(v.Z * 255.0f) << 16);
+				fwrite(&i, GetStride(format), 1, fp);
+				break;
+			case EImageFormat::FormatF32:
+			case EImageFormat::FormatL16:
+			case EImageFormat::FormatR16:
+			case EImageFormat::FormatR8:
+				//invalid format
 				break;
 			}
 		}

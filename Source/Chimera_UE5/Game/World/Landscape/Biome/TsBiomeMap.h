@@ -36,19 +36,19 @@ concept DerivedFromTsBiomeItem = std::is_base_of_v<TsBiomeItem, T>;
 
 
 enum EBiomeMapType {
-	BiomeMapNone,	//nothing
+	E_None,	//nothing
 
-	BiomeMapMoist,	//moisture
-	BiomeMapTempr,	//temperture
-	BiomeMapGenre,	//genre
-	BiomeMapFlow,	//flow
-	BiomeMapPond,	//Pond
+	E_Moist,	//moisture
+	E_Tempr,	//temperture
+	E_Genre,	//genre
+	E_Flow,	//flow
+	E_Pond,	//Pond
 
-	BiomeMapMountain,	//
-	BiomeMapSlope,	//
-	BiomeMapPlant,	//bigger = taller
+	E_Mountain,	//
+	E_Slope,	//
+	E_Plant,	//bigger = taller
 
-	BiomeMapNormal,	//
+	E_Normal,	//
 };
 
 
@@ -105,7 +105,6 @@ public:
 };
 
 
-
 class TsHeightMap
 	: public TsBiomeMap 
 {
@@ -113,14 +112,21 @@ public:
 	TsHeightMap(int w, int h, const FBox2D* bound) : TsBiomeMap(w, h, bound) {}
 	virtual ~TsHeightMap() {}
 
-	void	SaveAll(int x, int y, int w, int h);
-
 	FVector CalcNormal(
 		float x, float y,// texel coordinate
 		float grid_height = 1.0f,
 		float grid_size = 1.0f);
 
+	void	Normalize();
+
 	float	RemapImage(float v, float range ) const override;
+};
+
+class TsNormalMap
+	: public TsImageMap<FVector>
+{
+public:
+	TsNormalMap(int w, int h, const FBox2D* bound) : TsImageMap<FVector>(w, h, bound) {}
 };
 
 
@@ -177,4 +183,5 @@ public:
 	void			SetMaterial(int x, int y, const TsMaterialValue& mv);
 	void			SaveAll(int x, int y, int w, int h);
 };
+
 

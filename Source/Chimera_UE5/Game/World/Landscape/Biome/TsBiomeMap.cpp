@@ -47,7 +47,7 @@ void	TsBiomeMap::SetPixel(int x, int y, float v)
 }
 
 float	TsBiomeMap::RemapImage(float v, float range) const {
-	return range * (v - mMin) / (mMax - mMin);
+	return (mMax - mMin) > 0 ? range * (v - mMin) / (mMax - mMin) : v;
 }
 
 
@@ -122,14 +122,19 @@ FVector TsHeightMap::CalcNormal(float x, float y, float grid_height, float grid_
 #endif
 }
 
-float		TsHeightMap::RemapImage(float v, float range ) const { 
-	return range * (v - mMin)/(mMax-mMin) ;
+float	TsHeightMap::RemapImage(float v, float range ) const { 
+	return range * FMath::Clamp( (v - mMin)/(mMax-mMin), 0, 1 ) ;
 }
 
-void	TsHeightMap::SaveAll( int x, int y,int w, int h )
+void	TsHeightMap::Normalize()
 {
-	Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16, x, y, w, h);	//EImageFormat::FormatL16_Debug
+	ForeachPixel(
+		[&](int px, int py) {
+			SetPixel(px, py, TsValueMap::Remap(GetPixel(px, py)));
+		});
+	RemapDone();
 }
+
 
 
 
@@ -141,8 +146,6 @@ TsMaterialMap::TsMaterialMap(int w, int h, const FBox2D* bound)
 	, mOutAlphaMap(w, h, bound)
 {
 }
-
-
 
 void	TsMaterialMap::SetMaterialPixel(int x, int y)
 {
@@ -260,5 +263,4 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 	mOutAlphaMap.Save("mat_value000.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 	mOutIndexMap.Save("mat_index000.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 }
-
 

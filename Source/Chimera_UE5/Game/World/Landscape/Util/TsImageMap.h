@@ -35,6 +35,7 @@ public:
 
 	virtual void	ResetRemap();
 	virtual float	Remap(float val) const ;
+	void			RemapDone();
 	virtual void	UpdateRemap(const FVector2D& p);
 
 	virtual float	GetValue(const FVector2D& p) = 0;	// world-coord
@@ -76,6 +77,7 @@ public:
 enum EImageFormat {
 	FormatInvalid = 0,
 	FormatB8G8R8A8,
+	FormatB8G8R8,
 	FormatF32,
 	FormatG16R16,
 	FormatR8,
@@ -105,7 +107,7 @@ protected:
 	static FString	gDirName;
 	FString			mFileName;
 	EImageFile		mFileType;
-	EImageFormat		mFileFormat;
+	EImageFormat	mFileFormat;
 
 	static float	gSx, gSY;
 
@@ -114,7 +116,8 @@ protected:
 public:
 	enum EOp {
 		Set,
-		Min,
+		Add,
+		Max,
 	};
 
 public:
@@ -141,7 +144,7 @@ public:
 	FIntVector2		GetPixelPos(const FVector2D& p) const;	// world-coord -> tex-coord
 	void			SetMapping(const TsMapOutput& conf) { mConfig = conf; }
 
-	void			ForeachPixel( std::function< void(int, int) > );
+	void			ForeachPixel( std::function< void(int, int) >, int inc=1 );
 	
 private:
 	virtual int		SaveImage(FILE* fp, EImageFormat format, int x, int y, int w, int h) const { return  0; }
@@ -232,8 +235,11 @@ public:
 		for (int i=1; i<=step ; i++){
 			T val ;
 			switch (op) {
-			case EOp::Min:
+			case EOp::Max:
 				val = FMath::Max(GetPixel((int)x, (int)y), v);
+				break;
+			case EOp::Add:
+				val = GetPixel((int)x, (int)y) + v;
 				break;
 			case EOp::Set:
 			default:
