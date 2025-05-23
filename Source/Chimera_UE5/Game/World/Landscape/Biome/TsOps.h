@@ -23,12 +23,12 @@ struct TsOp {
 
 	virtual bool Is(const FVector2D& p) const { return true; }	//tex-coord
 
-	static TsMaterialValue	gMatResult;
+	static TsMaterialPixel	gMatResult;
 	static bool				gResultDone;
 };
 
 #ifdef	DECLARE
-TsMaterialValue	TsOp::gMatResult = TsMaterialValue();
+TsMaterialPixel	TsOp::gMatResult = TsMaterialPixel();
 bool			TsOp::gResultDone = false;
 #endif	// DECLARE
 
@@ -58,36 +58,3 @@ struct TsOp_Not : public TsOp {
 	}
 };
 
-struct TsOp_PixelGt : public TsOp {
-	TsOp_PixelGt(EBiomeMapType id, float t) : TsOp({ Val(id), Val(t) }) {}
-	virtual ~TsOp_PixelGt() {}
-	bool Is(const FVector2D& p) const override {
-		return TsBiomeMap::GetBiomeMap((EBiomeMapType)mArgs[0].i)->GetValue(p) > mArgs[1].f;
-	}
-};
-
-struct TsOp_PixelLt : public TsOp {
-	TsOp_PixelLt(EBiomeMapType id, float t) : TsOp({ Val(id), Val(t) }) {}
-	virtual ~TsOp_PixelLt() {}
-	bool Is(const FVector2D& p) const override {
-		return TsBiomeMap::GetBiomeMap((EBiomeMapType)mArgs[0].i)->GetValue(p) < mArgs[1].f;
-	}
-};
-
-struct TsOp_PixelRange : public TsOp {
-	TsOp_PixelRange(EBiomeMapType id, float min, float max) : TsOp({ Val(id), Val(min), Val(max) }) {}
-	virtual ~TsOp_PixelRange() {}
-	bool Is(const FVector2D& p) const override {
-		return TsBiomeMap::GetBiomeMap((EBiomeMapType)mArgs[0].i)->GetValue(p) < mArgs[1].f;
-	}
-};
-
-struct TsOp_ExecTask : public TsOp {
-	TsOp_ExecTask(TsBiomeMFunc* task) : TsOp({ Val(task) }) {}
-	virtual ~TsOp_ExecTask() {}
-	bool Is(const FVector2D& p) const override {
-		gMatResult = mArgs[0].task->GetMaterial(p);
-		gResultDone = gMatResult.Num() != 0;
-		return true;
-	}
-};

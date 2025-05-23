@@ -39,6 +39,55 @@ enum class EBiomeGType : uint8 {	// Genre
 };
 
 
+enum EMaterialType {
+	MT_None,		//0
+	MT_OceanSoil_A,
+	MT_LakeSoil_A,	//2
+	MT_Soil_A,
+	MT_Soil_B,		//4
+	MT_Sand_A,
+	MT_Sand_B,		//6
+	MT_Grass_A,
+	MT_Grass_B,		//8
+	MT_Forest_A,
+	MT_Forest_B,	//10
+	MT_Rock_A,
+	MT_Moss_A,		//12
+	MT_Moss_B,
+};
+
+
+// -------------------------------- TsBiomeItem  --------------------------------
+struct TsBiomeItem {
+	float		mRatio;
+	float		mThreshold;
+};
+
+struct TsBiomeItem_MType : public TsBiomeItem {
+	EBiomeMType	mItem;
+};
+
+struct TsBiomeItem_SType : public TsBiomeItem {
+	EBiomeSType	mItem;
+};
+
+struct TsBiomeItem_Material	: public TsBiomeItem {
+	EMaterialType	mItem;
+};
+
+
+
+template <typename T>
+concept DerivedFromTsFVector2D = std::is_base_of_v<FVector2D, T>;
+
+template <typename T>
+concept DerivedFromTsBiomeItem = std::is_base_of_v<TsBiomeItem, T>;
+
+
+
+
+
+
 USTRUCT(BlueprintType)
 struct CHIMERA_UE5_API FTsBiomeModel
 {

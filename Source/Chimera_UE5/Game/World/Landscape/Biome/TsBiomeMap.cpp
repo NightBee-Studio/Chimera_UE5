@@ -1,20 +1,12 @@
 
 #include "TsBiomeMap.h"
 
+#include "../Util/TsImageMap.h"
 #include "../Util/TsUtility.h"
 
 
 
 
-
-// -------------------------------- TsMaterialValue  --------------------------------
-
-void	TsMaterialValue::Merge(const TsMaterialValue& a, float rate)
-{
-	for (auto d : a) {
-		Add( TsMaterialPixel(d.mA, d.mAlpha * rate));
-	}
-}
 
 
 
@@ -139,14 +131,29 @@ void	TsHeightMap::Normalize()
 
 
 TsMaterialMap::TsMaterialMap(int w, int h, const FBox2D* bound)
-	: TsBiomeMap(w, h, bound, TsNoiseParam(1.0f, 0.0010f, 0.2f, 0.0030f))
+	: TsImageCore(w, h, 1, FString() ) 
 	, mIndexMap(w, h, bound)
 	, mAlphaMap(w, h, bound)
-	, mOutIndexMap(w, h, bound)
-	, mOutAlphaMap(w, h, bound)
+	, mPixels()
 {
+	if (bound != nullptr) {
+		SetWorld(bound);
+	}
+	mPixels.Init(TsMaterialPixel(), w * h);
+}
+	
+void	TsMaterialMap::SetPixel(int x, int y, EMaterialType ty, float val) 
+{
+	mPixels[x + mW * y].Add(ty, val);
 }
 
+TsMaterialPixel& TsMaterialMap::GetPixel(int x, int y) 
+{
+	return mPixels[x + y * mW];
+}
+
+
+#if 0
 void	TsMaterialMap::SetMaterialPixel(int x, int y)
 {
 	struct MatScore {
@@ -173,7 +180,7 @@ void	TsMaterialMap::SetMaterialPixel(int x, int y)
 
 	TArray<MatScore*>	list;
 	auto get_list = [&](int ty) {
-		int idx = list.IndexOfByPredicate([&](const MatScore* s) { return s->mType == ty; });
+		int idx = list.IndexOfByPredicate( [&](const MatScore* s) { return s->mType == ty; });
 		if ( idx==INDEX_NONE ) {
 			idx = list.Num();
 			list.Add(new MatScore(ty));
@@ -214,45 +221,32 @@ void	TsMaterialMap::SetMaterialPixel(int x, int y)
 	mOutIndexMap.SetPixel(x, y, index);
 	mOutAlphaMap.SetPixel(x, y, alpha);
 }
+#endif
 
-
-void	TsMaterialMap::SetMaterial(int x, int y, const TsMaterialValue& mv)
+void	TsMaterialMap::StoreMaterial()
 {
-	auto get_pixel_index = [&](const TsMaterialPixel& px, int i) {
-		return	((px.mA & 0xff) << (i * 8));
+	auto get_pixel_index = [&](EMaterialType t, int i) {
+		return	((t & 0xff) << (i * 8));
 	};
-	auto set_pixel_value = [&](EMaterialType ty, int x, int y, float val) {
-		if (!mDic.Contains(ty)) {
-			mDic.Add(ty, new TsImageMap<float>(GetW(), GetH(), GetWorld()));
-		}
-		mDic[ty]->SetPixel(x, y, FMath::Clamp(val, 0.0f, 1.0f));
+	auto get_pixel_alpha = [&](EMaterialType t, float v, int i, int x, int y) {
+		return ((int)(v * 0xff) << (i * 8));
 	};
-	auto get_pixel_alpha = [&](const TsMaterialPixel& px, int i, int x, int y) {
-		float a = px.mAlpha;
-		set_pixel_value(px.mA, x, y, a);
-		return ((int)(a * 0xff) << (i * 8));
-	};
-
-	TArray<TsMaterialPixel> pix;
-	float rate = 0;
-	for (int i = mv.Num(); --i >= 0; ) {
-		pix.Insert(mv[i], 0);
-		if ((rate += mv[i].mAlpha) >= 1.0f) break;
-	}
-	if (pix.Num() > 4) {// 
-		UE_LOG(LogTemp, Log, TEXT("TsMaterialMap:: spillover %d (<4) "), pix.Num());
-	}
-
-	int index = 0;
-	int alpha = 0;
-	for (int i = 0; i < pix.Num(); i++) {
-		index |= get_pixel_index(pix[i], i);
-		alpha |= get_pixel_alpha(pix[i], i, x, y);
-	}
 
 	// Material-Map Pixel-Format			Marching-Square Index...
-	mAlphaMap.SetPixel(x, y, alpha);
-	mIndexMap.SetPixel(x, y, index);
+	ForeachPixel(
+		[&](int px, int py) {
+			TsMaterialPixel& pix = GetPixel(px, py);
+			int index = 0;
+			int alpha = 0;
+			int i = 0;
+			for ( auto & p : pix.mValues ) {
+				index |= get_pixel_index(p.Key, i);
+				alpha |= get_pixel_alpha(p.Key, p.Value, i, px, py);
+				i++;
+			}
+			mAlphaMap.SetPixel(px, py, alpha);
+			mIndexMap.SetPixel(px, py, index);
+		});
 }
 
 void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
@@ -260,7 +254,4 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 	UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
 	mAlphaMap   .Save("mat_value001.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 	mIndexMap   .Save("mat_index001.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
-	mOutAlphaMap.Save("mat_value000.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
-	mOutIndexMap.Save("mat_index000.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 }
-

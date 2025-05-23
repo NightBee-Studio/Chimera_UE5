@@ -7,31 +7,6 @@
 
 
 
-// -------------------------------- TsBiomeItem  --------------------------------
-
-struct TsBiomeItem {
-	float		mRatio;
-	float		mThreshold;
-};
-
-struct TsBiomeItem_MType : public TsBiomeItem {
-	EBiomeMType	mItem;
-};
-
-struct TsBiomeItem_SType : public TsBiomeItem {
-	EBiomeSType	mItem;
-};
-
-template <typename T>
-concept DerivedFromTsFVector2D = std::is_base_of_v<FVector2D, T>;
-
-template <typename T>
-concept DerivedFromTsBiomeItem = std::is_base_of_v<TsBiomeItem, T>;
-
-
-
-
-
 // -------------------------------- TsBiomeMaps  --------------------------------
 
 
@@ -130,58 +105,42 @@ public:
 };
 
 
-enum EMaterialType {
-	MT_None,
-	MT_OceanSoil_A,
-	MT_LakeSoil_A,	//2
-	MT_Soil_A,
-	MT_Soil_B,		//4
-	MT_Sand_A,
-	MT_Sand_B,		//6
-	MT_Grass_A,
-	MT_Grass_B,		//8
-	MT_Forest_A,
-	MT_Forest_B,	//10
-	MT_Rock_A,
-	MT_Moss_A,		//12
-	MT_Moss_B,
-};
 
-struct TsMaterialPixel {
-	EMaterialType	mA;// , mB;
-	float			mAlpha;//
 
-	bool operator < (const TsMaterialPixel& a) const { return mAlpha < a.mAlpha; }// sorting be random value
 
-	TsMaterialPixel(EMaterialType a, float al = 0) : mA(a), mAlpha(al) {}
-};
-
-struct TsMaterialValue
-	: public TArray<TsMaterialPixel> 
+struct TsMaterialPixel
 {
-	void Merge(const TsMaterialValue& a, float rate = 1);
+	TMap<EMaterialType, float>	mValues;
+
+	void Add( EMaterialType t, float v){
+		if ( mValues.Contains(t) )	mValues[t] += v ;
+		else						mValues.Emplace( t, v );
+	}
+
+	void Merge(const TsMaterialPixel& pixel, float rate = 1) {
+		for ( const auto &v : pixel.mValues ) {
+			Add(v.Key, v.Value * rate);
+		}
+	}
 };
+
 
 class TsMaterialMap
-	: public TsBiomeMap 
+	:public TsImageCore
 {
 private:
-	TMap<EMaterialType, TsImageMap<float>*>
-					mDic;
-	TsImageMap<int>	mIndexMap;	//RGBA
-	TsImageMap<int>	mAlphaMap;	//RGBA
-
-	TsImageMap<int>	mOutIndexMap;//RGBA
-	TsImageMap<int>	mOutAlphaMap;//RGBA
+	TArray<TsMaterialPixel>	mPixels;
+	TsImageMap<int>			mIndexMap;	//RGBA
+	TsImageMap<int>			mAlphaMap;	//RGBA
 
 public:
 	TsMaterialMap(int w, int h, const FBox2D* bound);
 	virtual ~TsMaterialMap() {}
 
-	void			SetMaterialPixel(int x, int y) ;
+	void				SetPixel(int x, int y, EMaterialType ty, float val);
+	TsMaterialPixel&	GetPixel(int x, int y) ;
 
-	void			SetMaterial(int x, int y, const TsMaterialValue& mv);
-	void			SaveAll(int x, int y, int w, int h);
+	void				StoreMaterial();
+
+	void				SaveAll(int x, int y, int w, int h);
 };
-
-

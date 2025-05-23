@@ -483,12 +483,12 @@ int			TsImageMap<FVector>::SaveImage(FILE* fp, EImageFormat format, int sx, int 
 			int			i = 0;
 			switch (format & EImageFormat::FmtMask) {
 			case EImageFormat::FormatG16R16:
-				i = ((int)(v.X * 32767.0f)) | ((int)(v.Z * 32767.0f) << 16);
+				i = ((int)(32767.0f + v.X * 32767.0f)) | ((int)(32767.0f + v.Z * 32767.0f) << 16);
 				fwrite(&i, GetStride(format), 1, fp);
 				break;
 			case EImageFormat::FormatB8G8R8A8:
 			case EImageFormat::FormatB8G8R8:			//break through
-				i = ((int)(v.X * 255.0f  )) | ((int)(v.Y * 255.0f  ) << 8) | ((int)(v.Z * 255.0f) << 16);
+				i = ((int)(127 + v.X * 127)) | ((int)(127 + v.Y * 127) << 8) | ((int)(127 + v.Z * 127) << 16);
 				fwrite(&i, GetStride(format), 1, fp);
 				break;
 			case EImageFormat::FormatF32:

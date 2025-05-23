@@ -33,24 +33,18 @@ public:
 
 
 class	TsBiomeMFunc {
-protected:
-	struct Layer {						// maybe need to be refactored....
-		EMaterialType		mMaterialType;
-		float				mOccupancy;
-		TsOp*				mOp;
-		float				mMin, mMax;	// this will be updated...
-	};
-	struct Config {						// maybe need to be refactored....
-		EBiomeMapType		mMapSource;
-		TArray<Layer>		mLayers;
-	};
-	TArray<Config>			mConfigs;
+//protected:
+public:
+	EBiomeMapType					mMapType;
+	TArray<TsBiomeItem_Material>	mItems;
 
 public:
-	TsBiomeMFunc(TArray<Config> cnfs)
-		: mConfigs(cnfs) {}
+	TsBiomeMFunc(
+			EBiomeMapType			type ,
+			const TArray<TsBiomeItem_Material>&	items
+		): mMapType(type), mItems(items) {}
 
-	TsMaterialValue	GetMaterial(const FVector2D& p);
+	//TsMaterialPixel	GetMaterial(const FVector2D& p);
 };
 
 
@@ -62,17 +56,17 @@ class	TsBiomeSurface {
 public:
 	//private:
 	TArray<TsBiomeSFunc*>	mSFuncs;
-	TArray<TsBiomeMFunc*>	mMFuncs;
+	TsBiomeMFunc*			mMFuncs;
 
 public:
 	TsBiomeSurface(
-		TArray<TsBiomeSFunc*> s_funcs,
-		TArray<TsBiomeMFunc*> m_funcs )
-		: mSFuncs(s_funcs), mMFuncs(m_funcs) {}
+		TArray<TsBiomeSFunc*>	s_funcs,
+		TsBiomeMFunc*			m_funcs )
+		: mSFuncs(s_funcs)
+		, mMFuncs(m_funcs) {}
 
-public:
 	float			GetHeight  (TsBiome* b, const FVector2D& p);	// world-coord
-	TsMaterialValue	GetMaterial(TsBiome* b, const FVector2D& p);	// world-coord
+	//TsMaterialPixel	GetMaterial(TsBiome* b, const FVector2D& p);	// world-coord
 	void			UpdateRemap(TsBiome* b, const FVector2D& p);	// world-coord
 };
 

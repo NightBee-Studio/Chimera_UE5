@@ -25,49 +25,35 @@ void	TsBiomeSFunc::RemapHeight(TsBiome* b, const FVector2D& p)
 
 // -------------------------------- TsBiomeMFunc --------------------------------
 
-TsMaterialValue	TsBiomeMFunc::GetMaterial(const FVector2D& p)
+#if 0
+TsMaterialPixel	TsBiomeMFunc::GetMaterial(const FVector2D& p)
 {
-	TsMaterialValue mv;
-	TsMaterialValue a, b;
-	TArray<TsMaterialPixel>ppx;
-
 	EMaterialType type = EMaterialType::MT_None;
-	for (auto& c : mConfigs) {
-		TsBiomeMap* bm = TsBiomeMap::GetBiomeMap(c.mMapSource);
-		float			v = bm->GetValue(p);
-		TsMaterialValue	ml;
-		for (auto& l : c.mLayers) {
-			if (l.mMaterialType != EMaterialType::MT_None) {
-				if (l.mMin <= v && v < l.mMax) {
-					TsOp::gResultDone = false;
-					if (l.mOp && !l.mOp->Is(p)) continue;
-					if (TsOp::gResultDone) {
-						ml.Merge(TsOp::gMatResult);
-					}
-					else {
-						float val;
-						if (type) {
-							val = FMath::Min((v - l.mMin) / ((l.mMax - l.mMin) * 0.4f), 1);
-							if (val < 1) mv.Add(TsMaterialPixel(type, 1));
-						}
-						else {
-							val = 1;
-						}
-						ml.Add(TsMaterialPixel(l.mMaterialType, val));
-					}
-					break;
-				}
-			}
-			type = l.mMaterialType;
-		}
-		mv.Merge(ml);
-	}
 
+	TsBiomeMap* bm = TsBiomeMap::GetBiomeMap(mMapType);
+	float		v  = bm->GetValue(p);
+	TsMaterialPixel	pl;
+	for (const auto& l : mLayers) {
+		if (l.mMaterialType != EMaterialType::MT_None) {
+			if (l.mMin <= v && v < l.mMax) {
+				float val;
+				if ( type ) {
+					val = FMath::Min((v - l.mMin) / ((l.mMax - l.mMin) * 0.4f), 1);
+					//if (val < 1) px.Add( TsMaterialValue(type, 1) );
+				} else {
+					val = 1;
+				}
+				pl.Add( TsMaterialValue(l.mMaterialType, val) );
+				break;
+			}
+		}
+		type = l.mMaterialType;
+	}
 	//	UE_LOG(LogTemp, Log, TEXT("NoResult (%f %f) %d"), p.X, p.Y, mConfigs.Num());
 
-	return mv;
+	return pl;
 }
-
+#endif
 
 
 // -------------------------------- TsBiomeSurface  --------------------------------
@@ -89,15 +75,14 @@ float			TsBiomeSurface::GetHeight(TsBiome* b, const FVector2D& p)
 	return h;
 }
 
-TsMaterialValue	TsBiomeSurface::GetMaterial(TsBiome* b, const FVector2D& p)
-{
-	TsMaterialValue mv;
-	for (auto fn : mMFuncs) {
-		mv.Merge(fn->GetMaterial(p));
-	}
-	return mv;
-}
-
+//TsMaterialPixel	TsBiomeSurface::GetMaterial(TsBiome* b, const FVector2D& p)
+//{
+//	TsMaterialPixel px;
+//	for (auto fn : mMFuncs) {
+//		px.Merge(fn->GetMaterial(p));
+//	}
+//	return px;
+//}
 
 //TArray<TsBiomeMatFunc*>	TsBiomeMatFunc::gList;
 //
