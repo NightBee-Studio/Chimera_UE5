@@ -72,7 +72,7 @@ public:
 	bool		IsInside(const FVector2D& p) const ;
 
 	void		AddEdge(const Edge& edge);
-	void		ForeachEdge( std::function< void(const Edge &) >);
+	void		ForeachEdge( std::function< void(const Edge &) > func);
 
 public:
 	void		Debug(UWorld* world, const FColor &c) const ;

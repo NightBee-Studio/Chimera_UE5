@@ -135,6 +135,7 @@ public:
 	static int		GetStride(EImageFormat format) ;
 	int				GetW() const { return mW; }
 	int				GetH() const { return mH; }
+	float			GetStep() const { return mStep.X; }
 
 public:
 	bool			IsWorld(const FVector2D& p) const;

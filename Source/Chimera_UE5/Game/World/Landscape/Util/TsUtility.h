@@ -1,9 +1,11 @@
 #pragma once
 
+#include <functional>
+
 // ---------------------------- Utillity -------------------------
 namespace TsUtil {
 	static inline
-		FVector2D	NearPoint(const FVector2D& v1, const FVector2D& v2, const FVector2D& pp)
+	FVector2D	NearPoint(const FVector2D& v1, const FVector2D& v2, const FVector2D& pp)
 	{
 		FVector2D ap = pp - v1;
 		FVector2D ab = v2 - v1;
@@ -20,7 +22,7 @@ namespace TsUtil {
 	}
 
 	static inline
-		FVector2D	LinePoint(const FVector2D& lp, const FVector2D& ld, const FVector2D& pp)
+	FVector2D	LinePoint(const FVector2D& lp, const FVector2D& ld, const FVector2D& pp)
 	{
 		float L = ld.Length();
 		if (L <= 0.0000001f)return lp;
@@ -40,6 +42,22 @@ namespace TsUtil {
 		////UE_LOG(LogTemp, Log, TEXT("NearPoint Dot%f"), d  );
 
 		//return lp + ld/l * d ;
+	}
+
+	static inline
+	void		ForeachGaussian( const FVector2D &p, float pixel, std::function<void( const FVector2D& p, float weight )> func ) {
+		static float w[5][5] = {
+			{1, 4, 7, 4,1},
+			{4,16,26,16,4},
+			{7,26,41,26,7},
+			{4,16,26,16,4},
+			{1, 4, 7, 4,1},
+		};
+		for (int i = 0; i < 25; i++) {
+			int mx = i % 5;
+			int my = i / 5;
+			func( p + FVector2D(mx, my)*pixel, w[mx][my] / 273.0f);
+		}
 	}
 
 	static inline FVector2D SinCosPos(float ang) {

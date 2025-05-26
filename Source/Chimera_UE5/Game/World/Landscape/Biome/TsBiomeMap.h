@@ -40,8 +40,6 @@ public:
 	static TsBiomeMap*	GetBiomeMap(EBiomeMapType ty	              ) { return gBiomeMaps[ty]; }
 	static void			AddBiomeMap(EBiomeMapType ty, TsBiomeMap* map) { gBiomeMaps.Emplace( ty, map ); }
 
-
-
 public:
 	TsBiomeMap(int w, int h, const FBox2D* bound, const TsNoiseParam& cnf = TsNoiseParam())
 		: TsImageMap<float>(w, h, bound)
@@ -68,14 +66,14 @@ public:
 	}
 
 	template<DerivedFromTsFVector2D Tpoint, DerivedFromTsBiomeItem Titem>
-	void SelectItem(const Tpoint& point, TArray<Titem>& items, std::function<void(const Titem&)>func) {
+	Titem SelectItem(const Tpoint& point, TArray<Titem>& items ) {
 		float h = GetValue(point);
 		for (auto& it : items) {
 			if (h < it.mThreshold) {
-				func( it );
-				break;
+				return it ;
 			}
 		}
+		return items.Last() ;
 	}
 };
 
@@ -117,8 +115,17 @@ struct TsMaterialPixel
 		else						mValues.Emplace( t, v );
 	}
 
+	void Normalize() {
+		float total = 0;
+		for (auto& v : mValues) 
+			UE_LOG(LogTemp, Log, TEXT("    [[ty%d w%f]]"), v.Key, v.Value);
+
+		for ( auto& v : mValues) total += v.Value ;
+		for ( auto& v : mValues) v.Value /= total ;
+	}
+
 	void Merge(const TsMaterialPixel& pixel, float rate = 1) {
-		for ( const auto &v : pixel.mValues ) {
+		for ( auto &v : pixel.mValues ) {
 			Add(v.Key, v.Value * rate);
 		}
 	}
@@ -132,11 +139,13 @@ private:
 	TArray<TsMaterialPixel>	mPixels;
 	TsImageMap<int>			mIndexMap;	//RGBA
 	TsImageMap<int>			mAlphaMap;	//RGBA
+	TArray<EMaterialType>	mMatIndex;
 
 public:
-	TsMaterialMap(int w, int h, const FBox2D* bound);
+	TsMaterialMap(int w, int h, const FBox2D* bound, const TArray<EMaterialType> &mat_index  );
 	virtual ~TsMaterialMap() {}
 
+	void				MergePixel(int x, int y, const TsMaterialPixel& px );
 	void				SetPixel(int x, int y, EMaterialType ty, float val);
 	TsMaterialPixel&	GetPixel(int x, int y) ;
 

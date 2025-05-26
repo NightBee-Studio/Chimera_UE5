@@ -43,8 +43,6 @@ public:
 			EBiomeMapType			type ,
 			const TArray<TsBiomeItem_Material>&	items
 		): mMapType(type), mItems(items) {}
-
-	//TsMaterialPixel	GetMaterial(const FVector2D& p);
 };
 
 

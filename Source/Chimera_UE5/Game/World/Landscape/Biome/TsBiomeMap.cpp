@@ -130,18 +130,19 @@ void	TsHeightMap::Normalize()
 
 
 
-TsMaterialMap::TsMaterialMap(int w, int h, const FBox2D* bound)
+TsMaterialMap::TsMaterialMap(int w, int h, const FBox2D* bound, const TArray<EMaterialType>& mat_index)
 	: TsImageCore(w, h, 1, FString() ) 
+	, mPixels()
 	, mIndexMap(w, h, bound)
 	, mAlphaMap(w, h, bound)
-	, mPixels()
+	, mMatIndex(mat_index)
 {
 	if (bound != nullptr) {
 		SetWorld(bound);
 	}
 	mPixels.Init(TsMaterialPixel(), w * h);
 }
-	
+
 void	TsMaterialMap::SetPixel(int x, int y, EMaterialType ty, float val) 
 {
 	mPixels[x + mW * y].Add(ty, val);
@@ -150,6 +151,12 @@ void	TsMaterialMap::SetPixel(int x, int y, EMaterialType ty, float val)
 TsMaterialPixel& TsMaterialMap::GetPixel(int x, int y) 
 {
 	return mPixels[x + y * mW];
+}
+
+void	TsMaterialMap::MergePixel(int x, int y, const TsMaterialPixel& px)
+{
+	GetPixel(x, y).Merge( px );
+	GetPixel(x, y).Normalize();
 }
 
 
@@ -225,10 +232,10 @@ void	TsMaterialMap::SetMaterialPixel(int x, int y)
 
 void	TsMaterialMap::StoreMaterial()
 {
-	auto get_pixel_index = [&](EMaterialType t, int i) {
+	auto get_pixel_index = [&](int t, int i) {
 		return	((t & 0xff) << (i * 8));
 	};
-	auto get_pixel_alpha = [&](EMaterialType t, float v, int i, int x, int y) {
+	auto get_pixel_alpha = [&](float v, int i) {
 		return ((int)(v * 0xff) << (i * 8));
 	};
 
@@ -240,10 +247,14 @@ void	TsMaterialMap::StoreMaterial()
 			int alpha = 0;
 			int i = 0;
 			for ( auto & p : pix.mValues ) {
-				index |= get_pixel_index(p.Key, i);
-				alpha |= get_pixel_alpha(p.Key, p.Value, i, px, py);
+				UE_LOG(LogTemp, Log, TEXT("   %d => %d"), p.Key, mMatIndex.Find(p.Key) );
+				index |= get_pixel_index(mMatIndex.Find(p.Key), i);
+				alpha |= get_pixel_alpha(p.Value, i);
 				i++;
 			}
+
+			UE_LOG(LogTemp, Log, TEXT("(%d,%d) %08x %08x"), px, py, index, alpha);
+
 			mAlphaMap.SetPixel(px, py, alpha);
 			mIndexMap.SetPixel(px, py, index);
 		});
