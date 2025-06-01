@@ -117,9 +117,6 @@ struct TsMaterialPixel
 
 	void Normalize() {
 		float total = 0;
-		for (auto& v : mValues) 
-			UE_LOG(LogTemp, Log, TEXT("    [[ty%d w%f]]"), v.Key, v.Value);
-
 		for ( auto& v : mValues) total += v.Value ;
 		for ( auto& v : mValues) v.Value /= total ;
 	}

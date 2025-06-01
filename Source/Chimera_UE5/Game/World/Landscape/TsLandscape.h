@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "DynamicMeshActor.h"
 
-#include "Biome/TsBiome.h"
+#include "../Builder/Biome/TsBiome.h"
 
 #include "TsLandscape.generated.h"
 

@@ -86,7 +86,11 @@ enum EImageFormat {
 	FormatR32,
 	FmtMask  = 0x0000ffff,
 	FmtDebug = 0x10000000,
+	FmtVFlip = 0x20000000,
+	FmtHFlip = 0x40000000,
 
+	FormatL16_VFlip = FormatL16 | FmtVFlip,
+	FormatB8G8R8A8_Debug = FormatB8G8R8A8 | FmtDebug,
 	FormatL16_Debug = FormatL16 | FmtDebug,
 };
 
@@ -94,6 +98,7 @@ enum EImageFile{
 	Bmp,
 	Png,
 	Dds,
+	Raw,
 };
 
 class TsImageCore {

@@ -117,7 +117,7 @@ public:
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group"));
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: BiomeMap creating ..."));
 
-			heightmap_reso = 64 ;
+			heightmap_reso = 2048 ;
 			if (heightmap_reso == 0) heightmap_reso = 512;
 #define IMG_SIZE heightmap_reso
 
@@ -132,8 +132,18 @@ public:
 						},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{ 0.10f,0.0f, EMaterialType::MT_Soil_B  },
-								{ 0.90f,0.0f, EMaterialType::MT_Soil_A  },
+								{ 1.00f,0.0f, EMaterialType::MT_BaseLand  },
+							})
+					)
+				},
+				{ EBiomeSType::E_SurfLake,
+					TsBiomeSurface({
+						new TsSurfaceLake(TsNoiseParam(1.0f, 0.001f, 0.2f, 0.003f), -10.0f),
+					},
+						new TsBiomeMFunc(
+							EBiomeMapType::E_Moist,{
+								{ 0.60f, 0.0f, EMaterialType::MT_LakeSoil_A },
+								{ 0.50f, 0.0f, EMaterialType::MT_Soil_B     },
 							})
 					)
 				},
@@ -144,21 +154,12 @@ public:
 						},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{ 0.50f,0.0f, EMaterialType::MT_Grass_A },
-								{ 0.35f,0.0f, EMaterialType::MT_Grass_B },
-								{ 0.10f,0.0f, EMaterialType::MT_Soil_B  },
-								{ 0.05f,0.0f, EMaterialType::MT_Soil_A  },
-							})
-					)
-				},
-				{ EBiomeSType::E_SurfLake,
-					TsBiomeSurface({
-						new TsSurfaceLake	  (TsNoiseParam(1.0f, 0.001f, 0.2f, 0.003f), -10.0f	),
-					},
-						new TsBiomeMFunc(
-							EBiomeMapType::E_Moist,{
-								{ 0.5f, 0.0f, EMaterialType::MT_Soil_B },
-								{ 1.0f, 0.0f, EMaterialType::MT_Soil_A },
+								{ 0.05f, 0.0f, EMaterialType::MT_Soil_A   },
+								{ 0.10f, 0.0f, EMaterialType::MT_Soil_B   },
+								{ 0.10f, 0.0f, EMaterialType::MT_Grass_A  },
+								{ 0.35f, 0.0f, EMaterialType::MT_Grass_B  },
+								{ 0.10f, 0.0f, EMaterialType::MT_Forest_A },
+								{ 0.15f, 0.0f, EMaterialType::MT_Forest_B },
 							})
 					)
 				},
@@ -170,10 +171,10 @@ public:
 						},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{  0.50f, 0.0f, EMaterialType::MT_Grass_A },
+								{  0.20f, 0.0f, EMaterialType::MT_Grass_A },
 								{  0.35f, 0.0f, EMaterialType::MT_Grass_B },
 								{  0.10f, 0.0f, EMaterialType::MT_Soil_B  },
-								{  0.05f, 0.0f, EMaterialType::MT_Soil_A  },
+								{  0.45f, 0.0f, EMaterialType::MT_Soil_A  },
 							})
 					)
 				},
@@ -240,7 +241,7 @@ public:
 				TsBiomeMap::AddBiomeMap( EBiomeMapType::E_Flow  , flow_map  );	//flow
 				TsBiomeMap::AddBiomeMap( EBiomeMapType::E_Pond  , pond_map  );	//pond
 
-#if 0
+#if 1
 				{///---------------------------------------- HeightMap
 					{///--------------------------------------------------- Create BaseHeightmap
 						UE_LOG(LogTemp, Log, TEXT("   Base Heightmap start ...."));
@@ -276,7 +277,7 @@ public:
 					{///--------------------------------------------------- Erosion
 						UE_LOG(LogTemp, Log, TEXT("   Erosion start..."));
 
-						erode_cycle = 1;
+						erode_cycle = 10 ;
 						TsErosion( mHeightMap, flow_map, pond_map ).Simulate( erode_cycle );
 
 						UE_LOG(LogTemp, Log, TEXT("   Erosion done."));
@@ -293,13 +294,15 @@ public:
 						UE_LOG(LogTemp, Log, TEXT("   Normal done."));
 					}
 
-					mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16     );
+					mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					mHeightMap->Save("HeightMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
 					mNormalMap->Save("NormalMap.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8);
 
 					UE_LOG(LogTemp, Log, TEXT("    HeightMap done."));
 				}
 #endif 
 
+#if 0		//material_map
 				{///--------------------------------------------------- MaterialMap
 					// update Occupancy of the config...
 					UE_LOG(LogTemp, Log, TEXT("BiomeSystem:: MaterialMap preparing..."));
@@ -308,29 +311,53 @@ public:
 							moist_map->SetupItems< TsBiome, TsBiomeItem_Material >(mBiomes, sf.Value.mMFuncs->mItems );
 						}
 					}
+
+					auto surf_to_mat = [&](EBiomeSType typ) {
+							switch (typ) {
+							case EBiomeSType::E_SurfLake: return EMaterialType::MT_Sand_A; 
+							case EBiomeSType::E_SurfField: return EMaterialType::MT_Grass_A; 
+							case EBiomeSType::E_SurfMountain: return EMaterialType::MT_Forest_A;
+							case EBiomeSType::E_SurfNone: return EMaterialType::MT_BaseLand;
+							}
+							return EMaterialType::MT_BaseLand;
+						};
 					moist_map->ForeachPixel(
 						[&](int px, int py) {
 							FVector2D     p = moist_map->GetWorldPos(px, py);
 							bool done = false;
 							if (moist_map->IsWorld(p)) {
+								TsMaterialPixel	pix;
+								TsUtil::ForeachGaussian( p, moist_map->GetStep(),
+									[&](const FVector2D& pos, float weight) {
+										if (TsBiome* b = SearchBiome(pos)) {
+											pix.Add( surf_to_mat(b->GetSType()), weight );
+											//UE_LOG(LogTemp, Log, TEXT("(%d,%d)[%f %f]  Surf[%d]  ty%d w%f"), px, py, pos.X, pos.Y, b->GetSType(), it.mItem, weight);
+										}
+									} );
+								pix.Normalize();
+								mMaterialMap->MergePixel(px, py, pix);
+
+#if 0
 								if (TsBiome* b = SearchBiome(p) ){
 									if (mSurfaces[b->GetSType()].mMFuncs) {
-										TsMaterialPixel	pix;
-										TsUtil::ForeachGaussian(p, moist_map->GetStep(),
-											[&](const FVector2D& pos, float weight) {
-												TsBiomeItem_Material it =
-													moist_map->SelectItem<FVector2D, TsBiomeItem_Material>(
-														pos,
-														mSurfaces[b->GetSType()].mMFuncs->mItems
-													);
-												pix.Add( it.mItem, weight );
-											//	UE_LOG(LogTemp, Log, TEXT("(%d,%d)[%f %f] ty%d w%f"), px, py, pos.X,pos.Y, it.mItem, weight);
-											});
-										pix.Normalize();
-										mMaterialMap->MergePixel(px, py, pix);
-										done = true;
+										//TsMaterialPixel	pix;
+
+										//TsUtil::ForeachGaussian( p, moist_map->GetStep(),
+										//	[&](const FVector2D& pos, float weight) {
+										//		TsBiomeItem_Material it =
+										//			moist_map->SelectItem<FVector2D, TsBiomeItem_Material>( pos, mSurfaces[b->GetSType()].mMFuncs->mItems );
+										//		pix.Add( it.mItem, weight );
+										//		UE_LOG(LogTemp, Log, TEXT("(%d,%d)[%f %f]  Surf[%d]  ty%d w%f"), px, py, pos.X,pos.Y, b->GetSType(), it.mItem, weight);
+										//	} );
+										//pix.Normalize();
+										//mMaterialMap->MergePixel(px, py, pix);
+
 									}
+									mMaterialMap->SetPixel(px, py, surf_to_mat(b->GetSType()), 1.0f);
 								}
+#endif
+
+								done = true;
 							}
 							if ( !done ) mMaterialMap->SetPixel(px, py, EMaterialType::MT_BaseLand, 1.0f);
 						});
@@ -341,6 +368,7 @@ public:
 					mMaterialMap->SaveAll(0,0,0,0);
 					UE_LOG(LogTemp, Log, TEXT("BiomeSystem:: MaterialMap done."));
 				}
+#endif		//material_map
 
 				{///--------------------------------------------------- File Exporting 
 					UE_LOG(LogTemp, Log, TEXT("    File exporting ..."));
@@ -357,7 +385,9 @@ public:
 					moist_map->Save("BM_MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
 					surfc_map->Save("BM_SurfcMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
 					flow_map ->Save("BM_FlowMap.dds" , EImageFile::Dds, EImageFormat::FormatL16);
+					flow_map ->Save("BM_FlowMap.raw" , EImageFile::Raw, EImageFormat::FormatL16);
 					pond_map ->Save("BM_PondMap.dds" , EImageFile::Dds, EImageFormat::FormatL16);
+					pond_map ->Save("BM_PondMap.raw" , EImageFile::Raw, EImageFormat::FormatL16);
 
 					UE_LOG(LogTemp, Log, TEXT("    File exporting done."));
 				}

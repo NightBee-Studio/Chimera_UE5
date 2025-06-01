@@ -13,6 +13,7 @@ public class Chimera_UE5 : ModuleRules
 			"Core", "CoreUObject",
 			"Engine", "InputCore", "EnhancedInput",
             "AIModule", "StateTreeModule", "GameplayStateTreeModule", "GameplayTags",
+			"PCG",
             "GeometryFramework",
             "UMG"
 		});

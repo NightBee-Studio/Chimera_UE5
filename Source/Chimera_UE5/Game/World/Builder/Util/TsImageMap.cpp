@@ -223,11 +223,15 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 		UKismetSystemLibrary::PrintString(nullptr, fname, true, true, FColor::Red, 5.0f, TEXT("None"));
 	}
 
-
 	FString	path = gDirName + fname;
 	FILE* fp;
 	if ((_tfopen_s(&fp, *path, TEXT("wb"))) == 0) {
 		switch (filetype) {
+		case EImageFile::Raw: {
+				SaveImage(fp, format, x, y, w, h);
+			}
+			break;
+
 		case EImageFile::Bmp:{
 				int imgoffs = 14 + sizeof(BITMAPINFOHEADER);
 				int imgbcc = GetStride(format) * 8;
@@ -412,7 +416,9 @@ int			TsImageMap<int>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, 
 {
 	for (int y = 0; y < h; y++) {
 		for (int x = 0; x < w; x++) {
-			int		v = GetPixel(sx + x, sy + y);
+			int px = (format & EImageFormat::FmtHFlip) ? (sx + w-1-x) : (sx + x);
+			int py = (format & EImageFormat::FmtVFlip) ? (sy + h-1-y) : (sx + y);
+			int		v = GetPixel(px, py);
 			float	f;
 			switch (format & EImageFormat::FmtMask) {
 			case EImageFormat::FormatF32:
@@ -424,6 +430,7 @@ int			TsImageMap<int>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, 
 			case EImageFormat::FormatR16:
 			case EImageFormat::FormatB8G8R8A8:
 			case EImageFormat::FormatR8:
+				if (format & EImageFormat::FmtDebug) UE_LOG(LogTemp, Log, TEXT("(%d,%d) %08x"), x, y, v);
 				fwrite(&v, GetStride(format), 1, fp);
 				break;
 			}
@@ -437,7 +444,9 @@ int			TsImageMap<float>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy
 {
 	for (int y = 0; y < h; y++) {
 		for (int x = 0; x < w; x++) {
-			float f = GetPixel(sx+x, sy+y) ;
+			int px = (format & EImageFormat::FmtHFlip) ? (sx + w - 1 - x) : (sx + x);
+			int py = (format & EImageFormat::FmtVFlip) ? (sy + h - 1 - y) : (sx + y);
+			float f = GetPixel(px, py) ;
 
 			switch (format & EImageFormat::FmtMask) {
 			case EImageFormat::FormatF32:
@@ -479,7 +488,9 @@ int			TsImageMap<FVector>::SaveImage(FILE* fp, EImageFormat format, int sx, int 
 {
 	for (int y = 0; y < h; y++) {
 		for (int x = 0; x < w; x++) {
-			FVector		v = GetPixel(sx + x, sy + y);
+			int px = (format & EImageFormat::FmtHFlip) ? (sx + w - 1 - x) : (sx + x);
+			int py = (format & EImageFormat::FmtVFlip) ? (sy + h - 1 - y) : (sx + y);
+			FVector		v = GetPixel(px, py);
 			int			i = 0;
 			switch (format & EImageFormat::FmtMask) {
 			case EImageFormat::FormatG16R16:

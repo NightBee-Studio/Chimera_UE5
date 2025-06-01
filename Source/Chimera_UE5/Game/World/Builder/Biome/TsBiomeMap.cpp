@@ -247,14 +247,12 @@ void	TsMaterialMap::StoreMaterial()
 			int alpha = 0;
 			int i = 0;
 			for ( auto & p : pix.mValues ) {
-				UE_LOG(LogTemp, Log, TEXT("   %d => %d"), p.Key, mMatIndex.Find(p.Key) );
+				//UE_LOG(LogTemp, Log, TEXT(" [%d,%d]  %d => %d"),   px,py,  p.Key, mMatIndex.Find(p.Key) );
 				index |= get_pixel_index(mMatIndex.Find(p.Key), i);
 				alpha |= get_pixel_alpha(p.Value, i);
 				i++;
 			}
-
-			UE_LOG(LogTemp, Log, TEXT("(%d,%d) %08x %08x"), px, py, index, alpha);
-
+			//UE_LOG(LogTemp, Log, TEXT("(%d,%d) %08x %08x"), px, py, index, alpha);
 			mAlphaMap.SetPixel(px, py, alpha);
 			mIndexMap.SetPixel(px, py, index);
 		});
@@ -263,6 +261,6 @@ void	TsMaterialMap::StoreMaterial()
 void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 {
 	UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
-	mAlphaMap   .Save("mat_value001.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
-	mIndexMap   .Save("mat_index001.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
+	mAlphaMap   .Save("MatAlpha00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
+	mIndexMap   .Save("MatIndex00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 }

@@ -53,10 +53,10 @@ namespace TsUtil {
 			{4,16,26,16,4},
 			{1, 4, 7, 4,1},
 		};
-		for (int i = 0; i < 25; i++) {
-			int mx = i % 5;
-			int my = i / 5;
-			func( p + FVector2D(mx, my)*pixel, w[mx][my] / 273.0f);
+		for (int y = 0; y < 5; y++) {
+			for (int x = 0; x < 5; x++) {
+				func( p + FVector2D(x-2, y-2) * pixel, w[x][y] / 273.0f );
+			}
 		}
 	}
 

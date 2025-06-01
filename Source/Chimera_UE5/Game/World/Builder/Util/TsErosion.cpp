@@ -13,11 +13,11 @@ struct Particle
     : public FVector2D {
 
     //Particle Properties
-    const float		cDensity   = 1.00f; //This gives varying amounts of inertia and stuff...
-    const float		cEvapRate  = 0.001f; //evaporate     0.001f
+    const float		cDensity   = 0.20f; //density       1.00f      This gives varying amounts of inertia and stuff...
+    const float		cEvapRate  = 0.001f;//evaporate     0.001f
     const float		cDepoRate  = 0.30f; //deposition    0.1f
-    const float		cMinVolume = 0.02f; //minimum vol   0.01f
-    const float		cMaxSpeed  = 1.00f; //max speed 
+    const float		cMinVolume = 0.01f; //minimum vol   0.01f
+    const float		cMaxSpeed  = 3.00f; //max speed 
     const float		cFriction  = 0.05f; //friction      0.05f
 
     Particle(float x, float y) : FVector2D(x, y), mSpeed(0, 0), mVolume(1.0f), mSediment(0.0f){}
@@ -63,20 +63,21 @@ struct Particle
             mSediment += ddt * cDepoRate * diff_sediment;
 
 #ifdef DDDD
-            UE_LOG(LogTemp, Log, TEXT("[%3.2f,%3.2f] [Speed%2.4f(%.2f,%.2f)=>(%.2f,%.2f) Vol%.2f Sed%.2f] dv%f dt%f ddt%f Flow(%f)"),
+            UE_LOG(LogTemp, Log, TEXT("[%3.2f,%3.2f] [Speed%2.4f(%.2f,%.2f) Vol%.2f Sed%.2f] dv%f dt%f ddt%f HghtChng(%f)Flow(%f)"),
                 X, Y,
                 mSpeed.Length(),
-                old_speed.X, old_speed.Y,
                 mSpeed.X, mSpeed.Y,
                 mVolume, mSediment,
                 dv, dt, ddt,
+                ddt * mVolume * cDepoRate * diff_sediment,
                 flowmap->GetPixel(px, py)
             );
 #endif
 
             // update all biomemap
- //           flowmap->SetPixel(px, py, FMath::Min(flowmap->GetPixel(px, py) + mVolume * 0.1f, 1.0f) );
-            flowmap->DrawLine(px, py, mVolume / rate, X, Y, mVolume / rate, TsImageCore::EOp::Max);
+            flowmap->SetPixel(px, py, FMath::Min(flowmap->GetPixel(px, py) + mVolume * 0.1f, 1.0f) );
+            //flowmap->DrawLine(px, py, mVolume, X, Y, mVolume, TsImageCore::EOp::Max);
+            //flowmap->DrawLine(px, py, 1.0f, X, Y, 1.0f, TsImageCore::EOp::Max);
             pondmap->SetPixel(px, py, FMath::Min(pondmap->GetPixel(px, py) + ddt * 0.001f, 1.0f)); //  + mSpeed.Length() * 0.001f );
             hghtmap->SetPixel(px, py, hghtmap->GetPixel(px, py) - ddt * mVolume * cDepoRate * diff_sediment );
 
@@ -92,7 +93,7 @@ void TsErosion::Simulate( int cycles)
 #define DG 1.0f 
 
 #ifdef DDDD
-    Particle(192, 56).Simulate(1.2f, mHeightMap, mFlowMap, mPondMap);
+    Particle(192, 56).Simulate(1.2f, mHeightMap, mFlowMap, mPondMap, 1.0f);
 #else
     for (int i = 0; i < cycles; i++) {
         // drop the rain-particle all over the world.
