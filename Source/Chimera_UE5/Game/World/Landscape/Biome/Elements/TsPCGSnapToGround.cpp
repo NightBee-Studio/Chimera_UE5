@@ -64,23 +64,28 @@ bool FPCGSnapToGroundElement::ExecuteInternal(FPCGContext* Context) const// cann
 		out_data->InitializeFromData(pn_data);
 		TArray<FPCGPoint>&	out_points = out_data->GetMutablePoints();
 		output.Data = out_data;
+		
+		if ( UWorld* world = Context ? Context->SourceComponent->GetWorld() : nullptr ) {
+			FCollisionQueryParams params;
+			params.bTraceComplex = true;
+			params.AddIgnoredActor(Context->SourceComponent->GetOwner());
 
-		FPCGAsync::AsyncPointProcessing(
-			Context, points.Num(), out_points,
-			[&](int32 idx, FPCGPoint& out_point) {
-				out_point = points[idx];
-				FTransform& trans = out_point.Transform;
+			for (int ip = 0; ip < points.Num(); ip++) {
+				out_points.Add(points[ip]);
+
+				FTransform& trans = out_points[ip].Transform;
 #define GAP	2000
 				FVector from = trans.GetLocation() + FVector(0, 0, GAP);
-				FVector to   = trans.GetLocation() + FVector(0, 0,-GAP);
+				FVector to = trans.GetLocation() + FVector(0, 0, -GAP);
 				FHitResult result;
-
-				UWorld* world = Context ? Context->SourceComponent->GetWorld() : nullptr;
-				if (world && world->LineTraceSingleByChannel(result, from, to, ECC_Visibility, FCollisionQueryParams())) {
-					trans.SetLocation( result.Location );
+				if (world->LineTraceSingleByChannel(result, from, to, ECC_Visibility, params)) {
+					//UE_LOG(LogTemp, Log, TEXT(" Pos=(%f %f %f)->Hit %f %f %f"),
+					//	trans.GetLocation().X, trans.GetLocation().Y, trans.GetLocation().Z,
+					//	result.Location.X, result.Location.Y, result.Location.Z);
+					trans.SetLocation(result.Location);
 				}
-				return true;
-			});
+			}
+		}
 	}
 
 	return true;

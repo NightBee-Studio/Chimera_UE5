@@ -22,7 +22,7 @@ class UPCGFilterTextureSettings : public UPCGSettings
 public:
 	//~Begin UPCGSettings interface
 #if WITH_EDITOR
-	virtual FName GetDefaultNodeName() const override { return FName("FilterTexture"); }
+	virtual FName GetDefaultNodeName() const override { return FName("TsFilterTexture"); }
 	virtual FText GetDefaultNodeTitle() const override { return NSLOCTEXT("PCG", "Filtered the Postions by Texture ", "Filtered By Texture"); }
 	//virtual EPCGSettingsType GetType() const override { return EPCGSettingsType::Debug; }
 #endif
