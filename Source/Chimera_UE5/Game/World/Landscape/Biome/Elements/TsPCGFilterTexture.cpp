@@ -1,79 +1,52 @@
 
+
 #include "TsPCGFilterTexture.h"
 
-#include "PCGComponent.h"
 #include "PCGContext.h"
 #include "PCGPin.h"
-
+#include "PCGComponent.h"
+#include "Data/PCGSpatialData.h"
+#include "Data/PCGPointData.h"
 #include "Helpers/PCGAsync.h"
 
-#include "Data/PCGPointData.h"
-#include "Data/PCGSpatialData.h"
-
+#include "PCGVolume.h"
 
 //#include UE_INLINE_GENERATED_CPP_BY_NAME(PCGSnapToGround)
 
-#define LOCTEXT_NAMESPACE "PCGFilterTexture"
+#define LOCTEXT_NAMESPACE "PCGFilterTextureElement"
 
-
-TArray<FPCGPinProperties> UPCGFilterTextureSettings::InputPinProperties() const
-{
-	TArray<FPCGPinProperties> PinProperties;
-	PinProperties.Emplace(PCGPinConstants::DefaultInputLabel, EPCGDataType::Point);
-
-	return PinProperties;
-}
-
-TArray<FPCGPinProperties> UPCGFilterTextureSettings::OutputPinProperties() const
-{
-	TArray<FPCGPinProperties> PinProperties;
-	PinProperties.Emplace(PCGPinConstants::DefaultOutputLabel, EPCGDataType::Point);
-
-	return PinProperties;
-}
 
 FPCGElementPtr UPCGFilterTextureSettings::CreateElement() const
 {
-	return MakeShared<FPCGFilterTextureElement>(mTexture, mVolumeSize, mThresholdMin, mThresholdMax );
-}
-
-
-FPCGFilterTextureElement::FPCGFilterTextureElement(TObjectPtr<UTexture2D> texture, const FVector& size, float min, float max)
-	: IPCGElement()
-	, mTexture(texture)
-	, mVolumeSize(size)
-	, mMin(min)
-	, mMax(min<max ? max : min+0.01f)
-{
+	return MakeShared<FPCGFilterTextureElement>();
 }
 
 int FPCGFilterTextureElement::GetIndexFromPos(const FPCGContext* context, const FPCGPoint &point ) const
 {
 	const UPCGComponent* pcg_comp = context->SourceComponent.Get();
-
 	FVector volpos = pcg_comp->GetOwner()->GetActorLocation();
 	FVector scale  = pcg_comp->GetOwner()->GetActorScale3D();
-	FVector volsiz = mVolumeSize * scale.X;// scale
+	FVector volsiz(100.0f);
 
-	//if (APCGVolume* pcg_volume = Cast<APCGVolume>(pcg_comp->GetOwner())){
-	//	UE_LOG(LogTemp, Log, TEXT("This PCGComponent belongs to a PCGVolume!"));
-	//	// ここでサイズ取得可能
-	//	UBrushComponent* brush = pcg_volume->GetBrushComponent();
-	//	if (brush)	{
-	//		FVector box_extent  = brush->Bounds.BoxExtent;
-	//		volsiz = brush->GetComponentTransform().TransformVector(box_extent * 2.0f);
-	//		UE_LOG(LogTemp, Log, TEXT("PCG Volume Size: %s"), *volsiz.ToString());
-	//	}
-	//}
+	// ComponentがPCGVolumeに接続されている前提でキャスト
+	if (const APCGVolume* pcg_vol = Cast<APCGVolume>(pcg_comp->GetOwner())){
+		volsiz = pcg_vol->GetBounds().BoxExtent * 2.0f;
+	}
 
-	int byte_per_pixel = GPixelFormats[mTexture->GetPixelFormat()].BlockBytes;
-	int w = mTexture->GetSizeX();
-	int h = mTexture->GetSizeY();
+	const UPCGFilterTextureSettings* settings = context->GetInputSettings<UPCGFilterTextureSettings>();
+	check(settings);
+	const UTexture2D* tex = settings->mTexture;
 
-	FVector local = (point.Transform.GetLocation() + volsiz *0.5f - volpos) / volsiz.X * w ;
+	int byte_per_pixel = GPixelFormats[tex->GetPixelFormat()].BlockBytes;
+	int w = tex->GetSizeX();
+	int h = tex->GetSizeY();
+
+	FVector local = (point.Transform.GetLocation() + volsiz * 0.5f - volpos) / volsiz.X * w ;
 	int x = FMath::Clamp( (int)(local.X), 0, w-1) ;
 	int y = FMath::Clamp( (int)(local.Y), 0, h-1);
-	return (x*w + y) * byte_per_pixel;
+	//UE_LOG(LogTemp, Log, TEXT("VolSize %f %f %f ) * scale %f x%d y%d ofs%d"), volsiz.X, volsiz.Y, volsiz.Z, scale.X,
+	//	x,y, (y * w + x) * byte_per_pixel);
+	return (y*w + x) * byte_per_pixel;
 }
 
 bool FPCGFilterTextureElement::ExecuteInternal(FPCGContext* Context) const// cannot change the name of 'Context'
@@ -96,36 +69,60 @@ bool FPCGFilterTextureElement::ExecuteInternal(FPCGContext* Context) const// can
 			continue;
 		}
 
-		if (mTexture && mTexture->GetPlatformData() && mTexture->GetPlatformData()->Mips.Num()>0 ){
+		const UPCGFilterTextureSettings* settings = Context->GetInputSettings<UPCGFilterTextureSettings>();
+		check(settings);
+		float 	    max = settings->mThresholdMax;
+		float	    min = settings->mThresholdMin;
+		UTexture2D* tex = settings->mTexture;
+
+#if WITH_EDITORONLY_DATA
+		if (tex && tex->Source.IsValid()){
+			//UE_LOG(LogTemp, Log, TEXT("Source  IsValid%d Fmt%d"), tex ? tex->Source.IsValid() : -2, tex->GetPixelFormat());
+#else
+		if (tex && tex->GetPlatformData() && tex->GetPlatformData()->Mips.Num()>0 ){
+			//UE_LOG(LogTemp, Log, TEXT("Platform MipNum%d"), tex ? tex->GetPlatformData() ? tex->GetPlatformData()->Mips.Num() : -2 : -1);
+#endif
 			const TArray<FPCGPoint>& points = pn_data->GetPoints();
 			UPCGPointData* out_data = NewObject<UPCGPointData>();
 			out_data->InitializeFromData(pn_data);
 			TArray<FPCGPoint>& out_points = out_data->GetMutablePoints();
 			output.Data = out_data;
 
-			FTexture2DMipMap& mip = mTexture->GetPlatformData()->Mips[0];
+#if WITH_EDITORONLY_DATA
+			const void* data_ptr = (const void*)tex->Source.LockMip(0);
+#else
+			FTexture2DMipMap& mip = tex->GetPlatformData()->Mips[0];
 			const void* data_ptr = mip.BulkData.LockReadOnly();
+#endif
 			for (const FPCGPoint& p : points) {
 				int    idx = GetIndexFromPos(Context, p);
 				float  r   = 0.0f;
-				switch( mTexture->GetPixelFormat() ){
+				switch( tex->GetPixelFormat() ){
+				case EPixelFormat::PF_G16:
 				case EPixelFormat::PF_R16_UINT:
 				case EPixelFormat::PF_R16_SINT:
-					r = ((uint16*)data_ptr)[idx] / 65535.0f;
+					r = ((uint16*)data_ptr)[idx/2] / 65535.0f;
 					break;
 				case EPixelFormat::PF_B8G8R8A8:
 				case EPixelFormat::PF_R8G8B8A8:
-					r = ((uint8 *)data_ptr)[idx] / 255.0f   ;
+					r = ((uint8 *)data_ptr)[idx+0] / 255.0f   ;
 					break;
 				}
-				if (mMin <= r && r <= mMax) {
-					UE_LOG(LogTemp, Log, TEXT("(r%f fmt%d) "), r, mTexture->GetPixelFormat());
+				if (min <= r && r <= max) {
+					//UE_LOG(LogTemp, Log, TEXT("(pix%d  r%f fmt%d) "), ((uint16*)data_ptr)[idx / 2], r, tex->GetPixelFormat());
 					out_points.Add(p);
 				}
 			}
+#if WITH_EDITORONLY_DATA
+			tex->Source.UnlockMip(0);
+#else
 			mip.BulkData.Unlock();
+#endif
 		}
 	}
 
 	return true;
 }
+
+#undef LOCTEXT_NAMESPACE
+

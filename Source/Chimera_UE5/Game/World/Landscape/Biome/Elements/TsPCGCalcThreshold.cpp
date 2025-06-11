@@ -136,3 +136,4 @@ bool FPCGCalcThresholdElement::DoOperation(PCGMetadataOps::FOperationData& op_da
 			);
 }
 
+#undef LOCTEXT_NAMESPACE

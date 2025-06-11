@@ -25,7 +25,7 @@ public:
 #if WITH_EDITOR
 	virtual FName GetDefaultNodeName() const override { return FName("SnapToGround"); }
 	virtual FText GetDefaultNodeTitle() const override { return NSLOCTEXT("PCG", "SnapToGround", "Snap To Ground"); }
-	//virtual EPCGSettingsType GetType() const override { return EPCGSettingsType::Debug; }
+	virtual EPCGSettingsType GetType() const override { return EPCGSettingsType::PointOps; }
 #endif
 
 	virtual TArray<FPCGPinProperties> InputPinProperties() const override;

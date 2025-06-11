@@ -128,3 +128,5 @@ bool FPCGBreakMaterialElement::DoOperation(PCGMetadataOps::FOperationData& Opera
 
 bool FPCGMetadataElementBase::PrepareDataInternal(FPCGContext* Context) const { return true;}
 bool FPCGMetadataElementBase::ExecuteInternal(FPCGContext* Context) const { return true; }
+
+#undef LOCTEXT_NAMESPACE

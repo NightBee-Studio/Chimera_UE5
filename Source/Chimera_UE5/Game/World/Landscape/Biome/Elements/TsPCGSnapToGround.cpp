@@ -90,3 +90,5 @@ bool FPCGSnapToGroundElement::ExecuteInternal(FPCGContext* Context) const// cann
 
 	return true;
 }
+
+#undef LOCTEXT_NAMESPACE
