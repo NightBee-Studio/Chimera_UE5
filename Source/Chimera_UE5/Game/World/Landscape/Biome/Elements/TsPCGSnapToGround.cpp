@@ -4,33 +4,12 @@
 #include "PCGComponent.h"
 #include "PCGContext.h"
 #include "PCGPin.h"
-
 #include "Helpers/PCGAsync.h"
-
 #include "Data/PCGPointData.h"
 #include "Data/PCGSpatialData.h"
 
-
-//#include UE_INLINE_GENERATED_CPP_BY_NAME(PCGSnapToGround)
-
 #define LOCTEXT_NAMESPACE "PCGSnapToGroundElement"
 
-
-TArray<FPCGPinProperties> UPCGSnapToGroundSettings::InputPinProperties() const
-{
-	TArray<FPCGPinProperties> PinProperties;
-	PinProperties.Emplace(PCGPinConstants::DefaultInputLabel, EPCGDataType::Point);
-
-	return PinProperties;
-}
-
-TArray<FPCGPinProperties> UPCGSnapToGroundSettings::OutputPinProperties() const
-{
-	TArray<FPCGPinProperties> PinProperties;
-	PinProperties.Emplace(PCGPinConstants::DefaultOutputLabel, EPCGDataType::Point);
-
-	return PinProperties;
-}
 
 FPCGElementPtr UPCGSnapToGroundSettings::CreateElement() const
 {

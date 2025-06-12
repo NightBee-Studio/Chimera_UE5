@@ -19,10 +19,10 @@
 
 namespace PCGMetadataBreakTransformSettings
 {
-	inline EBiomeSType GetSType(const FTsPCGMaterial& m)
-	{
-		return m.mSType;
-	}
+	//inline EBiomeSType GetSType(const FTsPCGMaterial& m)
+	//{
+	//	return m.mSType;
+	//}
 	inline EBiomeMType GetMType(const FTsPCGMaterial& m)
 	{
 		return m.mMType;
@@ -46,8 +46,8 @@ FPCGAttributePropertyInputSelector UPCGBreakMaterialSettings::GetInputSource(uin
 FName UPCGBreakMaterialSettings::GetOutputPinLabel(uint32 index) const
 {
 	switch (index){
-	case 0:	return FName("SType");
-	case 1:	return FName("MType");
+//	case 0:	return FName("SType");
+	case 0:	return FName("MType");
 	default:return FName("Ratio");
 	}
 }
@@ -118,7 +118,6 @@ bool FPCGBreakMaterialElement::DoOperation(PCGMetadataOps::FOperationData& Opera
 
 	return DoUnaryOp<FTsPCGMaterial>(
 			OperationData,
-			PCGMetadataBreakTransformSettings::GetSType,
 			PCGMetadataBreakTransformSettings::GetMType,
 			PCGMetadataBreakTransformSettings::GetRatio
 		);

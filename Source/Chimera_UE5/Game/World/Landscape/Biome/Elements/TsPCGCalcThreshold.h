@@ -11,65 +11,47 @@
 
 UCLASS(MinimalAPI, BlueprintType, ClassGroup = (Procedural))
 class UPCGCalcThresholdSettings
-	: public UPCGMetadataSettingsBase
+	: public UPCGSettings
 {
 	GENERATED_BODY()
 
 public:
-	// ~Begin UObject interface
-	virtual void PostLoad() override;
-	// ~End UObject interface
-	// 
-	//~Begin UPCGSettings interface
 #if WITH_EDITOR
-	virtual FName GetDefaultNodeName() const override;
-	virtual FText GetDefaultNodeTitle() const override;
+	virtual FName GetDefaultNodeName() const override { return TEXT("CalcThreshold"); }
+	virtual FText GetDefaultNodeTitle() const override { return NSLOCTEXT("PCG", "CalcThreshold", "Calc Threshold"); }
+	virtual EPCGSettingsType GetType() const override { return EPCGSettingsType::Param; }
 #endif
-	virtual FPCGAttributePropertyInputSelector GetInputSource(uint32 Index) const override;
 
-	virtual FName GetOutputPinLabel(uint32 Index) const override;
-	virtual uint32 GetResultNum() const override;
+	//virtual bool HasInputPin() const override { return false; }
 
-	virtual bool IsSupportedInputType(uint16 TypeId, uint32 InputIndex, bool& bHasSpecialRequirement) const override;
-	virtual FName GetOutputAttributeName(FName BaseName, uint32 Index) const override;
-
-	virtual bool HasDifferentOutputTypes() const override;
-	virtual TArray<uint16> GetAllOutputTypes() const override;
+	virtual TArray<FPCGPinProperties> InputPinProperties() const override {
+		return Super::DefaultPointInputPinProperties();
+	}
+	virtual TArray<FPCGPinProperties> OutputPinProperties() const override{
+		TArray<FPCGPinProperties> Pins;
+		Pins.Emplace(TEXT("R1"), EPCGDataType::Param);
+		Pins.Emplace(TEXT("R2"), EPCGDataType::Param);
+		Pins.Emplace(TEXT("R3"), EPCGDataType::Param);
+		Pins.Emplace(TEXT("R4"), EPCGDataType::Param);
+		return Pins;
+	}
 
 protected:
 	virtual FPCGElementPtr CreateElement() const override;
-	//~End UPCGSettings interface
 
 public:
-	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Input, meta = (PCG_Overridable))
-	FPCGAttributePropertyInputSelector InputSource;
-
-
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Settings, meta = (PCG_Overridable))
+	TArray<FTsPCGMaterial>	mLayers;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Settings, meta = (PCG_Overridable))
-	UTexture2D*							mTexture;
+	UTexture2D*				mTexture;
 };
 
 
 class FPCGCalcThresholdElement
-	: public FPCGMetadataElementBase
+	: public IPCGElement
 {
-	TArray<float>	mResult;
-
 public:
-	FPCGCalcThresholdElement();
-protected:
-
-	static float Get0(const TArray<FTsPCGMaterial>& m);
-	static float GetR1(const TArray<FTsPCGMaterial>& m);
-	static float GetR2(const TArray<FTsPCGMaterial>& m);
-	static float GetR3(const TArray<FTsPCGMaterial>& m);
-	static float GetR4(const TArray<FTsPCGMaterial>& m);
-	static float Get1(const TArray<FTsPCGMaterial>& m);
-
-	virtual bool PrepareDataInternal(FPCGContext* Context) const override;
 	virtual bool ExecuteInternal(FPCGContext* Context) const override;
-
-	virtual bool DoOperation(PCGMetadataOps::FOperationData& op_data) const override;
 };
 

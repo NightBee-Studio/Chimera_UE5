@@ -28,8 +28,8 @@ struct CHIMERA_UE5_API FTsPCGMaterial
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (DisplayName = "SType"))
-	EBiomeSType				mSType;
+	//UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (DisplayName = "SType"))
+	//EBiomeSType				mSType;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (DisplayName = "MType"))
 	EBiomeMType				mMType;
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Meta = (DisplayName = "Ratio"))
