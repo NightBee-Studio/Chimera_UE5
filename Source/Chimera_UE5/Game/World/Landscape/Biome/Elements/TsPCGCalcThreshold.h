@@ -5,7 +5,6 @@
 
 #include "../TsBiomePCG.h"
 
-
 #include "TsPCGCalcThreshold.generated.h"
 
 
@@ -25,15 +24,14 @@ public:
 	//virtual bool HasInputPin() const override { return false; }
 
 	virtual TArray<FPCGPinProperties> InputPinProperties() const override {
-		return Super::DefaultPointInputPinProperties();
+		TArray<FPCGPinProperties> pins;
+		pins.Emplace(TEXT("In"), EPCGDataType::Spatial);
+		return pins;
 	}
 	virtual TArray<FPCGPinProperties> OutputPinProperties() const override{
-		TArray<FPCGPinProperties> Pins;
-		Pins.Emplace(TEXT("R1"), EPCGDataType::Param);
-		Pins.Emplace(TEXT("R2"), EPCGDataType::Param);
-		Pins.Emplace(TEXT("R3"), EPCGDataType::Param);
-		Pins.Emplace(TEXT("R4"), EPCGDataType::Param);
-		return Pins;
+		TArray<FPCGPinProperties> pins;
+		pins.Emplace(TEXT("Out"), EPCGDataType::Spatial);
+		return pins;
 	}
 
 protected:

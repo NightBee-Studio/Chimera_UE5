@@ -78,19 +78,24 @@ bool FPCGCalcThresholdElement::ExecuteInternal(FPCGContext* Context) const
 	}
 #endif
 
-	UPCGParamData* out_data = NewObject<UPCGParamData>();
-	out_data->Metadata->CreateAttribute<float>(TEXT("R1"), results[0], false, false);
-	out_data->Metadata->CreateAttribute<float>(TEXT("R2"), results[1], false, false);
-	out_data->Metadata->CreateAttribute<float>(TEXT("R3"), results[2], false, false);
-	out_data->Metadata->CreateAttribute<float>(TEXT("R4"), results[3], false, false);
-	out_data->Metadata->AddEntry();
+	UPCGPointData* pn_data = NewObject<UPCGPointData>();
+	pn_data->InitializeFromData(nullptr);
 
-	for (const FName& name : { TEXT("R1"), TEXT("R2"), TEXT("R3"), TEXT("R4") }){
-		FPCGTaggedData td;
-		td.Data = out_data;
-		td.Pin  = name;
-		outputs.Add(MoveTemp(td));
-	}
+	//UPCGParamData* out_data = NewObject<UPCGParamData>();
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R1"), results[0], false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R2"), results[1], false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R3"), results[2], false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R4"), results[3], false, false);
+	pn_data->Metadata->AddEntry();
+
+	//FPCGPoint point;
+	//point.Transform = FTransform::Identity;
+	pn_data->GetMutablePoints().Add( FPCGPoint() );
+
+	FPCGTaggedData td;
+	td.Data = pn_data;
+	td.Pin  = TEXT("Out");
+	outputs.Add(MoveTemp(td));
 
 	return true;
 }

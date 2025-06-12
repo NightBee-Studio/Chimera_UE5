@@ -71,8 +71,8 @@ bool FPCGFilterTextureElement::ExecuteInternal(FPCGContext* Context) const// can
 
 		const UPCGFilterTextureSettings* settings = Context->GetInputSettings<UPCGFilterTextureSettings>();
 		check(settings);
-		float 	    max = settings->mThresholdMax;
-		float	    min = settings->mThresholdMin;
+		float	    min = settings->mRange.X;
+		float 	    max = settings->mRange.Y;
 		UTexture2D* tex = settings->mTexture;
 
 #if WITH_EDITORONLY_DATA
