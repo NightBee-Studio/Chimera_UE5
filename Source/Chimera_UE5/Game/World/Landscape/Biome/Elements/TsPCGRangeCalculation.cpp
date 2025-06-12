@@ -1,4 +1,4 @@
-#include "TsPCGCalcThreshold.h"
+#include "TsPCGRangeCalculation.h"
 
 #include "PCGComponent.h"
 #include "PCGContext.h"
@@ -13,24 +13,24 @@
 #include "../TsBiomePCG.h"
 
 
-#define LOCTEXT_NAMESPACE "TsPCGCalcThreshold"
+#define LOCTEXT_NAMESPACE "TsPCGRangeCalculation"
 
 
 
-FPCGElementPtr UPCGCalcThresholdSettings::CreateElement() const
+FPCGElementPtr UPCGRangeCalculationSettings::CreateElement() const
 {
-	return MakeShared<FPCGCalcThresholdElement>();
+	return MakeShared<FPCGRangeCalculationElement>();
 }
 
-bool FPCGCalcThresholdElement::ExecuteInternal(FPCGContext* Context) const
+bool FPCGRangeCalculationElement::ExecuteInternal(FPCGContext* Context) const
 {
 	const TArray<FPCGTaggedData>& inputs  = Context->InputData .TaggedData;
 	      TArray<FPCGTaggedData>& outputs = Context->OutputData.TaggedData ;
 
-#if 1
-	const UPCGCalcThresholdSettings* settings = Context->GetInputSettings<UPCGCalcThresholdSettings>();
+	const UPCGRangeCalculationSettings* settings = Context->GetInputSettings<UPCGRangeCalculationSettings>();
 	check(settings);
 	UTexture2D* tex = settings->mTexture;
+	if ( !tex ) 	return true;
 
 	TArray<float> samples;
 
@@ -76,25 +76,18 @@ bool FPCGCalcThresholdElement::ExecuteInternal(FPCGContext* Context) const
 		ratio += ly.mRatio;
 		results.Add( samples[max * FMath::Min(1, ratio)] );
 	}
-#endif
 
 	UPCGPointData* pn_data = NewObject<UPCGPointData>();
 	pn_data->InitializeFromData(nullptr);
 
-	//UPCGParamData* out_data = NewObject<UPCGParamData>();
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R1"), results[0], false, false);
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R2"), results[1], false, false);
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R3"), results[2], false, false);
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R4"), results[3], false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R1"), results.Num()>0 ? results[0] : 0.0f, false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R2"), results.Num()>1 ? results[1] : 0.0f, false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R3"), results.Num()>2 ? results[2] : 0.0f, false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R4"), results.Num()>3 ? results[3] : 0.0f, false, false);
 	pn_data->Metadata->AddEntry();
-
-	//FPCGPoint point;
-	//point.Transform = FTransform::Identity;
 	pn_data->GetMutablePoints().Add( FPCGPoint() );
 
-	FPCGTaggedData td;
-	td.Data = pn_data;
-	td.Pin  = TEXT("Out");
+	FPCGTaggedData td = { .Data = pn_data, .Pin = TEXT("Out"),};
 	outputs.Add(MoveTemp(td));
 
 	return true;

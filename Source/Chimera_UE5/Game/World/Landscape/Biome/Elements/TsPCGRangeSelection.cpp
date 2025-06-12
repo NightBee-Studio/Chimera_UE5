@@ -1,4 +1,4 @@
-#include "TsPCGSelectRange.h"
+#include "TsPCGRangeSelection.h"
 
 #include "PCGParamData.h"
 #include "PCGContext.h"
@@ -11,12 +11,12 @@
 #include "Data/PCGSpatialData.h"
 
 
-FPCGElementPtr UPCGSelectRangeSettings::CreateElement() const
+FPCGElementPtr UPCGRangeSelectionSettings::CreateElement() const
 {
-	return MakeShared<FPCGSelectRangeElement>();
+	return MakeShared<FPCGRangeSelectionElement>();
 }
 
-bool FPCGSelectRangeElement::ExecuteInternal(FPCGContext* Context) const
+bool FPCGRangeSelectionElement::ExecuteInternal(FPCGContext* Context) const
 {
 	const TArray<FPCGTaggedData>& inputs  = Context->InputData. TaggedData;
 	      TArray<FPCGTaggedData>& outputs = Context->OutputData.TaggedData;
@@ -32,16 +32,12 @@ bool FPCGSelectRangeElement::ExecuteInternal(FPCGContext* Context) const
 		auto ExtractAttribute = [&](const FName& name) -> float {
 				FPCGAttributePropertySelector selector;
 				selector.SetAttributeName(name);
-
-				TUniquePtr<const IPCGAttributeAccessor>		accessor = PCGAttributeAccessorHelpers::CreateConstAccessor(pn_data, selector);
-				TUniquePtr<const IPCGAttributeAccessorKeys> keys = PCGAttributeAccessorHelpers::CreateConstKeys(pn_data, selector);
-
+				TUniquePtr<const IPCGAttributeAccessor    > accessor = PCGAttributeAccessorHelpers::CreateConstAccessor(pn_data, selector);
+				TUniquePtr<const IPCGAttributeAccessorKeys> keys     = PCGAttributeAccessorHelpers::CreateConstKeys    (pn_data, selector);
 				if (!accessor || !keys) {
 					UE_LOG(LogTemp, Warning, TEXT("Attribute %s not found or empty"), *name.ToString());
 					return 0.0f;
 				}
-
-				// 1点目だけ読む（1点しかない前提ならこれで十分）
 				float value = 0.0f;
 				if (!accessor->Get<float>(value, *keys)) {
 					UE_LOG(LogTemp, Warning, TEXT("Failed to read attribute %s"), *name.ToString());
@@ -49,15 +45,11 @@ bool FPCGSelectRangeElement::ExecuteInternal(FPCGContext* Context) const
 				return value;
 			};
 
-			// 読み取り対象の属性名リスト
-		for (const FName& at_name : { TEXT("R1"), TEXT("R2"), TEXT("R3"), TEXT("R4") }) {
-			float val = ExtractAttribute(at_name);
-//			PCGE_LOG(Verbose, TEXT("Read %s = %.2f"), *at_name.ToString(), val);
-			UE_LOG(LogTemp, Log, TEXT(" Read %s = %.2f"), *at_name.ToString(), val);
-		}
+		//for (const FName& at_name : { TEXT("R1"), TEXT("R2"), TEXT("R3"), TEXT("R4") }) {
+		//	UE_LOG(LogTemp, Log, TEXT(" Read %s = %.2f"), *at_name.ToString(), ExtractAttribute(at_name) );
+		//}
 
-
-		const UPCGSelectRangeSettings* setting = Context->GetInputSettings<UPCGSelectRangeSettings>();
+		const UPCGRangeSelectionSettings* setting = Context->GetInputSettings<UPCGRangeSelectionSettings>();
 		if (!setting) return true;
 
 		int i = setting->mIndex-1 ;
@@ -72,7 +64,6 @@ bool FPCGSelectRangeElement::ExecuteInternal(FPCGContext* Context) const
 		out_data->Metadata->CreateAttribute<FVector2D>(TEXT("Range"), range, /*bAllowOverride=*/false, /*bOverrideParent=*/false);
 		out_data->Metadata->AddEntry(); // 1行追加
 
-		//TArray<FPCGTaggedData>& outputs = Context->OutputData.TaggedData;
 		FPCGTaggedData td = { .Data = out_data, .Pin = TEXT("Range"),  };
 		outputs.Add(MoveTemp(td));
 	}

@@ -2,23 +2,23 @@
 
 #include "PCGSettings.h"
 #include "PCGElement.h"
-#include "TsPCGSelectRange.generated.h"
+#include "TsPCGRangeSelection.generated.h"
 
 UCLASS(MinimalAPI, BlueprintType, ClassGroup = (Procedural))
-class UPCGSelectRangeSettings
+class UPCGRangeSelectionSettings
 	: public UPCGSettings
 {
 	GENERATED_BODY()
 
 public:
-	UPCGSelectRangeSettings(const FObjectInitializer& ObjectInitializer) {}
+	UPCGRangeSelectionSettings(const FObjectInitializer& ObjectInitializer) {}
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Settings, meta = (PCG_Overridable))
 	int mIndex = 0;
 
 #if WITH_EDITOR
-	virtual FName GetDefaultNodeName() const override { return TEXT("GetRange"); }
-	virtual FText GetDefaultNodeTitle() const override { return NSLOCTEXT("PCG", "Node_GetRange", "Get Range"); }
+	virtual FName GetDefaultNodeName() const override { return TEXT("RangeSelection"); }
+	virtual FText GetDefaultNodeTitle() const override { return NSLOCTEXT("PCG", "Node_RangeSelection", "Range Selection"); }
 	virtual EPCGSettingsType GetType() const override { return EPCGSettingsType::Param; }
 #endif
 
@@ -37,7 +37,7 @@ protected:
 	virtual FPCGElementPtr CreateElement() const override;
 };
 
-class FPCGSelectRangeElement
+class FPCGRangeSelectionElement
 	: public IPCGElement
 {
 public:

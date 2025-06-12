@@ -5,19 +5,19 @@
 
 #include "../TsBiomePCG.h"
 
-#include "TsPCGCalcThreshold.generated.h"
+#include "TsPCGRangeCalculation.generated.h"
 
 
 UCLASS(MinimalAPI, BlueprintType, ClassGroup = (Procedural))
-class UPCGCalcThresholdSettings
+class UPCGRangeCalculationSettings
 	: public UPCGSettings
 {
 	GENERATED_BODY()
 
 public:
 #if WITH_EDITOR
-	virtual FName GetDefaultNodeName() const override { return TEXT("CalcThreshold"); }
-	virtual FText GetDefaultNodeTitle() const override { return NSLOCTEXT("PCG", "CalcThreshold", "Calc Threshold"); }
+	virtual FName GetDefaultNodeName() const override { return TEXT("RangeCalculation"); }
+	virtual FText GetDefaultNodeTitle() const override { return NSLOCTEXT("PCG", "Node_RangeCalculation", "Range Calculation"); }
 	virtual EPCGSettingsType GetType() const override { return EPCGSettingsType::Param; }
 #endif
 
@@ -46,7 +46,7 @@ public:
 };
 
 
-class FPCGCalcThresholdElement
+class FPCGRangeCalculationElement
 	: public IPCGElement
 {
 public:
