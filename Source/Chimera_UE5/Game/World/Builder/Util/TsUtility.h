@@ -45,17 +45,22 @@ namespace TsUtil {
 	}
 
 	static inline
-	void		ForeachGaussian( const FVector2D &p, float pixel, std::function<void( const FVector2D& p, float weight )> func ) {
-		static float w[5][5] = {
+	void		ForeachGaussian( const FVector2D &p, float pixel, std::function<void( const FVector2D& p, float weight )> func, int size=5) {
+		static float w25[5][5] = {
 			{1, 4, 7, 4,1},
 			{4,16,26,16,4},
 			{7,26,41,26,7},
 			{4,16,26,16,4},
 			{1, 4, 7, 4,1},
 		};
-		for (int y = 0; y < 5; y++) {
-			for (int x = 0; x < 5; x++) {
-				func( p + FVector2D(x-2, y-2) * pixel, w[x][y] / 273.0f );
+		static float w9[3][3] = {
+			{1,2,1},{2,4,2},{1,2,1},
+		};
+		float wt = size > 4 ? 273.0f : 16.0f;
+		int   nc = size > 4 ? 2      : 1    ;
+		for (int y = 0; y < size; y++) {
+			for (int x = 0; x < size; x++) {
+				func( p + FVector2D(x-nc, y-nc) * pixel, (size>4 ? w25[x][y] : w9[x][y]) / wt );
 			}
 		}
 	}

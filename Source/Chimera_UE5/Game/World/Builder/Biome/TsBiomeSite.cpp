@@ -105,39 +105,44 @@ float	TsBiomeSite::Remap(float val) const
 	return 100 * (FMath::Pow(TsValueMap::Remap(val), 2.0f ) - 1 );
 }
 
-float	 TsBiomeSite::GetValue(const FVector2D &p )
-{
-	return	( 1.00f * FMath::PerlinNoise2D(0.001f * mN0 * p + mNoisePos)
-			+ 0.50f * FMath::PerlinNoise2D(0.002f * mN0 * p + mNoisePos)
-			+ 0.25f * FMath::PerlinNoise2D(0.004f * mN0 * p + mNoisePos)
-			+ 0.13f * FMath::PerlinNoise2D(0.008f * mN0 * p + mNoisePos)
-			+ 0.06f * FMath::PerlinNoise2D(0.016f * mN0 * p + mNoisePos)
-			+ 0.03f * FMath::PerlinNoise2D(0.032f * mN0 * p + mNoisePos));
-#if 0
-	float h = -1000000;
-	for (auto& c : mCircles) {
-		if ( c.IsInside( p ) ){
-			h = 1.0f;
-		} else {
-			float hc = -1000000.0f;
-			for (int i = 0; i < c.n; i++) {
-				FVector2D v0 = c.GetOutline(i + 0);
-				FVector2D v1 = c.GetOutline(i + 1);
-				float hp = 1.0f - (TsUtil::NearPoint(v0, v1, p) - p).Length() / 10;
-				hc = FMath::Max(hc, hp) ;
-			}
-			h = FMath::Max(h, hc);
-		}
-	}
-	return h;
-#endif
-}
+//float	 TsBiomeSite::GetValue(const FVector2D &p )
+//{
+//	return	( 1.00f * FMath::PerlinNoise2D(0.001f * mN0 * p + mNoisePos)
+//			+ 0.50f * FMath::PerlinNoise2D(0.002f * mN0 * p + mNoisePos)
+//			+ 0.25f * FMath::PerlinNoise2D(0.004f * mN0 * p + mNoisePos)
+//			+ 0.13f * FMath::PerlinNoise2D(0.008f * mN0 * p + mNoisePos)
+//			+ 0.06f * FMath::PerlinNoise2D(0.016f * mN0 * p + mNoisePos)
+//			+ 0.03f * FMath::PerlinNoise2D(0.032f * mN0 * p + mNoisePos));
+//#if 0
+//	float h = -1000000;
+//	for (auto& c : mCircles) {
+//		if ( c.IsInside( p ) ){
+//			h = 1.0f;
+//		} else {
+//			float hc = -1000000.0f;
+//			for (int i = 0; i < c.n; i++) {
+//				FVector2D v0 = c.GetOutline(i + 0);
+//				FVector2D v1 = c.GetOutline(i + 1);
+//				float hp = 1.0f - (TsUtil::NearPoint(v0, v1, p) - p).Length() / 10;
+//				hc = FMath::Max(hc, hp) ;
+//			}
+//			h = FMath::Max(h, hc);
+//		}
+//	}
+//	return h;
+//#endif
+//}
 
 TsBiomeSite::TsBiomeSite()
-	: TsBiomeSFunc(TsNoiseParam(1.0f, 0, 0, 0), 1.0f )
-	//: TsValueMap()
-{}
-
+	: TsBiomeSFunc(
+		TsNoiseParam({
+			{ 1.00f, 0.001f },
+			{ 0.50f, 0.002f },
+			{ 0.25f, 0.004f },
+			{ 0.13f, 0.008f },
+			{ 0.06f, 0.016f },
+			{ 0.03f, 0.032f },
+		}), 1.0f ){}
 
 	//for (uint32 RegionIndex = 0; RegionIndex < region_data->NumRegions; ++RegionIndex) {
 	//	int32 CurrentFirstMip = region_data->Texture2DResource->GetCurrentFirstMip();

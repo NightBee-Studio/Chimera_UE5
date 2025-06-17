@@ -65,9 +65,34 @@ void TsNoiseParam::Setup(int seed )
 }
 
 float	TsNoiseMap::GetValue(const FVector2D& p) {
-	return	( mN0 * FMath::PerlinNoise2D(p * mS0 + mNoisePos)
-			+ mN1 * FMath::PerlinNoise2D(p * mS1 + mNoisePos));
+	float val = 0;
+	for ( const auto & l : mLayers) {
+		val += l.X * FMath::PerlinNoise2D(l.Y * p + mNoisePos);
+	}
+	return val;
 }
+
+//	switch (mType) {
+//	default:
+//	case ENoiseType::NoiseNormal:
+//		return (    mN0 * FMath::PerlinNoise2D(         mS0 * p + mNoisePos)
+//				  + mN1 * FMath::PerlinNoise2D(         mS1 * p + mNoisePos));
+//	case ENoiseType::NoiseMaterial:
+//		return (  0.80f * FMath::PerlinNoise2D(0.001f * mN0 * p + mNoisePos)
+//				+ 0.50f * FMath::PerlinNoise2D(0.002f * mN0 * p + mNoisePos)
+//				+ 0.25f * FMath::PerlinNoise2D(0.004f * mN0 * p + mNoisePos)
+//				+ 0.13f * FMath::PerlinNoise2D(0.008f * mN0 * p + mNoisePos)
+//				+ 0.60f * FMath::PerlinNoise2D(0.016f * mN0 * p + mNoisePos)
+//				+ 0.30f * FMath::PerlinNoise2D(0.032f * mN0 * p + mNoisePos));
+//	case ENoiseType::NoiseField:
+//		return (  1.00f * FMath::PerlinNoise2D(0.001f * mN0 * p + mNoisePos)
+//				+ 0.50f * FMath::PerlinNoise2D(0.002f * mN0 * p + mNoisePos)
+//				+ 0.25f * FMath::PerlinNoise2D(0.004f * mN0 * p + mNoisePos)
+//				+ 0.13f * FMath::PerlinNoise2D(0.008f * mN0 * p + mNoisePos)
+//				+ 0.06f * FMath::PerlinNoise2D(0.016f * mN0 * p + mNoisePos)
+//				+ 0.03f * FMath::PerlinNoise2D(0.032f * mN0 * p + mNoisePos));
+//	}
+//}
 
 
 // -------------------------------- TsImageCore  --------------------------------
@@ -270,6 +295,10 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 				case EImageFormat::FormatR32:// unspported for dds
 				case EImageFormat::FormatR16:
 					return -1;
+				case EImageFormat::FormatR8:
+					ds_header.dwPfFlags  = DDPF_LUMINANCE;
+					ds_header.dwRBitMask = 0x000000ff;
+					break;
 				case EImageFormat::FormatL16:
 					ds_header.dwPfFlags = DDPF_LUMINANCE;
 					ds_header.dwRBitMask = 0x0000ffff;

@@ -9,10 +9,9 @@ private:
 	float				mPowerFactor ;
 
 public:
-	TsSurfaceMountain(const TsNoiseParam& cnf, float h, float pw = 2.0f)
-		: TsBiomeSFunc(cnf, h), mPowerFactor(pw) {
-		//gInstance = this;
-	}
+	TsSurfaceMountain( float h, float pw = 2.0f)
+		: TsBiomeSFunc( TsNoiseParam(), h )
+		, mPowerFactor(pw) {}
 
 	float	Remap(float val) const override;
 	float	GetHeight(TsBiome* b, const FVector2D& p) override;

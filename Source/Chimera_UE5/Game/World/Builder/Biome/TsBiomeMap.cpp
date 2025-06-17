@@ -19,7 +19,7 @@ TMap<EBiomeMapType, TsBiomeMap*>	TsBiomeMap::gBiomeMaps;
 float	TsBiomeMap::GetValue(const FVector2D& p)	// world-coord
 {
 	float v = 0;
-	if (mN0 == 0 && mN1 == 0) {
+	if ( mLayers.Num() == 0 ) {
 		FIntVector2	px = GetPixelPos(p);
 		v = TsImageMap<float>::GetPixel(px.X, px.Y);	// get pixel value
 	} else {
@@ -159,76 +159,14 @@ void	TsMaterialMap::MergePixel(int x, int y, const TsMaterialPixel& px)
 	GetPixel(x, y).Normalize();
 }
 
-
-#if 0
-void	TsMaterialMap::SetMaterialPixel(int x, int y)
+void	TsMaterialMap::ForeachPix(std::function< void(int, int, TsMaterialPixel&) > func, int inc )
 {
-	struct MatScore {
-		float	mScore;
-		int		mScoreNum;
-		int		mType;
-		int		mAlpha;
-
-		bool operator < (const MatScore& a) const { return mScore / mScoreNum > a.mScore / a.mScoreNum; }// sorting be random value
-
-		MatScore(int ty) : mScore(0), mScoreNum(0), mType(ty), mAlpha(0) {}
-
-		void AddAlpha(int i, int alpha, int score) {
-			mAlpha |= ((alpha > 220 ? 3 :
-						alpha > 135 ? 2 :
-						alpha >  50 ? 1 : 0) << (i * 2));
-			mScore += score;
-			mScoreNum++;
-		}
-	};
-
-	auto get = [&](int data, int i) { return ((data >> (i * 8)) & 0xff); };
-	auto set = [&](int data, int i) { return ((data & 0xff) << (i * 8)); };
-
-	TArray<MatScore*>	list;
-	auto get_list = [&](int ty) {
-		int idx = list.IndexOfByPredicate( [&](const MatScore* s) { return s->mType == ty; });
-		if ( idx==INDEX_NONE ) {
-			idx = list.Num();
-			list.Add(new MatScore(ty));
-		}
-		return list[idx];
-	};
-
-	for (int i = 0; i < 4; i++) {		// pixel primeter 
-		int px = x + (i&1 ? 1 : 0);
-		int py = y + (i&2 ? 1 : 0);
-		int alp = mAlphaMap.GetPixel(px, py);
-		int idx = mIndexMap.GetPixel(px, py);
-		for (int j = 0; j < 4; j++) {	// regist each mat-type
-			int ty = get(idx, j);
-			int al = get(alp, j);
-			if (ty == 0) continue;
-
-			get_list(ty)->AddAlpha(i, al, 3-j);
+	for (int y = 0; y < mH; y += inc) {
+		for (int x = 0; x < mW; x += inc) {
+			func(x, y, mPixels[x + y*mW] );
 		}
 	}
-
-	list.Sort();
-
-	int index = 0;
-	int alpha = 0;
-	int i = 0;
-	for ( auto m : list) {		// pixel primeter 
-		index |= set( m->mType , i );
-		alpha |= set( m->mAlpha, i );
-		if (i == 0) alpha = 0xff ;
-
-		if (++i == 4) {
-			//if ( maps.Num() > 4 )	UE_LOG(LogTemp, Log, TEXT("TsMaterialMap:: SetPixel spilled  %d (<4) "), maps.Num());
-			break;
-		}
-	}
-
-	mOutIndexMap.SetPixel(x, y, index);
-	mOutAlphaMap.SetPixel(x, y, alpha);
 }
-#endif
 
 void	TsMaterialMap::StoreMaterial()
 {
@@ -260,7 +198,46 @@ void	TsMaterialMap::StoreMaterial()
 
 void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 {
+	TMap<EMaterialType, FString> enumname = {
+		{ MT_None		,FString("None")		},
+		{ MT_BaseLand	,FString("BaseLand")	},
+		{ MT_LakeSoil_A	,FString("LakeSoil_A")	},
+		{ MT_Soil_A		,FString("Soil_A")		},
+		{ MT_Soil_B		,FString("Soil_B")		},
+		{ MT_Sand_A		,FString("Sand_A")		},
+		{ MT_Sand_B		,FString("Sand_B")		},
+		{ MT_Snow_A		,FString("Snow_A")		},
+		{ MT_Grass_A	,FString("Grass_A")		},
+		{ MT_Grass_B	,FString("Grass_B")		},
+		{ MT_Forest_A	,FString("Forest_A")	},
+		{ MT_Forest_B	,FString("Forest_B")	},
+		{ MT_Rock_A		,FString("Rock_A")		},
+		{ MT_Moss_A		,FString("Moss_A")		},
+		{ MT_Moss_B		,FString("Moss_B")		},
+	};
+	
+	int tw = mAlphaMap.GetW();
+	int th = mAlphaMap.GetH();
+	TsImageMap<float>* bitmap = new TsImageMap<float>( tw, th, mAlphaMap.GetWorld() );
+	for (auto& i : mMatIndex) {
+		bool need_save = false;
+		bitmap->ForeachPixel([&](int x, int y) {
+				float val = 0.0f;
+				if ( mPixels[x + y * tw].mValues.Contains(i)) {
+					val = mPixels[x + y * tw].mValues[i];
+					need_save = true;
+				}
+				bitmap->SetPixel(x, y, val );
+			});
+		if (need_save){
+			FString fname = FString::Printf( TEXT("Mat_%s.dds"), *(enumname[i]) );
+			bitmap->Save( *fname, EImageFile::Dds, EImageFormat::FormatR8, 0, 0, w, h);
+		}
+	}
+
 	UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
 	mAlphaMap   .Save("MatAlpha00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 	mIndexMap   .Save("MatIndex00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 }
+
+

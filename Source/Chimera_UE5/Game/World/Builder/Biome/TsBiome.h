@@ -25,9 +25,10 @@ enum class EBiomeSType : uint8 {	// Surface(Height)
 UENUM(BlueprintType)
 enum class EBiomeMType : uint8 {	// Moist(Water)
 	E_Soil,
-	E_Field,	//Field
+	E_Field,
 	E_Tree,
-	E_Forest,
+	E_ForestA,
+	E_ForestB,
 };
 
 UENUM(BlueprintType)
@@ -38,7 +39,7 @@ enum class EBiomeGType : uint8 {	// Genre
 	E_GenreSavanna,
 };
 
-
+UENUM(BlueprintType)
 enum EMaterialType {
 	MT_None,		//0
 	MT_BaseLand,
@@ -79,11 +80,10 @@ struct TsBiomeItem_Material	: public TsBiomeItem {
 
 
 template <typename T>
-concept DerivedFromTsFVector2D = std::is_base_of_v<FVector2D, T>;
+concept DerivedFVector2D = std::is_base_of_v<FVector2D, T>;
 
 template <typename T>
-concept DerivedFromTsBiomeItem = std::is_base_of_v<TsBiomeItem, T>;
-
+concept DerivedBiomeItem = std::is_base_of_v<TsBiomeItem, T>;
 
 
 

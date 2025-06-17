@@ -47,7 +47,7 @@ public:
 	float			GetMaterialValue(const FVector2D& p);
 
 	float			Remap(float val) const override;
-	float			GetValue(const FVector2D& p) override ;
+	//float			GetValue(const FVector2D& p) override ;
 
 	//------------------------------------------------------- Debug
 	void			Debug(UWorld* world);

@@ -32,12 +32,11 @@ enum EBiomeMapType {
 class TsBiomeMap
 	: public TsImageMap<float>
 	, public TsNoiseMap {
-
 private:
 	static
 	TMap<EBiomeMapType, TsBiomeMap*>	gBiomeMaps;
 public:
-	static TsBiomeMap*	GetBiomeMap(EBiomeMapType ty	              ) { return gBiomeMaps[ty]; }
+	static TsBiomeMap*	GetBiomeMap(EBiomeMapType ty	             ) { return gBiomeMaps[ty]; }
 	static void			AddBiomeMap(EBiomeMapType ty, TsBiomeMap* map) { gBiomeMaps.Emplace( ty, map ); }
 
 public:
@@ -52,28 +51,60 @@ public:
 
 	// Items
 public:
-	template<DerivedFromTsFVector2D Tpoint, DerivedFromTsBiomeItem Titem>
-	void SetupItems(TArray<Tpoint>& points, TArray<Titem>& items) {
+	template<
+		DerivedFVector2D	T_point,
+		DerivedBiomeItem	T_item
+	>
+	void SetupItems( TArray<T_point>& points, TArray<T_item>& items ) {
 		TArray<float>	samples;
-		float			ratio = 0.0f;
 		for (const auto& p : points) samples.Add(GetValue(p));
 		samples.Sort();		// sort to determine the ratio of the group.
+
 		int max_idx = (samples.Num() - 1);
+		float			ratio = 0.0f;
 		for (auto& it : items) {
 			ratio += it.mRatio;
 			it.mThreshold = samples[max_idx * FMath::Min(1, ratio)];
 		}
 	}
 
-	template<DerivedFromTsFVector2D Tpoint, DerivedFromTsBiomeItem Titem>
-	Titem SelectItem(const Tpoint& point, TArray<Titem>& items ) {
-		float h = GetValue(point);
+	template<
+		DerivedBiomeItem T_item
+	>
+	void SetupItemsPixel( TArray<T_item>& items) {
+		TArray<float>	samples;
+		ForeachPixel(
+			[&](int px, int py) {
+				samples.Add(GetValue(GetWorldPos(px, py)));
+			});
+		samples.Sort();		// sort to determine the ratio of the group.
+
+		int    max_idx = (samples.Num() - 1);
+		float  ratio = 0.0f;
 		for (auto& it : items) {
-			if (h < it.mThreshold) {
-				return it ;
-			}
+			ratio += it.mRatio;
+			it.mThreshold = samples[max_idx * FMath::Min(1, ratio)];
 		}
-		return items.Last() ;
+	}
+
+	template<
+		DerivedFVector2D T_point,
+		DerivedBiomeItem T_item
+	>
+	int SelectItemIdx( const T_point& point, TArray<T_item>& items ) {
+		float h = GetValue(point);
+		for (int i = 0; i < items.Num(); i++) {
+			if (h < items[i].mThreshold) return i;
+		}
+		return items.Num() - 1;
+	}
+
+	template<
+		DerivedFVector2D T_point,
+		DerivedBiomeItem T_item
+	>
+	T_item SelectItem( const T_point& point, TArray<T_item>& items ) {
+		return items[SelectItemIdx(point, items)];
 	}
 };
 
@@ -82,7 +113,8 @@ class TsHeightMap
 	: public TsBiomeMap 
 {
 public:
-	TsHeightMap(int w, int h, const FBox2D* bound) : TsBiomeMap(w, h, bound) {}
+	TsHeightMap( int w, int h, const FBox2D* bound)
+		: TsBiomeMap(w, h, bound) {}
 	virtual ~TsHeightMap() {}
 
 	FVector CalcNormal(
@@ -99,7 +131,8 @@ class TsNormalMap
 	: public TsImageMap<FVector>
 {
 public:
-	TsNormalMap(int w, int h, const FBox2D* bound) : TsImageMap<FVector>(w, h, bound) {}
+	TsNormalMap(int w, int h, const FBox2D* bound)
+		: TsImageMap<FVector>(w, h, bound) {}
 };
 
 
@@ -110,8 +143,12 @@ struct TsMaterialPixel
 {
 	TMap<EMaterialType, float>	mValues;
 
-	void Add( EMaterialType t, float v){
-		if ( mValues.Contains(t) )	mValues[t] += v ;
+	void Add(EMaterialType t, float v) {
+		if (mValues.Contains(t))	mValues[t] += v;
+		else						mValues.Emplace( t, v );
+	}
+	void Max( EMaterialType t, float v){
+		if ( mValues.Contains(t) )	mValues[t] = FMath::Max(v, mValues[t]);
 		else						mValues.Emplace( t, v );
 	}
 
@@ -120,7 +157,6 @@ struct TsMaterialPixel
 		for ( auto& v : mValues) total += v.Value ;
 		for ( auto& v : mValues) v.Value /= total ;
 	}
-
 	void Merge(const TsMaterialPixel& pixel, float rate = 1) {
 		for ( auto &v : pixel.mValues ) {
 			Add(v.Key, v.Value * rate);
@@ -142,9 +178,12 @@ public:
 	TsMaterialMap(int w, int h, const FBox2D* bound, const TArray<EMaterialType> &mat_index  );
 	virtual ~TsMaterialMap() {}
 
+
 	void				MergePixel(int x, int y, const TsMaterialPixel& px );
 	void				SetPixel(int x, int y, EMaterialType ty, float val);
 	TsMaterialPixel&	GetPixel(int x, int y) ;
+
+	void				ForeachPix(std::function< void(int, int, TsMaterialPixel&) >, int inc = 1);
 
 	void				StoreMaterial();
 

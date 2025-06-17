@@ -45,13 +45,12 @@ public:
 
 // -------------------------------- TsNoiseMap  --------------------------------
 struct TsNoiseParam {
-	FVector2D		mNoisePos;
-	float			mN0, mS0;
-	float			mN1, mS1;
+	FVector2D			mNoisePos;
+	TArray<FVector2D>	mLayers;
 	TsNoiseParam()
-		: mNoisePos(0,0), mN0(0 ), mS0(0 ), mN1(0 ), mS1(0 ) {}
-	TsNoiseParam(float n0, float s0, float n1, float s1, int seed = -1)
-		: mNoisePos(0,0), mN0(n0), mS0(s0), mN1(n1), mS1(s1) { Setup(seed); }
+		: mNoisePos(0,0), mLayers(){}
+	TsNoiseParam( std::initializer_list<FVector2D> layers, int seed = -1)
+		: mNoisePos(0,0), mLayers(layers) { Setup(seed); }
 	void Setup( int seed = -1 ) ;
 };
 
@@ -89,10 +88,18 @@ enum EImageFormat {
 	FmtVFlip = 0x20000000,
 	FmtHFlip = 0x40000000,
 
+	FormatR8_Debug = FormatR8 | FmtDebug,
 	FormatL16_VFlip = FormatL16 | FmtVFlip,
 	FormatB8G8R8A8_Debug = FormatB8G8R8A8 | FmtDebug,
 	FormatL16_Debug = FormatL16 | FmtDebug,
 };
+
+
+enum EImageMode {
+	Clamp,
+	Wrap,
+};
+
 
 enum EImageFile{
 	Bmp,
@@ -204,13 +211,22 @@ public:
 
 	T*			GetImage( void ) const { return (T*)mImage ;}
 
-	T			GetPixel( const FVector2D& p ) const {		// world-coord -> tex-coord
+	T			GetPixel( const FVector2D& p, EImageMode mode = EImageMode::Clamp) const {		// world-coord -> tex-coord
 		FIntVector2	pix = GetPixelPos(p);
-		return	GetPixel(pix.X, pix.Y);
+		return	GetPixel(pix.X, pix.Y, mode);
 	}
-	T			GetPixel(int x, int y) const {
-		int dx = x<0 ? 0 : x>=mW ? mW-1 : x ;
-		int dy = y<0 ? 0 : y>=mH ? mH-1 : y ;
+	T			GetPixel(int x, int y, EImageMode mode=EImageMode::Clamp ) const {
+		int dx, dy;
+		switch (mode) {
+		case EImageMode::Wrap:
+			dx = (x < 0 ? mW-x : x) % mW ;
+			dy = (y < 0 ? mH-y : y) % mH ;
+			break;
+		default:
+			dx = x < 0 ? 0 : x >= mW ? mW - 1 : x;
+			dy = y < 0 ? 0 : y >= mH ? mH - 1 : y;
+			break;
+		}
 		return ((T*)mImage)[dx + mW * dy];
 	}
 
