@@ -4,6 +4,7 @@
 
 #include "TsBiome.h"
 #include "../Util/TsImageMap.h"
+#include "../Util/TsTextureMap.h"
 
 
 
@@ -27,10 +28,12 @@ enum EBiomeMapType {
 };
 
 
+typedef TsImageMap<float>  TsLevelMap;
+
 
 //	Hue Sat Val		=>	 	Genre Temp Moist
 class TsBiomeMap
-	: public TsImageMap<float>
+	: public TsLevelMap
 	, public TsNoiseMap {
 private:
 	static
@@ -41,7 +44,7 @@ public:
 
 public:
 	TsBiomeMap(int w, int h, const FBox2D* bound, const TsNoiseParam& cnf = TsNoiseParam())
-		: TsImageMap<float>(w, h, bound)
+		: TsLevelMap(w, h, bound)
 		, TsNoiseMap(cnf) {}
 	virtual ~TsBiomeMap() {}
 
@@ -71,11 +74,13 @@ public:
 	template<
 		DerivedBiomeItem T_item
 	>
-	void SetupItemsPixel( TArray<T_item>& items) {
+	void SetupItemsPixel( TArray<T_item>& items, std::function< bool(int, int) > chk_pixel = nullptr ) {
 		TArray<float>	samples;
 		ForeachPixel(
 			[&](int px, int py) {
-				samples.Add(GetValue(GetWorldPos(px, py)));
+				//if (chk_pixel ? chk_pixel(px,py) : true ){
+					samples.Add(GetValue(GetWorldPos(px, py)));
+				//}
 			});
 		samples.Sort();		// sort to determine the ratio of the group.
 
@@ -127,6 +132,7 @@ public:
 	float	RemapImage(float v, float range ) const override;
 };
 
+
 class TsNormalMap
 	: public TsImageMap<FVector>
 {
@@ -135,6 +141,25 @@ public:
 		: TsImageMap<FVector>(w, h, bound) {}
 };
 
+
+
+struct TsExtraMap {
+	TsTextureMap *	mTex ;
+	float			mScale;
+} ;
+
+class TsMoistureMap
+	: public TsBiomeMap
+{
+public:
+	TsMoistureMap( int w, int h, const FBox2D* bound, const TsNoiseParam& cnf, const TArray<TsExtraMap>& extra )
+		: TsBiomeMap( w, h, bound, cnf )
+		, mExtras( extra ){}
+
+	TArray<TsExtraMap>	mExtras ;
+
+	virtual float	GetValue(const FVector2D& p) override;
+};
 
 
 

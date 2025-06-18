@@ -1,6 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
+#include "Util/TsTextureMap.h"
+
 #include "TsBuilder.generated.h"
 
 
@@ -30,6 +33,8 @@ public:
 	int			mReso;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Erode Cycle"))
 	int			mErodeCycle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Texture Map"))
+	TMap<TEnumAsByte<ETextureMap>,TObjectPtr<UTexture2D>>	mTextureMaps;
 
 	UFUNCTION(BlueprintCallable)
 	void		Build();

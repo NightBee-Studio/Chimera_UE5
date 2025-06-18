@@ -172,6 +172,7 @@ public:
 	int				Save() const{ return Save(mFileName, mFileType, mFileFormat,0,0,mW,mH); }
 };
 
+
 template<typename T>
 class TsImageMap : public TsImageCore {
 public:

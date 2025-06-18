@@ -138,6 +138,17 @@ struct	PNGHEADER {			// ChunkType =49 48 44 52	"IHDR"
 	UINT8	pnInteraceType;	//インターレース手法
 	UINT32	pnCRC;			// (Cyclic Redundancy Check)	Chunk Type と Chunk Data を もとに計算される
 };
+enum    PNGColorType {
+	HasAlpha   = 0x04,
+	HasRGB     = 0x02,
+	HasPalette = 0x01,
+
+	GrayScale   = 0,
+	RGBIndex    = HasRGB | HasPalette,
+	RGBColor	= HasRGB,
+	RGBAColor	= HasRGB | HasAlpha,
+	GrayAlpha   = HasAlpha,
+};
 struct	PNGChunkBegin {
 	UINT32	pnLength;
 	UINT32	pnChunkType;
@@ -230,7 +241,27 @@ int		TsImageCore::Load(const FString& fname, EImageFile fmt) {
 			}
 			break;
 
-		case EImageFile::Png:{
+		case EImageFile::Png: {
+				PNGTYPE       png_type;
+				PNGHEADER     png_header;
+				PNGChunkBegin png_chunk_begin;
+				PNGChunkEnd   png_chunk_end;
+
+				fread(&png_type, sizeof(png_type), 1, fp);
+				fread(&png_header, sizeof(png_header), 1, fp);
+				bool loading = true;
+				while (loading) {
+					fread(&png_chunk_begin, sizeof(png_chunk_begin), 1, fp);
+					switch (png_chunk_begin.pnChunkType) {
+					case 0x49444154://IDAT
+						break;
+					case 0x504C5445://PLTE  palette
+					case 0x49454E44://IEND
+						loading = false;
+						break;
+					}
+					fread(&png_chunk_end, sizeof(png_chunk_end), 1, fp);
+				}
 			}
 			break;
 		}

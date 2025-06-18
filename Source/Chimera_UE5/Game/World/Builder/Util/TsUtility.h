@@ -2,6 +2,9 @@
 
 #include <functional>
 
+#include <vector>
+#include <cmath>
+
 // ---------------------------- Utillity -------------------------
 namespace TsUtil {
 	static inline
@@ -45,7 +48,7 @@ namespace TsUtil {
 	}
 
 	static inline
-	void		ForeachGaussian( const FVector2D &p, float pixel, std::function<void( const FVector2D& p, float weight )> func, int size=5) {
+	void		ForeachGaussian( const FVector2D &p, float pixel, std::function<void( const FVector2D& p, float weight )> func) {
 		static float w25[5][5] = {
 			{1, 4, 7, 4,1},
 			{4,16,26,16,4},
@@ -53,14 +56,46 @@ namespace TsUtil {
 			{4,16,26,16,4},
 			{1, 4, 7, 4,1},
 		};
-		static float w9[3][3] = {
-			{1,2,1},{2,4,2},{1,2,1},
-		};
-		float wt = size > 4 ? 273.0f : 16.0f;
-		int   nc = size > 4 ? 2      : 1    ;
-		for (int y = 0; y < size; y++) {
-			for (int x = 0; x < size; x++) {
-				func( p + FVector2D(x-nc, y-nc) * pixel, (size>4 ? w25[x][y] : w9[x][y]) / wt );
+		float wt = 273.0f;
+		int   nc = 2;
+		for (int y = 0; y < 5; y++) {
+			for (int x = 0; x < 5; x++) {
+				func( p + FVector2D(x-nc, y-nc) * pixel, w25[x][y] / wt );
+			}
+		}
+	}
+
+	static inline
+		void ForeachGaussianEx(
+			const FVector2D& p,
+			float pixel,
+			int size,
+			std::function<void(const FVector2D& p, float weight)> func)
+	{
+		// サイズは奇数である必要があります（例: 3, 5, 7,...）
+		if (size % 2 == 0 || size < 1) size++;
+
+		// カーネルの半径
+		int   radius = size / 2;
+		float sigma = size / 3.0f; // σをカーネルサイズから推定
+		float sig_sq = 2.0f * sigma * sigma;
+		float sum = 0.0f;
+
+		// 2Dカーネルを生成
+		std::vector<std::vector<float>> kernel(size, std::vector<float>(size));
+		for (int y = -radius; y <= radius; ++y) {
+			for (int x = -radius; x <= radius; ++x) {
+				float r2 = static_cast<float>(x * x + y * y);
+				float value = std::exp(-r2 / sig_sq);
+				kernel[y + radius][x + radius] = value;
+				sum += value;
+			}
+		}
+
+		for (int y = 0; y < size; ++y) {
+			for (int x = 0; x < size; ++x) {
+				FVector2D offset(x - radius, y - radius);
+				func(p + offset * pixel, kernel[y][x] / sum );
 			}
 		}
 	}

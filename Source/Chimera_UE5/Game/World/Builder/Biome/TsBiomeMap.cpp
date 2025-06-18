@@ -1,12 +1,7 @@
-
 #include "TsBiomeMap.h"
 
 #include "../Util/TsImageMap.h"
 #include "../Util/TsUtility.h"
-
-
-
-
 
 
 
@@ -200,13 +195,9 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 {
 	TMap<EMaterialType, FString> enumname = {
 		{ MT_None		,FString("None")		},
-		{ MT_BaseLand	,FString("BaseLand")	},
-		{ MT_LakeSoil_A	,FString("LakeSoil_A")	},
 		{ MT_Soil_A		,FString("Soil_A")		},
 		{ MT_Soil_B		,FString("Soil_B")		},
-		{ MT_Sand_A		,FString("Sand_A")		},
-		{ MT_Sand_B		,FString("Sand_B")		},
-		{ MT_Snow_A		,FString("Snow_A")		},
+		{ MT_Soil_C		,FString("Soil_C")		},
 		{ MT_Grass_A	,FString("Grass_A")		},
 		{ MT_Grass_B	,FString("Grass_B")		},
 		{ MT_Forest_A	,FString("Forest_A")	},
@@ -241,3 +232,12 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 }
 
 
+float	TsMoistureMap::GetValue( const FVector2D& p )
+{
+	FIntVector2	pos = TsBiomeMap::GetPixelPos( p );
+	float		val = TsBiomeMap::GetValue( p ) ;
+	for ( auto &ex : mExtras ){
+		val += ex.mTex->GetPixel( pos.X, pos.Y, mW ) * ex.mScale ; 
+	}
+	return val ;
+}
