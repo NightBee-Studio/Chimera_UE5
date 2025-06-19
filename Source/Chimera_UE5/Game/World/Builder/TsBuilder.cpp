@@ -202,9 +202,12 @@ public:
 						{ 0.10f, 0.032f*S },
 						{ 0.10f, 0.064f*S },
 					}),
-					{	{ texture_maps[ETextureMap::ETM_Flow     ],	-1.8f },
-						{ texture_maps[ETextureMap::ETM_Slope    ],	-0.8f },
-						{ texture_maps[ETextureMap::ETM_Curvature],	-0.8f },}
+					{
+						{ texture_maps[ETextureMap::ETM_Height   ],	 1.0f, EExtraOp::E_InvMul },
+						{ texture_maps[ETextureMap::ETM_Flow     ],	-1.2f, EExtraOp::E_Add },
+						{ texture_maps[ETextureMap::ETM_Slope    ],	-0.8f, EExtraOp::E_Add },
+						{ texture_maps[ETextureMap::ETM_Curvature],	-0.8f, EExtraOp::E_Add },
+					}
 				);
 #undef S
 
@@ -266,19 +269,6 @@ public:
 				//TsBiomeMap::AddBiomeMap( EBiomeMapType::E_Pond  , pond_map  );	//pond
 
 				
-				TsBiomeMap* nonbio_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &bound);
-				{// create non plants map
-					nonbio_map->ForeachPixel(
-						[&](int px, int py) {
-							float pix = 0.0f;
-							if (texture_maps[ETextureMap::ETM_Flow     ]->GetPixel(px, py, IMG_SIZE) > 0.45f) pix = 1;
-							if (texture_maps[ETextureMap::ETM_Slope    ]->GetPixel(px, py, IMG_SIZE) > 0.2f) pix = 1;
-							if (texture_maps[ETextureMap::ETM_Curvature]->GetPixel(px, py, IMG_SIZE) > 0.2f) pix = 1;
-							//if (texture_maps[ETextureMap::ETM_Wear     ]->GetPixel(px, py, IMG_SIZE) < 0.7f) pix = 1;
-							nonbio_map->SetPixel( px, py, pix );
-						});
-					nonbio_map->Save("NonBiome.dds", EImageFile::Dds, EImageFormat::FormatL16);
-				}
 #if 1
 				{///---------------------------------------- HeightMap
 					{///--------------------------------------------------- Create BaseHeightmap
@@ -358,9 +348,7 @@ public:
 						{ 0.15f, 0.0f, EMaterialType::MT_Forest_B,},
 					};
 					bool first = true;
-					moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items
-						//,	[&](int px, int py) { return nonbio_map->GetPixel(px, py) < 0.5f; }
-					);
+					moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items );
 					moist_map->ForeachPixel(
 						[&](int px, int py) {
 							TsMaterialPixel	pix;
@@ -369,10 +357,8 @@ public:
 							if (moist_map->IsWorld(p)) {
 								TsUtil::ForeachGaussian(p, moist_map->GetStep(),
 									[&](const FVector2D& pos, float weight) {
-										//if (nonbio_map->GetPixel(px, py) < 0.5f) {
-												int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
-											pix.Add(moist_items[idx].mItem, weight);
-										//}
+										int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
+										pix.Add(moist_items[idx].mItem, weight);
 									}); 
 							}
 
@@ -466,10 +452,6 @@ public:
 							moist_map->SetPixel( px, py,
 								moist_map->GetValue(moist_map->GetWorldPos(px, py)));
 						});
-					//moist_map->ForeachPixel([&](int px, int py) {
-					//		moist_map->SetPixel(px, py, 
-					//			(nonbio_map->GetPixel(px, py) > 0.5f) ? moist_map->mMin : moist_map->GetPixel(px, py) );
-					//	});
 					surfc_map->ForeachPixel([&](int px, int py) {
 							surfc_map->SetPixel(px, py,
 								surfc_map->GetValue(surfc_map->GetWorldPos(px, py)));

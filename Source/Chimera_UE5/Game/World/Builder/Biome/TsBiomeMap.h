@@ -142,10 +142,16 @@ public:
 };
 
 
+enum EExtraOp{
+	E_Add,
+	E_Mul,
+	E_InvMul,
+} ;
 
 struct TsExtraMap {
 	TsTextureMap *	mTex ;
 	float			mScale;
+	EExtraOp		mOp;
 } ;
 
 class TsMoistureMap

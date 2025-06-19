@@ -54,6 +54,7 @@ float TsTextureMap::GetPixel(int x, int y, int reso )
 	case EPixelFormat::PF_R16_SINT:
 		r = ((uint16*)data)[channel] / 65535.0f;
 		break;
+	case EPixelFormat::PF_G8:
 	case EPixelFormat::PF_B8G8R8A8:
 	case EPixelFormat::PF_R8G8B8A8:
 		r = ((uint8*)data)[channel] / 255.0f;

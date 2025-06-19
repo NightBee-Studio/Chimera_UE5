@@ -237,7 +237,19 @@ float	TsMoistureMap::GetValue( const FVector2D& p )
 	FIntVector2	pos = TsBiomeMap::GetPixelPos( p );
 	float		val = TsBiomeMap::GetValue( p ) ;
 	for ( auto &ex : mExtras ){
-		val += ex.mTex->GetPixel( pos.X, pos.Y, mW ) * ex.mScale ; 
+		float pix = ex.mTex->GetPixel( pos.X, pos.Y, mW );
+		switch( ex.mOp ){
+		case EExtraOp::E_Mul:
+			val *= (pix    ) * ex.mScale ; 
+			break ;
+		case EExtraOp::E_InvMul:
+			val *= (1 - pix) * ex.mScale ; 
+			break ;
+		default:
+		case EExtraOp::E_Add:
+			val += pix * ex.mScale ; 
+			break ;
+		}
 	}
 	return val ;
 }
