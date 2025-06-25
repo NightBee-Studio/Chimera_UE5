@@ -56,11 +56,9 @@ namespace TsUtil {
 			{4,16,26,16,4},
 			{1, 4, 7, 4,1},
 		};
-		float wt = 273.0f;
-		int   nc = 2;
 		for (int y = 0; y < 5; y++) {
 			for (int x = 0; x < 5; x++) {
-				func( p + FVector2D(x-nc, y-nc) * pixel, w25[x][y] / wt );
+				func( p + FVector2D(x-2, y-2) * pixel, w25[x][y] / 273.0f );
 			}
 		}
 	}

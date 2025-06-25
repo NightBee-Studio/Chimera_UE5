@@ -60,7 +60,7 @@ bool FPCGPointsAtPointElement::ExecuteInternal(FPCGContext* Context) const// can
 					float r_jit = FMath::FRandRange(-PI*0.1f, PI*0.1f);
 					FVector v = r * FVector( FMath::Cos(ang+r_jit), FMath::Sin(ang+r_jit), 0.0f ) ;
 					float r_ang = FMath::FRandRange(0.0f, 360.0f);
-					float r_scl = FMath::FRandRange(0.5f, 0.8f);
+					float r_scl = FMath::FRandRange( setting->mScaleRange.X, setting->mScaleRange.Y );
 
 					point.Transform.SetLocation( point.Transform.GetLocation() + v );
 					point.Transform.SetRotation( FRotator(0,r_ang,0).Quaternion() );

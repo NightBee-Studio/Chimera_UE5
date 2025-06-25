@@ -53,7 +53,7 @@ bool FPCGSnapToGroundElement::ExecuteInternal(FPCGContext* Context) const// cann
 				out_points.Add(points[ip]);
 
 				FTransform& trans = out_points[ip].Transform;
-#define GAP	2000
+#define GAP	5000
 				FVector from = trans.GetLocation() + FVector(0, 0, GAP);
 				FVector to = trans.GetLocation() + FVector(0, 0, -GAP);
 				FHitResult result;

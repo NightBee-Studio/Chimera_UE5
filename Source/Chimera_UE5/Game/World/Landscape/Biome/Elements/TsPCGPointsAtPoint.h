@@ -40,6 +40,9 @@ public:
 	float		mCreateRadius = 100.0f ;
 
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Settings, meta = (PCG_Overridable))
+	FVector2D	mScaleRange = FVector2D(0.7f,1.0f);
+
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Settings, meta = (PCG_Overridable))
 	int			mPointNum     = 5 ;
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category = Settings, meta = (PCG_Overridable))
 	float		mPointRadius  = 50.0f;
