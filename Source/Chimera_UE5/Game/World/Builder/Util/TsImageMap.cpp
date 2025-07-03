@@ -533,7 +533,9 @@ int			TsImageMap<float>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy
 					break;
 				}
 				if (v<0) v=0 ;
-				if (format & EImageFormat::FmtDebug) UE_LOG(LogTemp, Log, TEXT("(%d,%d) %f[%d]"), x, y, f, v);
+				if (format & EImageFormat::FmtDebug){
+					 UE_LOG(LogTemp, Log, TEXT("(%d,%d) %f[%d]"), x, y, f, v);
+				}
 
 				fwrite(&v, GetStride(format), 1, fp);
 				break;

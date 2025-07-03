@@ -110,7 +110,7 @@ FVector TsHeightMap::CalcNormal(float x, float y, float grid_height, float grid_
 }
 
 float	TsHeightMap::RemapImage(float v, float range ) const { 
-	return range * FMath::Clamp( (v - mMin)/(mMax-mMin), 0, 1 ) ;
+	return range * (mMax-mMin>0 ? FMath::Clamp( (v - mMin)/(mMax-mMin), 0, 1 ) : v) ;
 }
 
 void	TsHeightMap::Normalize()

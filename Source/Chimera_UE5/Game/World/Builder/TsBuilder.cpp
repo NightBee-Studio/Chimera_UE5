@@ -20,7 +20,7 @@ class Builder_Work {
 public:
 	TMap<EBiomeSType, TsBiomeSurface>	mSurfaces;
 	TArray<TsBiome>						mBiomes;
-	TsBiomeSite*						mShape;
+	TsBiomeSite							mShape;
 
 	FBox2D								mBoundingbox;
 
@@ -48,7 +48,6 @@ private:
 	void			Release()
 	{
 		mBiomes.Empty();
-		mShape->Release();
 
 		SAFE_DELETE(mHeightMap);
 		SAFE_DELETE(mNormalMap);
@@ -58,7 +57,7 @@ private:
 public:
 	void			Debug(UWorld* world)
 	{
-		mShape->Debug(world);
+		mShape.Debug(world);
 
 		for (auto &b : mBiomes) {
 			FColor c(0, 0, 0);
@@ -73,7 +72,7 @@ public:
 	}
 
 	Builder_Work()
-		: mShape( new TsBiomeSite() )
+		: mShape()
 		, mHeightMap(nullptr)
 		, mNormalMap(nullptr)
 		, mMaterialMap(nullptr)
@@ -91,14 +90,22 @@ public:
 	{
 		TsUtil::RandSeed( seed );
 
+		UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Build Start.... center(%f,%f) radius%f"), _x, _y, radius );
+
 		//clean up first.
 		Release();
 
 		// create island shape
-		mShape->Generate(_x, _y, radius);
+		mShape.Generate(_x, _y, radius,
+			{TsBiomeSite::CircleConf(1.0f,1.5f, 0.06f,0.4f, 3, -40, 40),
+			 TsBiomeSite::CircleConf(0.8f,1.0f, 0.06f,0.5f, 1,  20, 40),
+			 TsBiomeSite::CircleConf(0.7f,0.9f, 0.06f,0.5f, 1, -40,-20),
+			 TsBiomeSite::CircleConf(1.0f,1.2f, 0.06f,0.5f, 0, -40,-20),
+//			 TsBiomeSite::CircleConf(0.5f,0.5f, 0.06f,0.5f, 0,   0,-20),
+			} );
 
 		{//-------------------------------------------------------------------------------------- create voronois
-			mShape->UpdateBoundingbox(mBoundingbox);
+			mShape.UpdateBoundingbox(mBoundingbox);
 			mBoundingbox.Min -= FVector2D(500, 500);
 			mBoundingbox.Max += FVector2D(500, 500);
 
@@ -120,7 +127,8 @@ public:
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group"));
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: BiomeMap creating ..."));
 
-			heightmap_reso = 2048;
+		//	heightmap_reso = 2048;
+			heightmap_reso = 1024 ;
 			if (heightmap_reso == 0) heightmap_reso = 512;
 #define IMG_SIZE heightmap_reso
 
@@ -146,7 +154,7 @@ public:
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
 								{ 0.60f, 0.0f, EMaterialType::MT_Soil_A },
-								{ 0.50f, 0.0f, EMaterialType::MT_Soil_B     },
+								{ 0.50f, 0.0f, EMaterialType::MT_Soil_B },
 							})
 					)
 				},
@@ -211,6 +219,36 @@ public:
 				);
 #undef S
 
+			{
+				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Genre map ...") );
+
+				TArray<TsBiomeSite> sites ;
+				for ( const auto & c  : mShape.FindCircle( 0 ) ){// Level 0 meas the leaf of the continent...
+					TsBiomeSite s ;
+					s.Generate( c, radius, {
+							TsBiomeSite::CircleConf(1.0f,1.0f, 0.06f,0.25f,6,-40,40),
+							TsBiomeSite::CircleConf(0.4f,0.6f, 0.1f,0.3f,0,-40,40),
+						} );
+					sites.Add( s ) ;
+				}
+
+				genre_map->ForeachPixel(
+					[&](int px, int py) {
+						FVector2D p = genre_map->GetWorldPos(px, py);
+						if (genre_map->IsWorld(p)) {
+							int lvl = sites.Num() ;
+							for ( const auto & s : sites ){
+								if ( s.IsInside(p) ) break ;
+								lvl-- ;
+							}
+							genre_map->SetPixel( px, py, lvl ) ;
+						}
+					} );
+				genre_map->Save("GenreMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+
+				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Genre map done.") );
+			}
+
 			// lock all of texturemaps
 			for (auto& tm : texture_maps) tm.Value->Lock();
 
@@ -233,7 +271,7 @@ public:
 				moist_map->SetupItems< TsBiome, TsBiomeItem_MType >(mBiomes, moist_items);
 				
 				for ( auto& b : mBiomes ) {
-					if (mShape->IsInside(b)) {
+					if (mShape.IsInside(b)) {
 						b.SetSType( surfc_map->SelectItem<TsBiome, TsBiomeItem_SType>( b, surfc_items).mItem );
 						b.SetMType( moist_map->SelectItem<TsBiome, TsBiomeItem_MType>( b, moist_items).mItem );
 					}
@@ -263,12 +301,6 @@ public:
 				TsBiomeMap* flow_map = new TsBiomeMap( reso, reso, &bound );
 				TsBiomeMap* pond_map = new TsBiomeMap( reso, reso, &bound );
 
-				//TsBiomeMap::AddBiomeMap( EBiomeMapType::E_Tempr , surfc_map );
-				//TsBiomeMap::AddBiomeMap( EBiomeMapType::E_Moist , moist_map );
-				//TsBiomeMap::AddBiomeMap( EBiomeMapType::E_Flow  , flow_map  );	//flow
-				//TsBiomeMap::AddBiomeMap( EBiomeMapType::E_Pond  , pond_map  );	//pond
-
-				
 #if 1
 				{///---------------------------------------- HeightMap
 					{///--------------------------------------------------- Create BaseHeightmap
@@ -325,7 +357,6 @@ public:
 
 						UE_LOG(LogTemp, Log, TEXT("   Normal done."));
 					}
-
 					mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
 					mHeightMap->Save("HeightMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
 					mNormalMap->Save("NormalMap.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8);

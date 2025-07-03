@@ -119,6 +119,7 @@ namespace TsUtil {
 
 	// Random
 	void	RandSeed(int i);
-	float	RandRange(float a, float b);
 	int32	RandRange(int32 a, int32 b);
+	float	RandRange(float a, float b);
+	float	RandRange(const FVector2D &v);
 }

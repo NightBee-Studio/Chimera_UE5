@@ -12,42 +12,59 @@
 class TsBiomeSite
 	: public TsBiomeSFunc
 {
-private:
+public:
+	struct CircleConf{
+		FVector2D	mRRange;	//1.0f, 1.5f
+		FVector2D	mRNoise;	//0.06f 0.25f
+		int			mChildren ;
+		FVector2D	mARange;	//1.0f, 1.5f
+
+		CircleConf(float cr_mn, float cr_mx, float cn_x, float cn_y, int num , float a_mn, float a_mx )
+		: mRRange(cr_mn, cr_mx), mRNoise(cn_x,cn_y), mChildren(num), mARange(a_mn,a_mx){}
+	} ;
+
 	struct Circle : public FVector2D {
-		float		r;			// radius
-		int			n;			// subdiv
+		float		mR;			// radius
+		int			mN;			// subdiv
+		int			mLevel;		// level
 
-		Circle(const FVector2D &_v, float _r, int _n)
-			: FVector2D(_v), r(_r), n(_n) {}
+		float		mNoiseScale ;			// noise scale
+		float		mNoiseRate  ;			// noise rate
 
-		bool		IsInside( const FVector2D& p );
-		FVector2D	GetOutline(int i);
+		Circle(const FVector2D &v, float r=0, int n=0, int l=0, float ns=0.06f, float nr = 0.5f)
+			: FVector2D(v), mR(r), mN(n), mLevel(l), mNoiseScale(ns), mNoiseRate(nr) {}
+
+		bool		IsInside( const FVector2D& p ) const ;
+		FVector2D	GetOutline(int i) const ;
 	};
 
-public:
 	float			mX, mY;
 	TArray<Circle>	mCircles;	// 
 
-//	TsValueMap		mBiomeType
 
 	//------------------------------------------------------- Island
 private:
-	void			CreateChild(const Circle& c, float radius, float angl, int count);
-
+	void			CreateChild( const Circle& c, float radius, float angl, TArray<CircleConf> conf );
 public:
 	TsBiomeSite();
 	virtual			~TsBiomeSite() {}
 
-	void			Generate(float _x, float _y, float radius);
-	void			Release();
-	void			UpdateBoundingbox(FBox2D& boundingbox);
 
-	bool			IsInside( const FVector2D& p );
+	void			Generate( const FVector2D& p, float radius, std::initializer_list<CircleConf> conf_list ){
+		Generate( p.X, p.Y, radius, conf_list );
+	}
+	void			Generate( float _x, float _y, float radius, std::initializer_list<CircleConf> conf_list );
 
+	void			UpdateBoundingbox( FBox2D& bounding );
+	bool			IsInside( const FVector2D& p )const ;
+
+	TArray<Circle>	FindCircle( int level ){
+		TArray<Circle>	list ;
+		for ( const auto &c : mCircles ) if ( c.mLevel==level ) list.Add( c ) ;
+		return			list;
+	}
 	float			GetMaterialValue(const FVector2D& p);
-
 	float			Remap(float val) const override;
-	//float			GetValue(const FVector2D& p) override ;
 
 	//------------------------------------------------------- Debug
 	void			Debug(UWorld* world);
