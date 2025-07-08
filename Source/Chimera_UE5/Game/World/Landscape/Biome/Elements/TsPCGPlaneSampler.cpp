@@ -36,12 +36,15 @@ bool FPCGPlaneSamplerElement::ExecuteInternal(FPCGContext* Context) const// cann
 		}
 	}
 
-	const FVector min = bounds.Min;
-	const FVector max = bounds.Max;
-	const float step_x = settings->mVoxelSize.X;
-	const float step_y = settings->mVoxelSize.Y;
+	const FVector&	min = bounds.Min;
+	const FVector&	max = bounds.Max;
+	const float		step_x = settings->mVoxelSize.X;
+	const float		step_y = settings->mVoxelSize.Y;
+	const FVector	b_min(-settings->mObjectSize.X*0.5f, -settings->mObjectSize.Y*0.5f, 0 );
+	const FVector	b_max( settings->mObjectSize.X*0.5f,  settings->mObjectSize.Y*0.5f, settings->mObjectSize.Z );
 
 	FRandomStream stream( settings->mSeed );
+
 
 	TArray<FPCGPoint> points;
 	for (float x = min.X; x <= max.X; x += step_x){
@@ -52,8 +55,8 @@ bool FPCGPlaneSamplerElement::ExecuteInternal(FPCGContext* Context) const// cann
 			p.Density   = stream.FRand(); // 0?1のランダム値
 			p.Seed		= stream.RandHelper(INT32_MAX); // ←これ大事！
 			p.MetadataEntry = mt_data->AddEntry(); // ←これも必須！
-			p.BoundsMin = -settings->mObjectSize*0.5f;
-			p.BoundsMax =  settings->mObjectSize*0.5f;
+			p.BoundsMin = b_min ;
+			p.BoundsMax = b_max ;
 			points.Add(p);
 		}
 	}

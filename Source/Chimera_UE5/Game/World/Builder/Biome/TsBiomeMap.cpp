@@ -194,17 +194,17 @@ void	TsMaterialMap::StoreMaterial()
 void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 {
 	TMap<EMaterialType, FString> enumname = {
-		{ MT_None		,FString("None")		},
-		{ MT_Soil_A		,FString("Soil_A")		},
-		{ MT_Soil_B		,FString("Soil_B")		},
-		{ MT_Soil_C		,FString("Soil_C")		},
-		{ MT_Grass_A	,FString("Grass_A")		},
-		{ MT_Grass_B	,FString("Grass_B")		},
-		{ MT_Forest_A	,FString("Forest_A")	},
-		{ MT_Forest_B	,FString("Forest_B")	},
-		{ MT_Rock_A		,FString("Rock_A")		},
-		{ MT_Moss_A		,FString("Moss_A")		},
-		{ MT_Moss_B		,FString("Moss_B")		},
+		{ EBMt_None		,FString("None")		},
+		{ EBMt_Soil_A		,FString("Soil_A")		},
+		{ EBMt_Soil_B		,FString("Soil_B")		},
+		{ EBMt_Soil_C		,FString("Soil_C")		},
+		{ EBMt_Grass_A	,FString("Grass_A")		},
+		{ EBMt_Grass_B	,FString("Grass_B")		},
+		{ EBMt_Forest_A	,FString("Forest_A")	},
+		{ EBMt_Forest_B	,FString("Forest_B")	},
+		{ EBMt_Rock_A		,FString("Rock_A")		},
+		{ EBMt_Moss_A		,FString("Moss_A")		},
+		{ EBMt_Moss_B		,FString("Moss_B")		},
 	};
 	
 	int tw = mAlphaMap.GetW();

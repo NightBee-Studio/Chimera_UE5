@@ -62,10 +62,10 @@ public:
 		for (auto &b : mBiomes) {
 			FColor c(0, 0, 0);
 			switch (b.GetSType()) {
-			case EBiomeSType::E_SurfNone:		c = FColor(  0,   0, 180); break;
-			case EBiomeSType::E_SurfLake:		c = FColor(100, 120, 255); break;
-			case EBiomeSType::E_SurfField:		c = FColor(125, 255,   0); break;
-			case EBiomeSType::E_SurfMountain:	c = FColor(120,  60,  20); break;
+			case EBiomeSType::EBSf_None:		c = FColor(  0,   0, 180); break;
+			case EBiomeSType::EBSf_Lake:		c = FColor(100, 120, 255); break;
+			case EBiomeSType::EBSf_Field:		c = FColor(125, 255,   0); break;
+			case EBiomeSType::EBSf_Mountain:	c = FColor(120,  60,  20); break;
 			}
 			b.Debug(world, c);
 		}
@@ -136,45 +136,45 @@ public:
 			TsImageCore::SetDirectory("Resources\\World\\Landscape\\Surface\\", mMapOutParam.x, mMapOutParam.y);
 
 			mSurfaces = TMap<EBiomeSType, TsBiomeSurface>{
-				{ EBiomeSType::E_SurfNone,
+				{ EBiomeSType::EBSf_None,
 					TsBiomeSurface({
 							new TsSurfaceField	  (1.0f, 5.0f     ),
 							new TsSurfacePondNoise( TsNoiseParam({{0.8f,0.01f},{0.2f,0.03f}}), 0.5f, 0.4f),
 						},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{ 1.00f,0.0f, EMaterialType::MT_None  },
+								{ 1.00f,0.0f, EMaterialType::EBMt_None  },
 							})
 					)
 				},
-				{ EBiomeSType::E_SurfLake,
+				{ EBiomeSType::EBSf_Lake,
 					TsBiomeSurface({
 						new TsSurfaceLake(TsNoiseParam({{1.0f, 0.001f},{ 0.2f, 0.003f}}), -10.0f),
 					},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{ 0.60f, 0.0f, EMaterialType::MT_Soil_A },
-								{ 0.50f, 0.0f, EMaterialType::MT_Soil_B },
+								{ 0.60f, 0.0f, EMaterialType::EBMt_Soil_A },
+								{ 0.50f, 0.0f, EMaterialType::EBMt_Soil_B },
 							})
 					)
 				},
-				{ EBiomeSType::E_SurfField,
+				{ EBiomeSType::EBSf_Field,
 					TsBiomeSurface({
 							new TsSurfaceField	  (1.00f, 10.0f     ),
 							new TsSurfacePondNoise(TsNoiseParam({{0.40f,0.01f},{0.15f,0.03f}}), 0.5f, 0.4f),
 						},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{ 0.05f, 0.0f, EMaterialType::MT_Soil_A   },
-								{ 0.10f, 0.0f, EMaterialType::MT_Soil_B   },
-								{ 0.10f, 0.0f, EMaterialType::MT_Grass_A  },
-								{ 0.35f, 0.0f, EMaterialType::MT_Grass_B  },
-								{ 0.10f, 0.0f, EMaterialType::MT_Forest_A },
-								{ 0.15f, 0.0f, EMaterialType::MT_Forest_B },
+								{ 0.05f, 0.0f, EMaterialType::EBMt_Soil_A   },
+								{ 0.10f, 0.0f, EMaterialType::EBMt_Soil_B   },
+								{ 0.10f, 0.0f, EMaterialType::EBMt_Grass_A  },
+								{ 0.35f, 0.0f, EMaterialType::EBMt_Grass_B  },
+								{ 0.10f, 0.0f, EMaterialType::EBMt_Forest_A },
+								{ 0.15f, 0.0f, EMaterialType::EBMt_Forest_B },
 							})
 					)
 				},
-				{ EBiomeSType::E_SurfMountain,
+				{ EBiomeSType::EBSf_Mountain,
 					TsBiomeSurface({
 							new TsSurfaceMountain ( 20       ),
 							//new TsSurfacePondNoise(TsNoiseParam({{0.8f , 0.010f},{ 0.2f, 0.030f}}), 0.5f, 0.5f),
@@ -182,10 +182,10 @@ public:
 						},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{  0.20f, 0.0f, EMaterialType::MT_Grass_A },
-								{  0.35f, 0.0f, EMaterialType::MT_Grass_B },
-								{  0.10f, 0.0f, EMaterialType::MT_Soil_B  },
-								{  0.45f, 0.0f, EMaterialType::MT_Soil_A  },
+								{  0.20f, 0.0f, EMaterialType::EBMt_Grass_A },
+								{  0.35f, 0.0f, EMaterialType::EBMt_Grass_B },
+								{  0.10f, 0.0f, EMaterialType::EBMt_Soil_B  },
+								{  0.45f, 0.0f, EMaterialType::EBMt_Soil_A  },
 							})
 					)
 				},
@@ -255,16 +255,16 @@ public:
 			{///---------------------------------------- Setup Biome
 				// world once
 				TArray<TsBiomeItem_SType> surfc_items = {
-					{ 0.05f, 0.0f, EBiomeSType::E_SurfLake    },
-					{ 0.70f, 0.0f, EBiomeSType::E_SurfField   },
-					{ 0.25f, 0.0f, EBiomeSType::E_SurfMountain},
+					{ 0.05f, 0.0f, EBiomeSType::EBSf_Lake    },
+					{ 0.70f, 0.0f, EBiomeSType::EBSf_Field   },
+					{ 0.25f, 0.0f, EBiomeSType::EBSf_Mountain},
 				};
 				TArray<TsBiomeItem_MType> moist_items = {
-					{ 0.10f, 0.0f, EBiomeMType::E_Soil	  },
-					{ 0.35f, 0.0f, EBiomeMType::E_Field	  },
-					{ 0.05f, 0.0f, EBiomeMType::E_Tree	  },
-					{ 0.30f, 0.0f, EBiomeMType::E_ForestA },
-					{ 0.15f, 0.0f, EBiomeMType::E_ForestB },
+					{ 0.10f, 0.0f, EBiomeMType::EBMo_Soil	  },
+					{ 0.35f, 0.0f, EBiomeMType::EBMo_Field	  },
+					{ 0.05f, 0.0f, EBiomeMType::EBMo_Tree	  },
+					{ 0.30f, 0.0f, EBiomeMType::EBMo_ForestA },
+					{ 0.15f, 0.0f, EBiomeMType::EBMo_ForestB },
 				};
 
 				surfc_map->SetupItems< TsBiome, TsBiomeItem_SType >(mBiomes, surfc_items);
@@ -286,17 +286,17 @@ public:
 				mHeightMap           = new TsHeightMap  ( reso, reso, &bound );
 				mNormalMap	         = new TsNormalMap  ( reso, reso, &bound );// only for output
 				mMaterialMap         = new TsMaterialMap( reso, reso, &bound,{
-						EMaterialType::MT_None,
-						EMaterialType::MT_Soil_A,
-						EMaterialType::MT_Soil_B,
-						EMaterialType::MT_Soil_C,
-						EMaterialType::MT_Grass_A,
-						EMaterialType::MT_Grass_B,
-						EMaterialType::MT_Forest_A,
-						EMaterialType::MT_Forest_B,
-						EMaterialType::MT_Rock_A,
-						EMaterialType::MT_Moss_A,
-						EMaterialType::MT_Moss_B,
+						EMaterialType::EBMt_None,
+						EMaterialType::EBMt_Soil_A,
+						EMaterialType::EBMt_Soil_B,
+						EMaterialType::EBMt_Soil_C,
+						EMaterialType::EBMt_Grass_A,
+						EMaterialType::EBMt_Grass_B,
+						EMaterialType::EBMt_Forest_A,
+						EMaterialType::EBMt_Forest_B,
+						EMaterialType::EBMt_Rock_A,
+						EMaterialType::EBMt_Moss_A,
+						EMaterialType::EBMt_Moss_B,
 					});
 				TsBiomeMap* flow_map = new TsBiomeMap( reso, reso, &bound );
 				TsBiomeMap* pond_map = new TsBiomeMap( reso, reso, &bound );
@@ -311,8 +311,8 @@ public:
 								if (mHeightMap->IsWorld(p)) {
 									if (TsBiome* b = SearchBiome(p)) {
 										mSurfaces[b->GetSType()].UpdateRemap(b, p);
-										if (b->GetSType() == EBiomeSType::E_SurfMountain || b->GetSType() == EBiomeSType::E_SurfLake) {
-											mSurfaces[EBiomeSType::E_SurfField].UpdateRemap(b, p);
+										if (b->GetSType() == EBiomeSType::EBSf_Mountain || b->GetSType() == EBiomeSType::EBSf_Lake) {
+											mSurfaces[EBiomeSType::EBSf_Field].UpdateRemap(b, p);
 										}
 									}
 								}
@@ -323,8 +323,8 @@ public:
 								FVector2D p = mHeightMap->GetWorldPos(px, py);
 								if (TsBiome* b = SearchBiome(p)) {
 									float h = mSurfaces[b->GetSType()].GetHeight(b, p);
-									if (b->GetSType() == EBiomeSType::E_SurfMountain || b->GetSType() == EBiomeSType::E_SurfLake) {
-										h += mSurfaces[EBiomeSType::E_SurfField].GetHeight(b, p);
+									if (b->GetSType() == EBiomeSType::EBSf_Mountain || b->GetSType() == EBiomeSType::EBSf_Lake) {
+										h += mSurfaces[EBiomeSType::EBSf_Field].GetHeight(b, p);
 									}
 									mHeightMap->SetPixel(px, py, h);
 								}
@@ -347,19 +347,17 @@ public:
 						UE_LOG(LogTemp, Log, TEXT("   Erosion done."));
 					}
 
-					{///--------------------------------------------------- Normal
-						UE_LOG(LogTemp, Log, TEXT("   Normal start..."));
-
-						mHeightMap->ForeachPixel(
-							[&](int px, int py) {
-								mNormalMap->SetPixel(px, py, mHeightMap->CalcNormal(px, py, 4));
-							});
-
-						UE_LOG(LogTemp, Log, TEXT("   Normal done."));
-					}
-					mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
-					mHeightMap->Save("HeightMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
-					mNormalMap->Save("NormalMap.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8);
+					//{///--------------------------------------------------- Normal
+					//	UE_LOG(LogTemp, Log, TEXT("   Normal start..."));
+					//	mHeightMap->ForeachPixel(
+					//		[&](int px, int py) {
+					//			mNormalMap->SetPixel(px, py, mHeightMap->CalcNormal(px, py, 4));
+					//		});
+					//	UE_LOG(LogTemp, Log, TEXT("   Normal done."));
+					//}
+					//mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+					//mHeightMap->Save("HeightMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
+					//mNormalMap->Save("NormalMap.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8);
 
 					UE_LOG(LogTemp, Log, TEXT("   HeightMap done."));
 				}
@@ -370,13 +368,13 @@ public:
 					UE_LOG(LogTemp, Log, TEXT("BiomeSystem:: MaterialMap preparing..."));
 
 					TArray<TsBiomeItem_Material> moist_items = {
-						{ 0.04f, 0.0f, EMaterialType::MT_Soil_A,  },
-						{ 0.02f, 0.0f, EMaterialType::MT_Soil_B,  },
-						{ 0.02f, 0.0f, EMaterialType::MT_Soil_C,  },
-						{ 0.10f, 0.0f, EMaterialType::MT_Grass_A, },
-						{ 0.35f, 0.0f, EMaterialType::MT_Grass_B, },
-						{ 0.20f, 0.0f, EMaterialType::MT_Forest_A,},
-						{ 0.15f, 0.0f, EMaterialType::MT_Forest_B,},
+						{ 0.04f, 0.0f, EBMt_Soil_A,  },
+						{ 0.02f, 0.0f, EBMt_Soil_B,  },
+						{ 0.02f, 0.0f, EBMt_Soil_C,  },
+						{ 0.10f, 0.0f, EBMt_Grass_A, },
+						{ 0.35f, 0.0f, EBMt_Grass_B, },
+						{ 0.20f, 0.0f, EBMt_Forest_A,},
+						{ 0.15f, 0.0f, EBMt_Forest_B,},
 					};
 					bool first = true;
 					moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items );
@@ -415,10 +413,10 @@ public:
 
 					auto surf_to_mat = [&](EBiomeSType typ) {
 							switch (typ) {
-							case EBiomeSType::E_SurfLake:		return EMaterialType::MT_Sand_A; 
-							case EBiomeSType::E_SurfField:		return EMaterialType::MT_Grass_A; 
-							case EBiomeSType::E_SurfMountain:	return EMaterialType::MT_Forest_A;
-							case EBiomeSType::E_SurfNone:		return EMaterialType::MT_BaseLand;
+							case EBiomeSType::EBSf_Lake:		return EMaterialType::MT_Sand_A; 
+							case EBiomeSType::EBSf_Field:		return EMaterialType::MT_Grass_A; 
+							case EBiomeSType::EBSf_Mountain:	return EMaterialType::MT_Forest_A;
+							case EBiomeSType::EBSf_None:		return EMaterialType::MT_BaseLand;
 							}
 							return EMaterialType::MT_BaseLand;
 						};

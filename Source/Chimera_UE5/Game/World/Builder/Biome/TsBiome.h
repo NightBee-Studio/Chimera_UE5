@@ -16,43 +16,55 @@
 
 UENUM(BlueprintType)
 enum class EBiomeSType : uint8 {	// Surface(Height)
-	E_SurfNone,	// out of continent
-	E_SurfLake,
-	E_SurfField	,
-	E_SurfMountain,
+	EBSf_None,	// out of continent
+	EBSf_Lake,
+	EBSf_Field	,
+	EBSf_Mountain,
 };
 
 UENUM(BlueprintType)
 enum class EBiomeMType : uint8 {	// Moist(Water)
-	E_Soil,
-	E_Field,
-	E_Tree,
-	E_ForestA,
-	E_ForestB,
+	EBMo_Soil,
+	EBMo_Field,
+	EBMo_Tree,
+	EBMo_ForestA,
+	EBMo_ForestB,
 };
 
 UENUM(BlueprintType)
 enum class EBiomeGType : uint8 {	// Genre
-	E_GenreTropical,
-	E_GenreDessert,
-	E_GenreWilderness,
-	E_GenreSavanna,
+	EBGn_A,
+	EBGn_B,
+	EBGn_C,
+	EBGn_D,
 };
 
 UENUM(BlueprintType)
 enum EMaterialType {
-	MT_None,		//0
-	MT_Soil_A,
-	MT_Soil_B,
-	MT_Soil_C,
-	MT_Grass_A,		//8
-	MT_Grass_B,		
-	MT_Forest_A,	//10
-	MT_Forest_B,	
-	MT_Rock_A,		//12
-	MT_Moss_A,		
-	MT_Moss_B,		//14
+	EBMt_None,		//0
+	EBMt_Soil_A,
+	EBMt_Soil_B,
+	EBMt_Soil_C,
+	EBMt_Grass_A,		//8
+	EBMt_Grass_B,		
+	EBMt_Forest_A,	//10
+	EBMt_Forest_B,	
+	EBMt_Rock_A,		//12
+	EBMt_Moss_A,		
+	EBMt_Moss_B,		//14
 };
+
+
+UENUM(BlueprintType)
+enum ETextureMap {
+	ETM_Height,
+	ETM_Genre,
+	ETM_Flow,
+	ETM_Wear,
+	ETM_Slope,
+	ETM_Deposite,
+	ETM_Curvature,
+} ;
 
 
 // -------------------------------- TsBiomeItem  --------------------------------
@@ -90,15 +102,15 @@ struct CHIMERA_UE5_API FTsBiomeModel
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Material"))
-	TObjectPtr<UMaterialInstanceConstant>	mMaterial;
-
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Bitmask, BitmaskEnum = "EItemFlag", DisplayName = "Flag"))
+	//int32							mFlag;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Textures"))
-	TArray<TObjectPtr<UTexture2D>>			mTextures;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Mask"))
-	TObjectPtr<UTexture2D>					mMask;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "HeightMap"))
-	TObjectPtr<UTexture2D>					mHeightMap;
+	TMap<TEnumAsByte<ETextureMap>,TObjectPtr<UTexture2D>>
+									mTextures;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Material"))
+	TObjectPtr<UMaterialInstance>	mMaterial;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Model"   ))
+	TObjectPtr<UStaticMesh>			mModel;
 };
 
 USTRUCT(BlueprintType)
@@ -109,13 +121,10 @@ struct CHIMERA_UE5_API FTsBiomeSpec
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeSurf"))
 	EBiomeSType				mSType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeMoist"))
-	EBiomeMType				mMType;
+	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeMoist"))
+	//EBiomeMType				mMType;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeGenre"))
 	EBiomeGType				mGType;
-
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Bitmask, BitmaskEnum = "EItemFlag", DisplayName = "Flag"))
-	//int32					mFlag;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Models"))
 	TArray<FTsBiomeModel>	Models;

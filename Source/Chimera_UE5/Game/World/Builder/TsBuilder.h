@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-#include "Util/TsTextureMap.h"
+#include "Biome/TsBiome.h"
 
 #include "TsBuilder.generated.h"
 

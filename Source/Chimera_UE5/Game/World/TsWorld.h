@@ -19,11 +19,8 @@ protected:
 	virtual void BeginPlay() override{;}
 
 public:
-	//ATsWorld();
-
 	UPROPERTY(BlueprintReadOnly, EditAnywhere, Meta = (RowType = "FBiomeSpec"))
 	TObjectPtr<UDataTable>		mBiomeSpecs;
-
 
 	AActor*		SpawnObject(TSubclassOf<AActor> cls, const FString& name, const FVector& pos, const FRotator& rot);
 

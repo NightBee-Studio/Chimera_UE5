@@ -7,8 +7,8 @@
 
 TsBiome::TsBiome(float x, float y)
 	: TsVoronoi(x, y, this)
-	, mSType( EBiomeSType::E_SurfNone )
-	, mMType( EBiomeMType::E_Soil     )
+	, mSType( EBiomeSType::EBSf_None )
+	, mMType( EBiomeMType::EBMo_Soil )
 {
 }
 
