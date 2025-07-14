@@ -36,16 +36,31 @@ void TsTextureMap::UnLock()
 	mData = nullptr;
 }
 
-float TsTextureMap::GetPixel(int x, int y, int reso ) 
+float TsTextureMap::GetPixel(int x, int y, EAnchor anc, int reso ) 
 {
 	int channel = 0;///////
-	int	byte_per_pixel = GPixelFormats[mTex->GetPixelFormat()].BlockBytes;
 	int w = mTex->GetSizeX();
 	int h = mTex->GetSizeY();
+
+int ox=x, oy =y;
+	//anchor control
+	switch( anc & (_Right|_Left  ) ){
+	case EAnchor::_Left:	           break ;
+	case EAnchor::_Center:	x = x+w/2; break ;
+	case EAnchor::_Right:	x = w-  x; break ;
+	}
+	switch( anc & (_Upper|_Bottom) ){
+	case EAnchor::_Bottom:	           break ;
+	case EAnchor::_Center:	y = y+h/2; break ;
+	case EAnchor::_Upper:	y = h-  y; break ;
+	}
+
 	int px = FMath::Clamp( (reso>0 ? w*x/reso : x), 0, w-1 ) ;
 	int py = FMath::Clamp( (reso>0 ? h*y/reso : y), 0, h-1 ) ;
+	int	byte_per_pixel = GPixelFormats[mTex->GetPixelFormat()].BlockBytes;
 	uint8* data = (uint8*)mData + (px + py * w) * byte_per_pixel ;
-	//UE_LOG(LogTemp, Log, TEXT("   GetPixel fmt%d [%d,%d]"), mTex->GetPixelFormat(), mTex->GetSizeX(), mTex->GetSizeY()) ;
+
+//	UE_LOG(LogTemp, Log, TEXT("GetPixel o(%d %d)=>(%d %d)=>p(%d %d)fmt%d"),ox,oy,x,y,px,py, mTex->GetPixelFormat() );
 
 	float  r = 0.0f;
 	switch (mTex->GetPixelFormat()) {
@@ -59,6 +74,24 @@ float TsTextureMap::GetPixel(int x, int y, int reso )
 	case EPixelFormat::PF_R8G8B8A8:
 		r = ((uint8*)data)[channel] / 255.0f;
 		break;
+	default:
+		UE_LOG(LogTemp, Log, TEXT("TsTextureMap : Unknown format%d"), mTex->GetPixelFormat() );
+		break;
 	}
 	return r;
 }
+
+float	TsTextureMap::GetValue(float x, float y, EAnchor anc, int reso )
+{
+	int   dx  = (int)x ;
+	int   dy  = (int)y ;
+	float sx  = FMath::Frac(x) ;
+	float sy  = FMath::Frac(y) ;
+	float h00 = TsTextureMap::GetPixel( dx+0, dy+0, anc, reso ) ;
+	float h01 = TsTextureMap::GetPixel( dx+1, dy+0, anc, reso ) ;
+	float h10 = TsTextureMap::GetPixel( dx+0, dy+1, anc, reso ) ;
+	float h11 = TsTextureMap::GetPixel( dx+1, dy+1, anc, reso ) ;
+	return ((h00 * (1-sx) + h01*sx) * (1-sy)+
+			(h10 * (1-sx) + h11*sx) * (  sy)) ;
+}
+

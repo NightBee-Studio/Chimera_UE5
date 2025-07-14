@@ -1,8 +1,9 @@
-
+	
 #include "TsBuilder.h"
 
 #include "Biome/TsBiome.h"
 #include "Biome/TsBiomeMap.h"
+#include "Biome/TsBiomeModel.h"
 #include "Biome/TsBiomeSite.h"
 #include "Biome/TsBiomeSurface.h"
 
@@ -20,6 +21,8 @@ class Builder_Work {
 public:
 	TMap<EBiomeSType, TsBiomeSurface>	mSurfaces;
 	TArray<TsBiome>						mBiomes;
+	TArray<TsBiomeGroup>				mBiomeGroups ;
+
 	TsBiomeSite							mShape;
 
 	FBox2D								mBoundingbox;
@@ -34,6 +37,13 @@ private:
 	{
 		for (auto& b : mBiomes) {
 			if (b.IsInside(p)) return &b;
+		}
+		return nullptr;
+	}
+	TsBiomeGroup*	SearchBiomeGroup(const FVector2D& p)// world-coord
+	{
+		for (auto& bg : mBiomeGroups) {
+			if (bg.IsInside(p)) return &bg;
 		}
 		return nullptr;
 	}
@@ -80,12 +90,12 @@ public:
 
 	void			BuildLandscape(
 			float _x, float _y, float radius,
-			int		seed,
-			float	voronoi_size,
-			float	voronoi_jitter,
-			int		heightmap_reso,
-			int		erode_cycle,
-			TMap<ETextureMap, TsTextureMap*>& texture_maps
+			int			seed,
+			float		voronoi_size,
+			float		voronoi_jitter,
+			int			heightmap_reso,
+			int			erode_cycle,
+			UDataTable*	biome_specs
 		)
 	{
 		TsUtil::RandSeed( seed );
@@ -100,9 +110,7 @@ public:
 			{TsBiomeSite::CircleConf(1.0f,1.5f, 0.06f,0.4f, 3, -40, 40),
 			 TsBiomeSite::CircleConf(0.8f,1.0f, 0.06f,0.5f, 1,  20, 40),
 			 TsBiomeSite::CircleConf(0.7f,0.9f, 0.06f,0.5f, 1, -40,-20),
-			 TsBiomeSite::CircleConf(1.0f,1.2f, 0.06f,0.5f, 0, -40,-20),
-//			 TsBiomeSite::CircleConf(0.5f,0.5f, 0.06f,0.5f, 0,   0,-20),
-			} );
+			 TsBiomeSite::CircleConf(1.0f,1.2f, 0.06f,0.5f, 0, -40,-20),} );
 
 		{//-------------------------------------------------------------------------------------- create voronois
 			mShape.UpdateBoundingbox(mBoundingbox);
@@ -205,16 +213,15 @@ public:
 						{ 0.90f, 0.001f*S },
 						{ 0.50f, 0.002f*S },
 						{ 0.25f, 0.004f*S },
-						//{ 0.13f, 0.008f*S },
 						{ 0.10f, 0.016f*S },
 						{ 0.10f, 0.032f*S },
 						{ 0.10f, 0.064f*S },
 					}),
 					{
-						{ texture_maps[ETextureMap::ETM_Height   ],	 1.0f, EExtraOp::E_InvMul },
-						{ texture_maps[ETextureMap::ETM_Flow     ],	-1.2f, EExtraOp::E_Add },
-						{ texture_maps[ETextureMap::ETM_Slope    ],	-0.8f, EExtraOp::E_Add },
-						{ texture_maps[ETextureMap::ETM_Curvature],	-0.8f, EExtraOp::E_Add },
+						//{ texture_maps[ETextureMap::ETM_Height   ],	 1.0f, EExtraOp::E_InvMul },
+						//{ texture_maps[ETextureMap::ETM_Flow     ],	-1.2f, EExtraOp::E_Add },
+						//{ texture_maps[ETextureMap::ETM_Slope    ],	-0.8f, EExtraOp::E_Add },
+						//{ texture_maps[ETextureMap::ETM_Curvature],	-0.8f, EExtraOp::E_Add },
 					}
 				);
 #undef S
@@ -249,8 +256,10 @@ public:
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Genre map done.") );
 			}
 
+
 			// lock all of texturemaps
-			for (auto& tm : texture_maps) tm.Value->Lock();
+			//for (auto& tm : texture_maps) tm.Value->Lock();
+
 
 			{///---------------------------------------- Setup Biome
 				// world once
@@ -276,6 +285,87 @@ public:
 						b.SetMType( moist_map->SelectItem<TsBiome, TsBiomeItem_MType>( b, moist_items).mItem );
 					}
 				}
+			}
+
+			{// Biome Specs
+				TsBiomeGroup::ClearDone() ;
+				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Specs ..."));
+
+				FTsBiomeModels	biome_models(biome_specs) ;
+				biome_models.Lock() ;
+
+				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group ..."));
+				// Grouping the Biomes.
+				for ( auto &b : mBiomes ){
+					if ( b.mSType != EBiomeSType::EBSf_None ){
+						if ( !TsBiomeGroup::TryDone( &b ) ){
+							mBiomeGroups.Add( TsBiomeGroup( &b, biome_models ) ) ;
+						}
+					}
+				}
+
+				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Construct Heightmap..."));
+				// Generate heightmap.
+				int		reso  = mMapOutParam.LocalReso();
+				FBox2D	bound = mMapOutParam.LocalBound(mBoundingbox);
+				mHeightMap   = new TsHeightMap  ( reso, reso, &bound );
+				mNormalMap	 = new TsNormalMap  ( reso, reso, &bound );
+				mMaterialMap = new TsMaterialMap( reso, reso, &bound,{
+						EMaterialType::EBMt_None,
+						EMaterialType::EBMt_Soil_A,
+						EMaterialType::EBMt_Soil_B,
+						EMaterialType::EBMt_Soil_C,
+						EMaterialType::EBMt_Grass_A,
+						EMaterialType::EBMt_Grass_B,
+						EMaterialType::EBMt_Forest_A,
+						EMaterialType::EBMt_Forest_B,
+						EMaterialType::EBMt_Rock_A,
+						EMaterialType::EBMt_Moss_A,
+						EMaterialType::EBMt_Moss_B,
+					});
+				//TsBiomeMap* surf_map = new TsBiomeMap( reso, reso, &bound );
+				//surf_map->ForeachPixel(
+				//	[&](int px, int py) {	/////////// This is for debug use.
+				//		FVector2D p = surf_map->GetWorldPos(px, py);
+				//		if ( surf_map->IsWorld(p) ) {
+				//			if (TsBiome* b = SearchBiome(p)) {
+				//				surf_map->SetPixel(px, py, (float)b->GetSType() );
+				//			}
+				//		}
+				//	} );
+				//surf_map->Save("SurfMap.dds", EImageFile::Dds, EImageFormat::FormatL16 );
+
+				mHeightMap->ForeachPixel(
+					[&](int px, int py) {
+						FVector2D p = mHeightMap->GetWorldPos(px, py);
+						if ( mHeightMap->IsWorld(p) ) {
+							if (TsBiomeGroup* g = SearchBiomeGroup(p)) {
+								float h = g->GetPixel( ETextureMap::ETM_Height, p );
+
+								UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: [%d,%d] %f"), px, py, h );
+
+								mHeightMap->SetPixel(px, py, h );
+							}
+						}
+					} );
+				mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+				mHeightMap->Save("HeightMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
+
+				TsBiomeMap* surf_map = new TsBiomeMap( reso, reso, &bound );
+				surf_map->ForeachPixel(
+					[&](int px, int py) {	/////////// This is for debug use.
+						FVector2D p = surf_map->GetWorldPos(px, py);
+						if ( surf_map->IsWorld(p) ) {
+							if (TsBiomeGroup* g = SearchBiomeGroup(p)) {
+								surf_map->SetPixel(px, py, (float)g->GetSeqID() );
+							}
+						}
+					} );
+				surf_map->Save("SurfMap.dds", EImageFile::Dds, EImageFormat::FormatL16 );
+
+				biome_models.UnLock() ;
+
+				return ;//stop
 			}
 
 			{///---------------------------------------- Generate Mapping
@@ -501,7 +591,7 @@ public:
 			}
 
 			// unlock all of texturemaps
-			for (auto& tm : texture_maps) tm.Value->UnLock();
+			//for (auto& tm : texture_maps) tm.Value->UnLock();
 		}
 	}
 };
@@ -533,10 +623,10 @@ void	ATsBuilder::Build()
 
 	FVector  pos = GetActorLocation();
 
-	TMap<ETextureMap, TsTextureMap*> texture_maps;
-	for (auto& tm : mTextureMaps ) {
-		texture_maps.Add(tm.Key, new TsTextureMap(tm.Value));
-	}
+	//TMap<ETextureMap, TsTextureMap*> texture_maps;
+	//for (auto& tm : mTextureMaps ) {
+	//	texture_maps.Add(tm.Key, new TsTextureMap(tm.Value));
+	//}
 
 	work->BuildLandscape(
 		pos.X, pos.Y, mRadius,
@@ -544,7 +634,7 @@ void	ATsBuilder::Build()
 		mVoronoiSize, mVoronoiJitter,
 		mReso,
 		mErodeCycle,
-		texture_maps
+		mBiomeTable
 	);
 
 	work->Debug( GetWorld());

@@ -94,42 +94,6 @@ template <typename T>
 concept DerivedBiomeItem = std::is_base_of_v<TsBiomeItem, T>;
 
 
-
-
-
-USTRUCT(BlueprintType)
-struct CHIMERA_UE5_API FTsBiomeModel
-{
-	GENERATED_BODY()
-public:
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (Bitmask, BitmaskEnum = "EItemFlag", DisplayName = "Flag"))
-	//int32							mFlag;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Textures"))
-	TMap<TEnumAsByte<ETextureMap>,TObjectPtr<UTexture2D>>
-									mTextures;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Material"))
-	TObjectPtr<UMaterialInstance>	mMaterial;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Model"   ))
-	TObjectPtr<UStaticMesh>			mModel;
-};
-
-USTRUCT(BlueprintType)
-struct CHIMERA_UE5_API FTsBiomeSpec
-	: public FTableRowBase
-{
-	GENERATED_BODY()
-public:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeSurf"))
-	EBiomeSType				mSType;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeMoist"))
-	//EBiomeMType				mMType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "TypeGenre"))
-	EBiomeGType				mGType;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Models"))
-	TArray<FTsBiomeModel>	Models;
-};
-
 //
 // Surface materail must be changed for following parameters.
 //	- Height
@@ -165,4 +129,33 @@ public:
 
 	void 			GetBlend(TMap<TsBiome*,float>& array, const FVector2D& p);
 };
+
+struct FTsBiomeModel  ;
+struct FTsBiomeModels ;
+class TsBiomeGroup
+{
+private:
+	TArray<TsBiome*>	mBiomes ;
+
+	FVector2D			mMin, mMax;
+	FTransform			mTransform;
+
+	int					mID ;
+	int					mSeqID ;
+	FTsBiomeModel*		mModel  ;
+	FVector2D			mHeightRange ;
+
+public:
+	static bool TryDone( TsBiome* b );
+	static bool CheckDone( TsBiome* b );
+	static void ClearDone() ;
+	static void Done( TsBiome* b );
+public:
+	TsBiomeGroup( TsBiome* b, FTsBiomeModels& biome_models ) ;
+
+	bool		IsInside( const FVector2D& p ) const ;
+	float		GetMask(const FVector2D& p ) const ;
+	int			GetSeqID() const { return mSeqID ;}
+	float		GetPixel(ETextureMap mp, const FVector2D& p) const ;
+} ;
 

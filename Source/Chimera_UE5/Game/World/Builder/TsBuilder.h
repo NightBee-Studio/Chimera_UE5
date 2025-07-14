@@ -4,6 +4,8 @@
 
 #include "Biome/TsBiome.h"
 
+#include "Engine/DataTable.h"
+
 #include "TsBuilder.generated.h"
 
 
@@ -22,19 +24,19 @@ public:
 	ATsBuilder();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Seed"))
-	int			mSeed;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Radius"))
-	float		mRadius;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "VoronoiSize"))
-	float		mVoronoiSize;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "VoronoiJitter"))
-	float		mVoronoiJitter;
+	int				mSeed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Island", Meta = (DisplayName = "Radius"))
+	float			mRadius;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Island", Meta = (DisplayName = "VoronoiSize"))
+	float			mVoronoiSize;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Island", Meta = (DisplayName = "VoronoiJitter"))
+	float			mVoronoiJitter;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Reso"))
-	int			mReso;
+	int				mReso;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Erode Cycle"))
-	int			mErodeCycle;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Texture Map"))
-	TMap<TEnumAsByte<ETextureMap>,TObjectPtr<UTexture2D>>	mTextureMaps;
+	int				mErodeCycle;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Biome Specs"))
+	UDataTable*		mBiomeTable;
 
 	UFUNCTION(BlueprintCallable)
 	void		Build();

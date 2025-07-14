@@ -30,8 +30,19 @@ public class Chimera_UE5 : ModuleRules
 		PublicDependencyModuleNames.AddRange(new string[] { "GameplayAbilities", "GameplayTags", });
 		PrivateDependencyModuleNames.AddRange(new string[] { "GameplayTasks" });
 
+		// mesh output
+		PrivateDependencyModuleNames.AddRange(new string[] {
+			"ProceduralMeshComponent",
+			"AssetTools",
+			"AssetRegistry",
+			"EditorScriptingUtilities",
+			"MeshDescription",
+			"StaticMeshDescription",
+            "UnrealEd",
+		    "EditorSubsystem", "EditorFramework" // GEditor経由で必要なこともある
+		});
 
-		PublicIncludePaths.AddRange(new string[] {
+        PublicIncludePaths.AddRange(new string[] {
 				Path.Combine(ModuleDirectory, "../Chimera_UE5")
 		});
 		PrivateIncludePaths.AddRange(new string[] {

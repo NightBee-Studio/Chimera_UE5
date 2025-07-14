@@ -195,16 +195,16 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 {
 	TMap<EMaterialType, FString> enumname = {
 		{ EBMt_None		,FString("None")		},
-		{ EBMt_Soil_A		,FString("Soil_A")		},
-		{ EBMt_Soil_B		,FString("Soil_B")		},
-		{ EBMt_Soil_C		,FString("Soil_C")		},
+		{ EBMt_Soil_A	,FString("Soil_A")		},
+		{ EBMt_Soil_B	,FString("Soil_B")		},
+		{ EBMt_Soil_C	,FString("Soil_C")		},
 		{ EBMt_Grass_A	,FString("Grass_A")		},
 		{ EBMt_Grass_B	,FString("Grass_B")		},
 		{ EBMt_Forest_A	,FString("Forest_A")	},
 		{ EBMt_Forest_B	,FString("Forest_B")	},
-		{ EBMt_Rock_A		,FString("Rock_A")		},
-		{ EBMt_Moss_A		,FString("Moss_A")		},
-		{ EBMt_Moss_B		,FString("Moss_B")		},
+		{ EBMt_Rock_A	,FString("Rock_A")		},
+		{ EBMt_Moss_A	,FString("Moss_A")		},
+		{ EBMt_Moss_B	,FString("Moss_B")		},
 	};
 	
 	int tw = mAlphaMap.GetW();
@@ -237,7 +237,7 @@ float	TsMoistureMap::GetValue( const FVector2D& p )
 	FIntVector2	pos = TsBiomeMap::GetPixelPos( p );
 	float		val = TsBiomeMap::GetValue( p ) ;
 	for ( auto &ex : mExtras ){
-		float pix = ex.mTex->GetPixel( pos.X, pos.Y, mW );
+		float pix = ex.mTex->GetPixel( pos.X, pos.Y, EAnchor::E_LB, mW );
 		switch( ex.mOp ){
 		case EExtraOp::E_Mul:
 			val *= (pix    ) * ex.mScale ; 
