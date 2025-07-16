@@ -10,6 +10,12 @@
 
 
 
+UENUM(BlueprintType)
+enum EBuildMode {
+	EBM_Heightmap,
+	EBM_FullGrid,
+} ;
+
 // -------------------------------- UTsLandscape  --------------------------------
 UCLASS(Blueprintable)
 class CHIMERA_UE5_API ATsBuilder
@@ -23,20 +29,34 @@ private:
 public:
 	ATsBuilder();
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Mode"))
+	TEnumAsByte<EBuildMode>	mMode ;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Seed"))
-	int				mSeed;
+	int						mSeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Island", Meta = (DisplayName = "Radius"))
-	float			mRadius;
+	float					mRadius;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Island", Meta = (DisplayName = "VoronoiSize"))
-	float			mVoronoiSize;
+	float					mVoronoiSize;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Island", Meta = (DisplayName = "VoronoiJitter"))
-	float			mVoronoiJitter;
+	float					mVoronoiJitter;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Reso"))
-	int				mReso;
+	int						mReso;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Erode Cycle"))
-	int				mErodeCycle;
+	int						mErodeCycle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Unit Size"))
+	int						mUnitSize;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Unit Division"))
+	int						mUnitDiv;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Unit Reso"))
+	int						mUnitReso;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Heightmap"))
+	UTexture2D*				mHeightmap;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Biome Specs"))
-	UDataTable*		mBiomeTable;
+	UDataTable*				mBiomeTable;
 
 	UFUNCTION(BlueprintCallable)
 	void		Build();

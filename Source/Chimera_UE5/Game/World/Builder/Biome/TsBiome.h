@@ -141,7 +141,7 @@ private:
 	FTransform			mTransform;
 
 	int					mID ;
-	int					mSeqID ;
+	//int					mSeqID ;
 	FTsBiomeModel*		mModel  ;
 	FVector2D			mHeightRange ;
 
@@ -155,7 +155,7 @@ public:
 
 	bool		IsInside( const FVector2D& p ) const ;
 	float		GetMask(const FVector2D& p ) const ;
-	int			GetSeqID() const { return mSeqID ;}
+	//int			GetSeqID() const { return mSeqID ;}
 	float		GetPixel(ETextureMap mp, const FVector2D& p) const ;
 } ;
 

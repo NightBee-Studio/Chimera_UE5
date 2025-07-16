@@ -35,6 +35,9 @@ public:
 	bool	Lock();
 	void	UnLock() ;
 
+	int		GetSizeX() const ;
+	int		GetSizeY() const ;
+
 	float	GetPixel(int   x, int   y, EAnchor anc=E_LB, int reso = 0);
 	float	GetValue(float x, float y, EAnchor anc=E_LB, int reso = 0);
 } ;

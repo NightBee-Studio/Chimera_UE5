@@ -184,7 +184,7 @@ TsBiomeGroup::TsBiomeGroup( TsBiome* b, FTsBiomeModels& biome_models )
 			}
 		}
 	}
-	mSeqID		 = ++gSeqNo ;
+	//mSeqID		 = ++gSeqNo ;
 	mModel		 = biome_models.GetRandomModel( mID ) ;
 	mHeightRange = biome_models.GetHeightRange( mID ) ;
 	FVector2D size = mMax - mMin ;

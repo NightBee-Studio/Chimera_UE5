@@ -36,11 +36,22 @@ void TsTextureMap::UnLock()
 	mData = nullptr;
 }
 
+
+int	TsTextureMap::GetSizeX() const 
+{
+	return mTex->GetSizeX();
+}
+
+int	TsTextureMap::GetSizeY() const 
+{
+	return mTex->GetSizeY();
+}
+
 float TsTextureMap::GetPixel(int x, int y, EAnchor anc, int reso ) 
 {
 	int channel = 0;///////
-	int w = mTex->GetSizeX();
-	int h = mTex->GetSizeY();
+	int w = GetSizeX();
+	int h = GetSizeY();
 
 int ox=x, oy =y;
 	//anchor control

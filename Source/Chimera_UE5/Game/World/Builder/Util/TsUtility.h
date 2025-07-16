@@ -7,6 +7,14 @@
 
 // ---------------------------- Utillity -------------------------
 namespace TsUtil {
+	struct TsBox{
+		int		mX, mY ; 
+		int		mW, mH ; 
+
+		TsBox( int x, int y, int w, int h )
+			: mX(x),mY(y), mW(w),mH(h){}
+	};
+
 	static inline
 	FVector2D	NearPoint(const FVector2D& v1, const FVector2D& v2, const FVector2D& pp)
 	{
