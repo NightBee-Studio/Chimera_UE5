@@ -15,7 +15,6 @@ public:
 		int						mesh_div,
 		float					mesh_size,
 		float					mesh_height,
-		const FString&			packagename,
 		const FString&			assetname );
 };
 

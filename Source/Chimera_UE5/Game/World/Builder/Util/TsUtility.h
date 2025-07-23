@@ -130,4 +130,11 @@ namespace TsUtil {
 	int32	RandRange(int32 a, int32 b);
 	float	RandRange(float a, float b);
 	float	RandRange(const FVector2D &v);
+
+
+	// directory
+	void		SetDirectory(const FString& path, int no_x=-1, int no_y=-1);
+	FString 	GetDirectory(const FString& name);
+	FString 	GetPackagePath(const FString& name);
+
 }

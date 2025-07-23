@@ -11,24 +11,29 @@
 
 
 
-#define PROJPATH	"D:\\Works\\Projects\\Chimera\\01_Project\\Chimera_UE5\\Content\\"
+//#define PROJPATH	"D:\\Works\\Projects\\Chimera\\01_Project\\Chimera_UE5\\Content\\"
 
 
 // -------------------------------- TsMapOutput  --------------------------------
 int		TsMapOutput::LocalReso()
 {
-	return reso * (n>1 ? 2 : 1);
+	return mReso / (mDiv>0 ? mDiv : 1);
 }
 
 FBox2D	TsMapOutput::LocalBound(const FBox2D& world_bound)
 {
-	if (n == 1) return world_bound;
+	if (mDiv == 1) return world_bound;
 
-	FVector2D	size = world_bound.GetSize()/n;
-	return FBox2D(	world_bound.Min + size * FVector2D( x-0.5f, y-0.5f ),
-					world_bound.Min + size * FVector2D( x+1.5f, y+1.5f ) );
+	FVector2D	size = world_bound.GetSize()/mDiv;
+	return FBox2D(	world_bound.Min + size * FVector2D( mX-0.5f, mY-0.5f ),
+					world_bound.Min + size * FVector2D( mX+1.5f, mY+1.5f ) );
 }
 
+TsUtil::TsBox	TsMapOutput::OutBound( int x, int y )
+{
+	int reso = LocalReso();
+	return TsUtil::TsBox( x*reso, y*reso, reso, reso );
+}
 
 
 
@@ -221,7 +226,7 @@ enum {
 } ;
 
 int		TsImageCore::Load(const FString& fname, EImageFile fmt) {
-	FString	path = PROJPATH + fname;
+	FString	path = TsUtil::GetDirectory( fname ) ;
 	FILE* fp;
 	if ((_tfopen_s(&fp, *path, TEXT("rb"))) == 0) {
 		switch (fmt) {
@@ -279,7 +284,7 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 		UKismetSystemLibrary::PrintString(nullptr, fname, true, true, FColor::Red, 5.0f, TEXT("None"));
 	}
 
-	FString	path = gDirName + fname;
+	FString	path = TsUtil::GetDirectory( fname ) ;
 	FILE* fp;
 	if ((_tfopen_s(&fp, *path, TEXT("wb"))) == 0) {
 		switch (filetype) {
@@ -404,21 +409,21 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 float	TsImageCore::gSx = 0;
 float	TsImageCore::gSY = 0;
 
-FString TsImageCore::gDirName;
+//FString TsImageCore::gDirName;
 
-void	TsImageCore::SetDirectory(const FString& path, int no_x, int no_y)
-{
-	gDirName = PROJPATH + path;
-	if (no_x >= 0 && no_y >= 0) {
-		gDirName += FString::Printf(TEXT("%02d_%02d"), no_x, no_y);
-	}
-	gDirName += FString("\\");
-
-	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
-	if (!pf.DirectoryExists(*gDirName)) {		// Directory Exists?
-		pf.CreateDirectory(*gDirName);
-	}
-}
+//void	TsImageCore::SetDirectory(const FString& path, int no_x, int no_y)
+//{
+//	gDirName = PROJPATH + path;
+//	if (no_x >= 0 && no_y >= 0) {
+//		gDirName += FString::Printf(TEXT("%02d_%02d"), no_x, no_y);
+//	}
+//	gDirName += FString("\\");
+//
+//	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
+//	if (!pf.DirectoryExists(*gDirName)) {		// Directory Exists?
+//		pf.CreateDirectory(*gDirName);
+//	}
+//}
 
 
 int			TsImageCore::GetStride(EImageFormat format) {

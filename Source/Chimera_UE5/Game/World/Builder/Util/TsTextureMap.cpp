@@ -71,7 +71,6 @@ int ox=x, oy =y;
 	int	byte_per_pixel = GPixelFormats[mTex->GetPixelFormat()].BlockBytes;
 	uint8* data = (uint8*)mData + (px + py * w) * byte_per_pixel ;
 
-//	UE_LOG(LogTemp, Log, TEXT("GetPixel o(%d %d)=>(%d %d)=>p(%d %d)fmt%d"),ox,oy,x,y,px,py, mTex->GetPixelFormat() );
 
 	float  r = 0.0f;
 	switch (mTex->GetPixelFormat()) {
@@ -89,6 +88,7 @@ int ox=x, oy =y;
 		UE_LOG(LogTemp, Log, TEXT("TsTextureMap : Unknown format%d"), mTex->GetPixelFormat() );
 		break;
 	}
+	//UE_LOG(LogTemp, Log, TEXT("GetPixel (%d %d)=>p(%d %d)fmt%d val=%f"),x,y,px,py, mTex->GetPixelFormat(), r );
 	return r;
 }
 

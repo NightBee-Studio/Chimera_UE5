@@ -150,7 +150,7 @@ public:
 #define IMG_SIZE heightmap_reso
 
 			mMapOutParam = TsMapOutput(0, 0, heightmap_reso, 1);
-			TsImageCore::SetDirectory("Resources\\World\\Landscape\\Surface\\", mMapOutParam.x, mMapOutParam.y);
+			TsUtil::SetDirectory("Resources/World/Landscape/Surface/");
 
 			mSurfaces = TMap<EBiomeSType, TsBiomeSurface>{
 				{ EBiomeSType::EBSf_None,
@@ -620,24 +620,24 @@ public:
 			{	///--------------------------------------------------- Generating  Meshes & Textures
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  generate start..."));
 
-				//TsTextureMap height_map( heightmap ) ;
-				//TsHeightMesh::Build( &height_map, TsUtil::TsBox(0,0,1024,1024), 64, 100.0f, 1.0f, "/Resources/World/Landscape/Surface/MyMesh", "MyMesh" );
+				TsTextureMap height_map( heightmap ) ;
+#define NN 4
+				TsMapOutput	outparam( 0, 0, heightmap_reso, NN );
+				for ( int oy=0 ; oy<NN ; oy++ ){
+					for ( int ox=0 ; ox<NN ; ox++ ){
+						UE_LOG(LogTemp, Log, TEXT("    File Grid(%d %d) ..."), ox, oy );
 
-#define NN 1
-				//for ( int oy ; oy<NN ; oy++ ){
-				//	for ( int ox ; ox<NN ; ox++ ){
-				//		UE_LOG(LogTemp, Log, TEXT("    File Grid(%d %d) ..."), ox, oy );
+						TsUtil::SetDirectory("Resources/World/Landscape/Surface/", ox, oy);
 
-				//		TsImageCore::SetDirectory("Resources\\World\\Landscape\\Surface\\", ox, oy);
-
-				//		TsHeightMesh::Build( &height_map, TsUtil::TsBox(0,0,128,128), 64, 100.0f, 1.0f, "/Resources/World/Landscape/Surface/MyMesh", "MyMesh" );
-
-				//		//moist_map->Save("BM_MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
-				//		//moist_map->Save("BM_MoistMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
-
-				//		UE_LOG(LogTemp, Log, TEXT("    File exporting done."));
-				//	}
-				//}
+						TsHeightMesh::Build( &height_map, 
+											 outparam.OutBound(ox,oy),	//TsUtil::TsBox(0,0,1024,1024)
+											 128, 20000.0f, 10000.0f,
+											 "SM_Surface" );
+				//		//moist_map->Save("Materials/BM_MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+				//		//moist_map->Save("Materials/BM_MoistMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
+						UE_LOG(LogTemp, Log, TEXT("    File exporting done."));
+					}
+				}
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  done."));
 			}
 		}

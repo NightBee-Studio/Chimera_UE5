@@ -19,7 +19,6 @@ void TsHeightMesh::Build(
     int mesh_div,
     float mesh_size,
     float mesh_height,
-    const FString& packagename,
     const FString& assetname)
 {
 #if WITH_EDITOR
@@ -60,6 +59,8 @@ void TsHeightMesh::Build(
         }
     }
 
+
+    FString packagename = TsUtil::GetPackagePath( assetname ) ;
     FString pkg_name = FPackageName::ObjectPathToPackageName(packagename);
     UPackage* package = CreatePackage(*pkg_name);
     UStaticMesh* static_mesh = NewObject<UStaticMesh>(package, *assetname, RF_Public | RF_Standalone);
@@ -75,21 +76,20 @@ void TsHeightMesh::Build(
     FStaticMeshAttributes attributes(*mesh_desc);
     attributes.Register();
 
-    TMap<int32, FVertexID> vert_vidmap;
+    TMap<int32, FVertexID        > vert_vidmap;
     TMap<int32, FVertexInstanceID> vert_iidmap;
 
-    TVertexAttributesRef<FVector3f> VertexPositions = attributes.GetVertexPositions();
+    TVertexAttributesRef<FVector3f>         VertexPositions = attributes.GetVertexPositions();
     TVertexInstanceAttributesRef<FVector2f> VertexUVs = attributes.GetVertexInstanceUVs();
     TVertexInstanceAttributesRef<FVector3f> VertexNormals = attributes.GetVertexInstanceNormals();
     TVertexInstanceAttributesRef<FVector3f> VertexTangents = attributes.GetVertexInstanceTangents();
-    TVertexInstanceAttributesRef<float> VertexBinormals = attributes.GetVertexInstanceBinormalSigns();
+    TVertexInstanceAttributesRef<float    > VertexBinormals = attributes.GetVertexInstanceBinormalSigns();
     TVertexInstanceAttributesRef<FVector4f> VertexColors = attributes.GetVertexInstanceColors();
 
     VertexUVs.SetNumChannels(1);
     FPolygonGroupID PolyGroup = mesh_desc->CreatePolygonGroup();
 
-    for (int i = 0; i < vt_list.Num(); i++)
-    {
+    for (int i = 0; i < vt_list.Num(); i++){
         FVertexID v_id = mesh_desc->CreateVertex();
         FVertexInstanceID i_id = mesh_desc->CreateVertexInstance(v_id);
         VertexPositions[v_id] = vt_list[i];
@@ -112,6 +112,11 @@ void TsHeightMesh::Build(
         };
         mesh_desc->CreatePolygon(PolyGroup, tri);
     }
+
+    UMaterialInterface* dummy_mat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
+    static_mesh->GetStaticMaterials().Add( FStaticMaterial(dummy_mat) );
+
+    //static_mesh->SetNaniteEnabled(true);
 
     static_mesh->CommitMeshDescription(LODIndex);
     static_mesh->ImportVersion = EImportStaticMeshVersion::LastVersion;

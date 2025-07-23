@@ -2,22 +2,22 @@
 
 #include <functional>
 #include "CoreMinimal.h"
+#include "TsUtility.h"
 
 
 // -------------------------------- TsMapOutput  --------------------------------
 
 struct TsMapOutput {
-	int		x, y;	// start offset ( x, y )*local_reso
-	int		reso;
-	int		n;
+	int		mX, mY;	// start offset ( x, y )*local_reso
+	int		mReso;
+	int		mDiv;
 
-	TsMapOutput() : x(0), y(0), reso(512), n(1) {}
-	TsMapOutput(int _x, int _y, int _r, int _n) : x(_x), y(_y), reso(_r), n(_n) {}
+	TsMapOutput() : mX(0), mY(0), mReso(512), mDiv(1) {}
+	TsMapOutput(int _x, int _y, int _r, int _n) : mX(_x), mY(_y), mReso(_r), mDiv(_n) {}
 
 	int		LocalReso();
-	int		LocalX() { return reso * (n > 1 ? 0.5f : 0.0f); }
-	int		LocalY() { return reso * (n > 1 ? 0.5f : 0.0f); }
 	FBox2D	LocalBound( const FBox2D &world_bound );
+	TsUtil::TsBox	OutBound( int x, int y ) ;
 };
 
 
@@ -164,7 +164,7 @@ private:
 public:
 	virtual	float	RemapImage(float v, float range = 1.0f) const { return v * range; }
 
-	static void		SetDirectory(const FString& path, int no_x=-1, int no_y=-1);
+//	static void		SetDirectory(const FString& path, int no_x=-1, int no_y=-1);
 
 	int				Load(const FString& fname, EImageFile file) ;
 	int				Save(const FString& fname, EImageFile file, EImageFormat format,int x=0, int y=0,int w=0, int h=0 ) const;
