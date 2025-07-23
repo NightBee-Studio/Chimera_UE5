@@ -17,7 +17,7 @@
 // -------------------------------- TsMapOutput  --------------------------------
 int		TsMapOutput::LocalReso()
 {
-	return mReso / (mDiv>0 ? mDiv : 1);
+	return mReso ;
 }
 
 FBox2D	TsMapOutput::LocalBound(const FBox2D& world_bound)
@@ -31,8 +31,7 @@ FBox2D	TsMapOutput::LocalBound(const FBox2D& world_bound)
 
 TsUtil::TsBox	TsMapOutput::OutBound( int x, int y )
 {
-	int reso = LocalReso();
-	return TsUtil::TsBox( x*reso, y*reso, reso, reso );
+	return TsUtil::TsBox( mX+x*mReso, mY+y*mReso, mReso, mReso );
 }
 
 
