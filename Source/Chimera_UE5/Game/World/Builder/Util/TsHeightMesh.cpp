@@ -31,7 +31,7 @@ void TsHeightMesh::Build(
     TArray<FVector3f> vt_list;
     TArray<FVector3f> nm_list;
     TArray<FVector2f> uv_list;
-    TArray<int32> pl_list;
+    TArray<int32    > pl_list;
 
     tex_map->Lock();
     for (int y = 0; y < nv; ++y){
@@ -44,10 +44,11 @@ void TsHeightMesh::Build(
             vt_list.Add( make_pos(0,0) );
             uv_list.Add(FVector2f((float)x / n, (float)y / n));
 
-            FVector3f p00 = make_pos(-1,-1) ;
-            FVector3f p01 = make_pos(-1,+1) ;
-            FVector3f p10 = make_pos(+1,-1) ;
-            FVector3f p11 = make_pos(+1,+1) ;
+            float g = sx*0.2f ;
+            FVector3f p00 = make_pos(-g,-g) ;
+            FVector3f p01 = make_pos(-g,+g) ;
+            FVector3f p10 = make_pos(+g,-g) ;
+            FVector3f p11 = make_pos(+g,+g) ;
             FVector3f n00 = FVector3f::CrossProduct(p01-p00, p10-p00).GetSafeNormal();
             FVector3f n11 = FVector3f::CrossProduct(p01-p11, p10-p11).GetSafeNormal();
             n00 *= n00.Z<0 ? -1 : 1 ;
