@@ -29,6 +29,7 @@ void TsHeightMesh::Build(
     const float sy = (float)tex_rect.mH / n ;
 
     TArray<FVector3f> vt_list;
+    TArray<FVector3f> nm_list;
     TArray<FVector2f> uv_list;
     TArray<int32> pl_list;
 
@@ -37,8 +38,21 @@ void TsHeightMesh::Build(
         for (int x = 0; x < nv; ++x){
             float px = tex_rect.mX + x * sx;
             float py = tex_rect.mY + y * sy;
-            vt_list.Add(FVector3f(x * s, y * s, tex_map->GetValue(px, py) * mesh_height));
+
+            auto    make_pos = [&] (float dx, float dy) { return FVector3f(x*s+dx, y*s+dy, tex_map->GetValue(px+dx, py+dy) * mesh_height ) ; } ;
+
+            vt_list.Add( make_pos(0,0) );
             uv_list.Add(FVector2f((float)x / n, (float)y / n));
+
+            FVector3f p00 = make_pos(-1,-1) ;
+            FVector3f p01 = make_pos(-1,+1) ;
+            FVector3f p10 = make_pos(+1,-1) ;
+            FVector3f p11 = make_pos(+1,+1) ;
+            FVector3f n00 = FVector3f::CrossProduct(p01-p00, p10-p00).GetSafeNormal();
+            FVector3f n11 = FVector3f::CrossProduct(p01-p11, p10-p11).GetSafeNormal();
+            n00 *= n00.Z<0 ? -1 : 1 ;
+            n11 *= n11.Z<0 ? -1 : 1 ;
+            nm_list.Add( (n00+n11).GetSafeNormal() ) ;
         }
     }
     tex_map->UnLock();
@@ -88,8 +102,8 @@ void TsHeightMesh::Build(
         FVertexInstanceID   i_id = mesh_desc->CreateVertexInstance(v_id);
         VertexPositions [v_id] = vt_list[i];
         VertexUVs       [i_id] = uv_list[i];
-        VertexNormals   [i_id] = FVector3f(0, 0, 1);
-        VertexTangents  [i_id] = FVector3f(1, 0, 0);
+        VertexNormals   [i_id] = nm_list[i];
+        VertexTangents  [i_id] = FVector3f::VectorPlaneProject(FVector3f(1,0,0), nm_list[i]).GetSafeNormal();
         VertexBinormals [i_id] = 1.0f;
         VertexColors    [i_id] = FVector4f(1, 1, 1, 1);
 

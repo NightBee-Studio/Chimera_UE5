@@ -251,6 +251,7 @@ public:
 			//for (auto& tm : texture_maps) tm.Value->Lock();
 
 
+#undef S
 #define S	0.5f 
 			TsMoistureMap* moist_map =
 				new TsMoistureMap(
@@ -641,11 +642,14 @@ public:
 						TsHeightMesh::Build(
 								&height_map, 
 								outparam.OutBound(ox,oy),	//TsUtil::TsBox(0,0,1024,1024)
-								1000, 20000.0f, 10000.0f,
+								100,//1000,
+								20000.0f, 7000.0f,
 								FString::Printf(TEXT("SM_Surface_%1d%1d"), ox, oy)
 							);
 						UE_LOG(LogTemp, Log, TEXT("    File exporting done."));
+break ;
 					}
+break ;
 				}
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  done."));
 			}
