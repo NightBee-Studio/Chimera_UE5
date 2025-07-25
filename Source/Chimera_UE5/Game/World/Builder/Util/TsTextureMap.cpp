@@ -1,7 +1,5 @@
 #include "TsTextureMap.h"
 
-//#include "TsUtility.h"
-
 
 bool TsTextureMap::Lock() 
 {

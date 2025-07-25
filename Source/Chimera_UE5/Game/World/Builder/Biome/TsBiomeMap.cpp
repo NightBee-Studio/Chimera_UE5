@@ -72,7 +72,7 @@ FVector TsHeightMap::CalcNormal(float x, float y, float grid_height, float grid_
 	float h01 = get_height(x + 0, y + 1);
 	float h10 = get_height(x + 1, y + 0);
 	float h11 = get_height(x + 1, y + 1);
-#define T   grid_size
+	const float T =  grid_size ;
 	if (FMath::Frac(x) < FMath::Frac(y)) {
 		return FVector::CrossProduct(
 			FVector( 0, h00 - h01, T).GetSafeNormal(),

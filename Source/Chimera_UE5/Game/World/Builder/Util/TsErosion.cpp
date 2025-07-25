@@ -89,8 +89,8 @@ struct Particle
 
 void TsErosion::Simulate( int cycles)
 {
-#define DD 4
-#define DG 1.0f 
+    const int   DD = 4 ;
+    const float DG = 1.0f ;
 
 #ifdef DDDD
     Particle(192, 56).Simulate(1.2f, mHeightMap, mFlowMap, mPondMap, 1.0f);

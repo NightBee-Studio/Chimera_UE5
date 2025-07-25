@@ -95,8 +95,10 @@ void	TsVoronoi::ForeachEdge( std::function< void(const Edge &) > func)
 	}
 }
 
-void	TsVoronoi::Debug(UWorld* world, const FColor& c ) const {
-#define UP 1.0f
+void	TsVoronoi::Debug(UWorld* world, const FColor& c ) const
+{
+	const float  UP = 1.0f;
+
 	DrawDebugCircle(world, FVector(X, Y, UP), 10, 8, FColor(155, 0, 0), true, 10000);
 	for (auto e : mEdges) {
 		FVector p0 = FVector((*this) * 0.05f + (e.mP       ) * 0.95f, UP);

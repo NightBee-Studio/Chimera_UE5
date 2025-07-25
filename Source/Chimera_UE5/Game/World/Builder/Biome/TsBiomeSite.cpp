@@ -22,8 +22,8 @@ bool	TsBiomeSite::Circle::IsInside( const FVector2D& p ) const {
 	return (cn & 1) > 0;    // 0 if even(out), and 1 if  odd(in)
 }
 
-#define S 0.06f
 FVector2D TsBiomeSite::Circle::GetOutline(int i) const {
+	//const float S = 0.06f ;
 	float ang  = (i % mN) * 360.0f / mN;
 	float bias = FMath::PerlinNoise3D( FVector(X, Y, ang * mNoiseScale) );
 	float l = (1 + bias * mNoiseRate) * mR;
@@ -32,9 +32,10 @@ FVector2D TsBiomeSite::Circle::GetOutline(int i) const {
 
 
 
-#define N 128
 void	TsBiomeSite::CreateChild(  const Circle& cen, float radius, float angl, TArray<CircleConf> conf )
 {
+	const int N = 128 ;
+
 	CircleConf cnf = conf[0] ;
 	conf.RemoveAt( 0 ) ;
 
@@ -123,8 +124,8 @@ bool	TsBiomeSite::IsInside( const FVector2D &p ) const
 //------------------------------------------------------- Debug
 
 void	TsBiomeSite::Debug(UWorld* world) {
+	const float UP = 1.0f;
 	for (auto c : mCircles) {
-#define UP 1.0f
 		DrawDebugCircle(world, FVector(c.X, c.Y, UP), 10, 32, FColor(255, 0, 255), true, 10000);
 		for (int i = 0; i < c.mN; i++) {
 			FVector	p0 = FVector( c.GetOutline(i + 0), UP);

@@ -251,19 +251,18 @@ public:
 			//for (auto& tm : texture_maps) tm.Value->Lock();
 
 
-#undef S
-#define S	0.5f 
+			const float s = 0.5f ;
 			TsMoistureMap* moist_map =
 				new TsMoistureMap(
 					IMG_SIZE, IMG_SIZE,
 					&mBoundingbox, 
 					TsNoiseParam({
-						{ 0.90f, 0.001f*S },
-						{ 0.50f, 0.002f*S },
-						{ 0.25f, 0.004f*S },
-						{ 0.10f, 0.016f*S },
-						{ 0.10f, 0.032f*S },
-						{ 0.10f, 0.064f*S },
+						{ 0.90f, 0.001f*s },
+						{ 0.50f, 0.002f*s },
+						{ 0.25f, 0.004f*s },
+						{ 0.10f, 0.016f*s },
+						{ 0.10f, 0.032f*s },
+						{ 0.10f, 0.064f*s },
 					}),
 					{
 						//{ texture_maps[ETextureMap::ETM_Height   ],	 1.0f, EExtraOp::E_InvMul },
@@ -272,7 +271,6 @@ public:
 						//{ texture_maps[ETextureMap::ETM_Curvature],	-0.8f, EExtraOp::E_Add },
 					}
 				);
-#undef S
 			{///---------------------------------------- Setup Biome
 				// world once
 				TArray<TsBiomeItem_SType> surfc_items = {
@@ -623,7 +621,8 @@ public:
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  generate start..."));
 
 				TsTextureMap height_map( heightmap ) ;
-#define NN 5
+
+				const int NN = 5 ;
 				TsMapOutput	outparam( 24, 24, 200, NN );// 200pix * NN
 				for ( int oy=0 ; oy<NN ; oy++ ){
 					for ( int ox=0 ; ox<NN ; ox++ ){

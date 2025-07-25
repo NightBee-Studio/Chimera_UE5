@@ -36,15 +36,16 @@ void TsHeightMesh::Build(
     tex_map->Lock();
     for (int y = 0; y < nv; ++y){
         for (int x = 0; x < nv; ++x){
-            float px = tex_rect.mX + x * sx;
-            float py = tex_rect.mY + y * sy;
-
-            auto    make_pos = [&] (float dx, float dy) { return FVector3f(x*s+dx, y*s+dy, tex_map->GetValue(px+dx, py+dy) * mesh_height ) ; } ;
+            auto    make_pos = [&] (float dx, float dy) {
+                float px = tex_rect.mX + (x+dx) * sx;
+                float py = tex_rect.mY + (y+dy) * sy;
+                return FVector3f( (x+dx)*s, (y+dy)*s, tex_map->GetValue(px, py) * mesh_height ) ;
+            } ;
 
             vt_list.Add( make_pos(0,0) );
             uv_list.Add(FVector2f((float)x / n, (float)y / n));
 
-            float g = sx*0.2f ;
+            float g = 0.2f ;
             FVector3f p00 = make_pos(-g,-g) ;
             FVector3f p01 = make_pos(-g,+g) ;
             FVector3f p10 = make_pos(+g,-g) ;
