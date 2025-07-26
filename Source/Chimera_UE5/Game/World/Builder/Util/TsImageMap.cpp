@@ -11,27 +11,33 @@
 
 
 
-//#define PROJPATH	"D:\\Works\\Projects\\Chimera\\01_Project\\Chimera_UE5\\Content\\"
-
-
 // -------------------------------- TsMapOutput  --------------------------------
-int		TsMapOutput::LocalReso()
+
+//FBox2D	TsMapOutput::WorldBound( int x, int y )
+//{
+//	return TsUtil::TsBox( mX+x*mReso, mY+y*mReso, mReso, mReso );
+//
+//	return FBox2D(	world_bound.Min + size * FVector2D( mX-0.5f, mY-0.5f ),
+//					world_bound.Min + size * FVector2D( mX+1.5f, mY+1.5f ) );
+//}
+
+FBox2D	TsMapOutput::LocalBound( int x, int y, int reso )
 {
-	return mReso ;
+	if (mDiv == 1) return *mWorldBound;
+
+	float ratio = mWorldBound->GetSize().X / mWorldReso ;
+	float sx    = mX   * ratio ;
+	float sy    = mY   * ratio ;
+	float size  = reso * ratio ;
+
+	FVector2D	min = mWorldBound->Min + FVector2D( size*x, size*y ) + FVector2D( sx, sy );
+	FVector2D	max = min              + FVector2D( size  , size   ) ;
+	return FBox2D( min, max );
 }
 
-FBox2D	TsMapOutput::LocalBound(const FBox2D& world_bound)
+TsUtil::TsBox	TsMapOutput::TexBound( int x, int y, int reso )
 {
-	if (mDiv == 1) return world_bound;
-
-	FVector2D	size = world_bound.GetSize()/mDiv;
-	return FBox2D(	world_bound.Min + size * FVector2D( mX-0.5f, mY-0.5f ),
-					world_bound.Min + size * FVector2D( mX+1.5f, mY+1.5f ) );
-}
-
-TsUtil::TsBox	TsMapOutput::OutBound( int x, int y )
-{
-	return TsUtil::TsBox( mX+x*mReso, mY+y*mReso, mReso, mReso );
+	return TsUtil::TsBox( mX+x*reso, mY+y*reso, reso, reso );
 }
 
 

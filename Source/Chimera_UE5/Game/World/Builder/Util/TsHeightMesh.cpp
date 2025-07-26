@@ -1,9 +1,7 @@
 #include "TsHeightMesh.h"
 
-#include "ProceduralMeshComponent.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
-#include "IAssetTools.h"
 #include "Engine/StaticMesh.h"
 #include "MeshDescription.h"
 #include "StaticMeshAttributes.h"

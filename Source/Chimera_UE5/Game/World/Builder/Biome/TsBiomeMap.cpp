@@ -154,6 +154,13 @@ void	TsMaterialMap::MergePixel(int x, int y, const TsMaterialPixel& px)
 	GetPixel(x, y).Normalize();
 }
 
+void	TsMaterialMap::Clear()
+{
+	for ( auto & p : mPixels ){
+		p.Clear() ;
+	}
+}
+
 void	TsMaterialMap::ForeachPix(std::function< void(int, int, TsMaterialPixel&) > func, int inc )
 {
 	for (int y = 0; y < mH; y += inc) {
@@ -207,28 +214,32 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 		{ EBMt_Moss_B	,FString("Moss_B")		},
 	};
 	
-	int tw = mAlphaMap.GetW();
-	int th = mAlphaMap.GetH();
-	TsImageMap<float>* bitmap = new TsImageMap<float>( tw, th, mAlphaMap.GetWorld() );
+    const UEnum* enum_ptr = StaticEnum<EMaterialType>();
+
+	TsImageMap<float>* bitmap = new TsImageMap<float>( mW, mH, mAlphaMap.GetWorld() );
 	for (auto& i : mMatIndex) {
 		bool need_save = false;
 		bitmap->ForeachPixel([&](int x, int y) {
 				float val = 0.0f;
-				if ( mPixels[x + y * tw].mValues.Contains(i)) {
-					val = mPixels[x + y * tw].mValues[i];
+				if ( mPixels[x + y * mW].mValues.Contains(i)) {
+					val = mPixels[x + y * mW].mValues[i];
 					need_save = true;
 				}
 				bitmap->SetPixel(x, y, val );
 			});
 		if (need_save){
-			FString fname = FString::Printf( TEXT("Mat_%s.dds"), *(enumname[i]) );
+		    FString name  = enum_ptr->GetNameStringByValue(static_cast<int64>(i)).Mid( 5 ) ;
+
+			FString fname = FString::Printf( TEXT("Materials/MIC_%s.dds"), *name );
+
+//			FString fname = FString::Printf( TEXT("Materials/MIC_%s.dds"), *(enumname[i]) );
 			bitmap->Save( *fname, EImageFile::Dds, EImageFormat::FormatR8, 0, 0, w, h);
 		}
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
-	mAlphaMap   .Save("MatAlpha00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
-	mIndexMap   .Save("MatIndex00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
+	//UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
+	//mAlphaMap   .Save("MatAlpha00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
+	//mIndexMap   .Save("MatIndex00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 }
 
 

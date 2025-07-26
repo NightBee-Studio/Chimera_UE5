@@ -102,8 +102,7 @@ public:
 			int			unit_div ,
 			int			unit_reso,
 
-			UTexture2D*	heightmap,
-
+			TMap<TEnumAsByte<ETextureMap>,TObjectPtr<UTexture2D>>&	texture_maps,
 
 			UDataTable*	biome_specs
 		)
@@ -150,7 +149,7 @@ public:
 			if (heightmap_reso == 0) heightmap_reso = 512;
 #define IMG_SIZE heightmap_reso
 
-			mMapOutParam = TsMapOutput(0, 0, heightmap_reso, 1);
+			mMapOutParam = TsMapOutput(0, 0, 1, heightmap_reso, &mBoundingbox);
 			TsUtil::SetDirectory("Resources/World/Landscape/Surface/");
 
 			mSurfaces = TMap<EBiomeSType, TsBiomeSurface>{
@@ -251,18 +250,18 @@ public:
 			//for (auto& tm : texture_maps) tm.Value->Lock();
 
 
-			const float s = 0.5f ;
+			const float S = 0.5f ;
 			TsMoistureMap* moist_map =
 				new TsMoistureMap(
 					IMG_SIZE, IMG_SIZE,
 					&mBoundingbox, 
 					TsNoiseParam({
-						{ 0.90f, 0.001f*s },
-						{ 0.50f, 0.002f*s },
-						{ 0.25f, 0.004f*s },
-						{ 0.10f, 0.016f*s },
-						{ 0.10f, 0.032f*s },
-						{ 0.10f, 0.064f*s },
+						{ 0.90f, 0.001f*S },
+						{ 0.50f, 0.002f*S },
+						{ 0.25f, 0.004f*S },
+						{ 0.10f, 0.016f*S },
+						{ 0.10f, 0.032f*S },
+						{ 0.10f, 0.064f*S },
 					}),
 					{
 						//{ texture_maps[ETextureMap::ETM_Height   ],	 1.0f, EExtraOp::E_InvMul },
@@ -327,11 +326,11 @@ public:
 
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Construct Heightmap..."));
 				// Generate heightmap.
-				int		reso  = mMapOutParam.LocalReso();
-				FBox2D	bound = mMapOutParam.LocalBound(mBoundingbox);
-				mHeightMap   = new TsHeightMap  ( reso, reso, &bound );
-				mNormalMap	 = new TsNormalMap  ( reso, reso, &bound );
-				mMaterialMap = new TsMaterialMap( reso, reso, &bound,{
+				int				reso  = mMapOutParam.mWorldReso;
+				const FBox2D*	bound = mMapOutParam.mWorldBound;
+				mHeightMap   = new TsHeightMap  ( reso, reso, bound );
+				mNormalMap	 = new TsNormalMap  ( reso, reso, bound );
+				mMaterialMap = new TsMaterialMap( reso, reso, bound,{
 						EMaterialType::EBMt_None,
 						EMaterialType::EBMt_Soil_A,
 						EMaterialType::EBMt_Soil_B,
@@ -392,13 +391,13 @@ public:
 
 			{///---------------------------------------- Generate Mapping
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Generate Mappings ..."));
-				int		reso  = mMapOutParam.LocalReso();
-				FBox2D	bound = mMapOutParam.LocalBound(mBoundingbox);
+				int				reso  = mMapOutParam.mWorldReso;
+				const FBox2D*	bound = mMapOutParam.mWorldBound;
 
 				reso = 64;
 //				reso = 4096;
-				mHeightMap           = new TsHeightMap( reso, reso, &bound );
-				mNormalMap	         = new TsNormalMap( reso, reso, &bound );// only for output
+				mHeightMap           = new TsHeightMap( reso, reso, bound );
+				mNormalMap	         = new TsNormalMap( reso, reso, bound );// only for output
 #if 1
 				{///---------------------------------------- HeightMap
 					{///--------------------------------------------------- Create BaseHeightmap
@@ -437,8 +436,8 @@ public:
 
 						erode_cycle = 0 ;
 						if (erode_cycle > 0) {
-							TsBiomeMap* flow_map = new TsBiomeMap ( reso, reso, &bound );
-							TsBiomeMap* pond_map = new TsBiomeMap ( reso, reso, &bound );
+							TsBiomeMap* flow_map = new TsBiomeMap ( reso, reso, bound );
+							TsBiomeMap* pond_map = new TsBiomeMap ( reso, reso, bound );// dispositionÅ@ëÕêœ
 
 							TsErosion(mHeightMap, flow_map, pond_map).Simulate(erode_cycle);
 
@@ -620,35 +619,82 @@ public:
 			{	///--------------------------------------------------- Generating  Meshes & Textures
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  generate start..."));
 
-				TsTextureMap height_map( heightmap ) ;
+				int				reso  = mMapOutParam.mWorldReso;
+				const FBox2D*	bound = mMapOutParam.mWorldBound;
+				mMaterialMap = new TsMaterialMap( reso, reso, bound,{
+						EMaterialType::EBMt_None,
+						EMaterialType::EBMt_Soil_A,
+						EMaterialType::EBMt_Soil_B,
+						EMaterialType::EBMt_Soil_C,
+						EMaterialType::EBMt_Grass_A,
+						EMaterialType::EBMt_Grass_B,
+						EMaterialType::EBMt_Forest_A,
+						EMaterialType::EBMt_Forest_B,
+						EMaterialType::EBMt_Rock_A,
+						EMaterialType::EBMt_Moss_A,
+						EMaterialType::EBMt_Moss_B,
+					});
+				TArray<TsBiomeItem_Material> moist_items = {
+					{ 0.04f, 0.0f, EBMt_Soil_A,  },
+					{ 0.02f, 0.0f, EBMt_Soil_B,  },
+					{ 0.02f, 0.0f, EBMt_Soil_C,  },
+					{ 0.10f, 0.0f, EBMt_Grass_A, },
+					{ 0.35f, 0.0f, EBMt_Grass_B, },
+					{ 0.20f, 0.0f, EBMt_Forest_A,},
+					{ 0.15f, 0.0f, EBMt_Forest_B,},
+				};
+				bool first = true;
+				moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items );
+
+				TsTextureMap height_map( texture_maps[ETextureMap::ETM_Height] ) ;
 
 				const int NN = 5 ;
-				TsMapOutput	outparam( 24, 24, 200, NN );// 200pix * NN
+				TsMapOutput	outparam( 24, 24, NN, height_map.GetSizeX(), &mBoundingbox );// 200pix * NN
 				for ( int oy=0 ; oy<NN ; oy++ ){
 					for ( int ox=0 ; ox<NN ; ox++ ){
 						UE_LOG(LogTemp, Log, TEXT("    File Grid(%d %d) ..."), ox, oy );
+						int		loc_reso	= 400 ;
+						FBox2D	loc_bound	= outparam.LocalBound( ox, oy,loc_reso );
 
-						TsUtil::SetDirectory("Resources/World/Landscape/Surface/", ox, oy);
+						TsUtil::SetDirectory( "Resources/World/Landscape/Surface/", ox, oy);
 
-				//		//moist_map->Save("Materials/BM_MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
-				//		//moist_map->Save("Materials/BM_MoistMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
+						mMaterialMap->Clear();
+						mMaterialMap->SetWorld( &loc_bound );
+						mMaterialMap->ForeachPixel([&](int px, int py) {
+							TsMaterialPixel	pix;
 
-						//TsMaterial::Build(
+							FVector2D p = mMaterialMap->GetWorldPos(px, py) ;
+							if (moist_map->IsWorld(p)) {
+								TsUtil::ForeachGaussian(p, moist_map->GetStep(),
+									[&](const FVector2D& pos, float weight) {
+										int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
+										pix.Add(moist_items[idx].mItem, weight);
+									}); 
+							}
+
+							mMaterialMap->MergePixel(px, py, pix);
+						});
+						mMaterialMap->StoreMaterial();
+						mMaterialMap->SaveAll(0,0,0,0);
+
+						//moist_map->Save("Materials/BM_MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
+						//moist_map->Save("Materials/BM_MoistMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
+
+						//TsMaterial::Build( 
+						//		FString( "Resources/World/Landscape/Surface/" ),
 						//		FString( "/Game/Resources/World/Landscape/Materials/M_Landscape.M_Landscape"),
 						//		FString::Printf(TEXT("Materials/MT_Surface_%1d%1d"), ox, oy)
 						//	) ;
 
 						TsHeightMesh::Build(
 								&height_map, 
-								outparam.OutBound(ox,oy),	//TsUtil::TsBox(0,0,1024,1024)
+								outparam.TexBound(ox,oy,loc_reso),	//TsUtil::TsBox(0,0,1024,1024)
 								100,//1000,
-								20000.0f, 7000.0f,
+								20000.0f, 10000.0f,
 								FString::Printf(TEXT("SM_Surface_%1d%1d"), ox, oy)
 							);
 						UE_LOG(LogTemp, Log, TEXT("    File exporting done."));
-break ;
 					}
-break ;
 				}
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  done."));
 			}
@@ -697,7 +743,7 @@ void	ATsBuilder::Build()
 
 		mUnitSize, mUnitDiv, mUnitReso,
 
-		mHeightmap,
+		mTextureMaps,
 
 		mBiomeTable
 	);

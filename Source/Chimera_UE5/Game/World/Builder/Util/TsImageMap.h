@@ -8,16 +8,19 @@
 // -------------------------------- TsMapOutput  --------------------------------
 
 struct TsMapOutput {
-	int		mX, mY;	// start offset ( x, y )*local_reso
-	int		mReso;
-	int		mDiv;
+	int				mX, mY;		// start offset ( mX, mY )*local_reso
+	int				mDiv;		// division
+	int				mWorldReso;	// world 
+	const FBox2D *	mWorldBound;
 
-	TsMapOutput() : mX(0), mY(0), mReso(512), mDiv(1) {}
-	TsMapOutput(int _x, int _y, int _r, int _n) : mX(_x), mY(_y), mReso(_r), mDiv(_n) {}
+	TsMapOutput() : mX(0), mY(0), mDiv(1), mWorldReso(512), mWorldBound(nullptr) {}
+	TsMapOutput(int _x, int _y, int _n, int world_reso, const FBox2D *world_bound	)
+		: mX(_x), mY(_y)
+		, mDiv(_n)
+		, mWorldReso(world_reso), mWorldBound(world_bound) {}
 
-	int		LocalReso();
-	FBox2D	LocalBound( const FBox2D &world_bound );
-	TsUtil::TsBox	OutBound( int x, int y ) ;
+	FBox2D			LocalBound( int x, int y, int reso );
+	TsUtil::TsBox	TexBound( int x, int y, int reso ) ;
 };
 
 

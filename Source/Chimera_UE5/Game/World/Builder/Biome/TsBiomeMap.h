@@ -183,11 +183,16 @@ struct TsMaterialPixel
 		else						mValues.Emplace( t, v );
 	}
 
+	void Clear() {
+		for ( auto& v : mValues ) v.Value = 0 ;
+	}
+
 	void Normalize() {
 		float total = 0;
 		for ( auto& v : mValues) total += v.Value ;
 		for ( auto& v : mValues) v.Value /= total ;
 	}
+
 	void Merge(const TsMaterialPixel& pixel, float rate = 1) {
 		for ( auto &v : pixel.mValues ) {
 			Add(v.Key, v.Value * rate);
@@ -216,6 +221,7 @@ public:
 
 	void				ForeachPix(std::function< void(int, int, TsMaterialPixel&) >, int inc = 1);
 
+	void				Clear();
 	void				StoreMaterial();
 
 	void				SaveAll(int x, int y, int w, int h);

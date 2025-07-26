@@ -47,9 +47,11 @@ void				TsUtil::SetDirectory(const FString& path, int no_x, int no_y)
 FString TsUtil::GetDirectory(const FString& name)
 {
 	FString fullpath = gDirectory + name.Replace(TEXT("/"), TEXT("\\"));
+
+	FString dir = FPaths::GetPath( *(fullpath.Replace(TEXT("\\"), TEXT("/"))) );
 	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
-	if (!pf.DirectoryExists(*fullpath)) {		// Directory Exists?
-		pf.CreateDirectory(*fullpath);
+	if (!pf.DirectoryExists(*dir)) {		// Directory Exists?
+		pf.CreateDirectory(*dir);
 	}
 	return fullpath ;
 }
