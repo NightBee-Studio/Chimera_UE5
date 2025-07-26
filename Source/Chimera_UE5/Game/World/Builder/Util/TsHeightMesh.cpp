@@ -12,12 +12,13 @@
 
 // Your original Build function rewritten to match UE5.4-style StaticMesh LOD/mesh description usage
 void TsHeightMesh::Build(
-    TsTextureMap* tex_map,
-    const TsUtil::TsBox& tex_rect,
-    int mesh_div,
-    float mesh_size,
-    float mesh_height,
-    const FString& assetname)
+    TsTextureMap*       tex_map,
+    const TsUtil::TsBox&tex_rect,
+    int                 mesh_div,
+    float               mesh_size,
+    float               mesh_height,
+    const FString&      asset_name,
+	UMaterialInterface*	material )
 {
 #if WITH_EDITOR
     const int n = mesh_div;
@@ -69,10 +70,10 @@ void TsHeightMesh::Build(
         }
     }
 
-    FString         package_path = TsUtil::GetPackagePath( assetname ) ;
+    FString         package_path = TsUtil::GetPackagePath( asset_name ) ;
     FString         package_name = FPackageName::ObjectPathToPackageName(package_path);
-    UPackage*       package     = CreatePackage(*package_name);
-    UStaticMesh*    static_mesh = NewObject<UStaticMesh>(package, *assetname, RF_Public | RF_Standalone);
+    UPackage*       package      = CreatePackage(*package_name);
+    UStaticMesh*    static_mesh  = NewObject<UStaticMesh>(package, *asset_name, RF_Public | RF_Standalone);
     static_mesh->SetNumSourceModels(1);
 
     const int32 LODIndex = 0;
@@ -121,8 +122,8 @@ void TsHeightMesh::Build(
         mesh_desc->CreatePolygon( ply_group, tri );
     }
 
-    UMaterialInterface* dummy_mat = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
-    static_mesh->GetStaticMaterials().Add( FStaticMaterial(dummy_mat) );
+    if ( !material ) material = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
+    static_mesh->GetStaticMaterials().Add( FStaticMaterial(material) );
 
     static_mesh->NaniteSettings.bEnabled = true;
 

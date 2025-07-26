@@ -10,7 +10,7 @@
 #include "Util/TsErosion.h"
 #include "Util/TsVoronoi.h"
 #include "Util/TsUtility.h"
-//#include "Util/TsMaterial.h"
+#include "Util/TsMaterial.h"
 #include "Util/TsTextureMap.h"
 #include "Util/TsHeightMesh.h"
 
@@ -653,30 +653,33 @@ public:
 
 						TsUtil::SetDirectory( "Resources/World/Landscape/Surface/", ox, oy);
 
-						mMaterialMap->Clear();
-						mMaterialMap->SetWorld( &loc_bound );
-						mMaterialMap->ForeachPixel([&](int px, int py) {
-							TsMaterialPixel	pix;
+						{// materials
+							TsUtil::SetSubDirectory( TEXT("Materials/") );
 
-							FVector2D p = mMaterialMap->GetWorldPos(px, py) ;
-							if (moist_map->IsWorld(p)) {
-								TsUtil::ForeachGaussian(p, moist_map->GetStep(),
-									[&](const FVector2D& pos, float weight) {
-										int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
-										pix.Add(moist_items[idx].mItem, weight);
-									}); 
-							}
+							mMaterialMap->Clear();
+							mMaterialMap->SetWorld( &loc_bound );
+							mMaterialMap->ForeachPixel([&](int px, int py) {
+								TsMaterialPixel	pix;
+								FVector2D p = mMaterialMap->GetWorldPos(px, py) ;
+								if (moist_map->IsWorld(p)) {
+									TsUtil::ForeachGaussian(p, moist_map->GetStep(),
+										[&](const FVector2D& pos, float weight) {
+											int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
+											pix.Add(moist_items[idx].mItem, weight);
+										}); 
+								}
+								mMaterialMap->MergePixel(px, py, pix);
+							});
+							mMaterialMap->StoreMaterial();
+							mMaterialMap->SaveAll(0,0,0,0);
 
-							mMaterialMap->MergePixel(px, py, pix);
-						});
-						mMaterialMap->StoreMaterial();
-						mMaterialMap->SaveAll(0,0,0,0);
-
-						//TsMaterial::Build( 
-						//		FString( "Resources/World/Landscape/Surface/" ),
-						//		FString( "/Game/Resources/World/Landscape/Materials/M_Landscape.M_Landscape"),
-						//		FString::Printf(TEXT("Materials/MT_Surface_%1d%1d"), ox, oy)
-						//	) ;
+							TsMaterial::Build( 
+									FString( "/Game/Resources/World/Landscape/Materials/M_Landscape.M_Landscape"),
+									FString::Printf(TEXT("MT_Surface_%1d%1d"), ox, oy),
+									mMaterialMap->GetTexParams()
+								) ;
+							TsUtil::SetSubDirectory( TEXT("") );	//reset
+						}
 
 						TsHeightMesh::Build(
 								&height_map, 

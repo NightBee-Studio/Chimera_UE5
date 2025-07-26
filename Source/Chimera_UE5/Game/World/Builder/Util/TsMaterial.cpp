@@ -13,7 +13,8 @@
 // Your original Build function rewritten to match UE5.4-style StaticMesh LOD/mesh description usage
 UMaterialInstanceConstant* TsMaterial::Build(
         const FString& msmat_path,
-        const FString& asset_name
+        const FString& asset_name,
+        const TMap<FName, UTexture2D*>& tex_table
     )
 {
     UMaterialInstanceConstant* material = nullptr ;
@@ -37,13 +38,9 @@ UMaterialInstanceConstant* TsMaterial::Build(
                     RF_Public | RF_Standalone | RF_Transactional
                );
     material->SetParentEditorOnly(master_mat); //
-
-    //
-    //Using the TMap to set the Texture parameters.
-    // 
-    //UTexture* tex_asset = LoadObject<UTexture>(nullptr, TEXT("/Game/Textures/T_Grass.T_Grass"));
-    //static const FName TextureParamName("BaseTexture");
-    //material->SetTextureParameterValueEditorOnly(TextureParamName, tex_asset);
+    for ( auto& param : tex_table ){
+        material->SetTextureParameterValueEditorOnly(param.Key, param.Value);
+    }
 
     //
     material->PostEditChange();

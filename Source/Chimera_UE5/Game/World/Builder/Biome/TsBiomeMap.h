@@ -200,6 +200,7 @@ private:
 	TsImageMap<int>			mIndexMap;	//RGBA
 	TsImageMap<int>			mAlphaMap;	//RGBA
 	TArray<EMaterialType>	mMatIndex;
+	TMap<FName,UTexture2D*>	mTexParams;
 
 public:
 	TsMaterialMap(int w, int h, const FBox2D* bound, const TArray<EMaterialType> &mat_index  );
@@ -209,6 +210,7 @@ public:
 	void				MergePixel(int x, int y, const TsMaterialPixel& px );
 	void				SetPixel(int x, int y, EMaterialType ty, float val);
 	TsMaterialPixel&	GetPixel(int x, int y) ;
+	const TMap<FName,UTexture2D*>&	GetTexParams()	{ return mTexParams ;}
 
 	void				ForeachPix(std::function< void(int, int, TsMaterialPixel&) >, int inc = 1);
 

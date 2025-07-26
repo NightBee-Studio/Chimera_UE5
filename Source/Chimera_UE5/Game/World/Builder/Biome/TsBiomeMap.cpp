@@ -202,7 +202,8 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 {
     const UEnum* enum_ptr = StaticEnum<EMaterialType>();
 
-	TsUtil::SetSubDirectory( TEXT("Materials/") );
+	mTexParams.Empty() ;
+
 	TsImageMap<float>* bitmap = new TsImageMap<float>( mW, mH, mAlphaMap.GetWorld() );
 	for (auto& i : mMatIndex) {
 		bool need_save = false;
@@ -218,10 +219,9 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 		    FString name  = enum_ptr->GetNameStringByValue(static_cast<int64>(i)).Mid( 5 ) ;
 			FString fname = FString::Printf( TEXT("MI_%s"), *name );
 //			bitmap->Save( *fname, EImageFile::Dds, EImageFormat::FormatR8, 0, 0, w, h);
-			bitmap->SaveAsset( *fname, EImageFormat::FormatR8 );
+			mTexParams.Emplace( *name, bitmap->SaveAsset( *fname, EImageFormat::FormatR8 ) );
 		}
 	}
-	TsUtil::SetSubDirectory( TEXT("") );	//reset
 
 	//UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
 	//mAlphaMap   .Save("MatAlpha00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
