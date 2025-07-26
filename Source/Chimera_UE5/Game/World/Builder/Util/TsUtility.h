@@ -134,6 +134,7 @@ namespace TsUtil {
 
 	// directory
 	void		SetDirectory(const FString& path, int no_x=-1, int no_y=-1);
+	void		SetSubDirectory(const FString& name);
 	FString 	GetDirectory(const FString& name);
 	FString 	GetPackagePath(const FString& name);
 }

@@ -1,13 +1,20 @@
-
-#include "TsImageMap.h"
-#include "TsUtility.h"
+#include "CoreMinimal.h"
 
 #include <stdio.h>
 
-#include "CoreMinimal.h"
-
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Kismet/KismetSystemLibrary.h"
+#include "Engine/Texture2D.h"
+//#include "PackageTools.h"
+
+#include "Misc/PackageName.h"
+#include "UObject/Package.h"
+#include "UObject/SavePackage.h"
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetToolsModule.h"
+
+#include "TsImageMap.h"
+#include "TsUtility.h"
 
 
 
@@ -411,24 +418,56 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 }
 
 
-float	TsImageCore::gSx = 0;
-float	TsImageCore::gSY = 0;
+UTexture2D*		TsImageCore::SaveAsset(const FString& asset_name, EImageFormat format ) const 
+{
+	UTexture2D* tex = nullptr ;
+#if WITH_EDITOR
+    FString     package_path = TsUtil::GetPackagePath( asset_name ) ;
+    FString     package_name = FPackageName::ObjectPathToPackageName( package_path ) ;
+    UPackage*	package = CreatePackage( *package_name ) ;
+    if (!package) return nullptr;
 
-//FString TsImageCore::gDirName;
+    // Texture2D の新規作成
+    tex = NewObject<UTexture2D>( package, *asset_name, RF_Public | RF_Standalone );
+    if (!tex) return nullptr;
 
-//void	TsImageCore::SetDirectory(const FString& path, int no_x, int no_y)
-//{
-//	gDirName = PROJPATH + path;
-//	if (no_x >= 0 && no_y >= 0) {
-//		gDirName += FString::Printf(TEXT("%02d_%02d"), no_x, no_y);
-//	}
-//	gDirName += FString("\\");
-//
-//	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
-//	if (!pf.DirectoryExists(*gDirName)) {		// Directory Exists?
-//		pf.CreateDirectory(*gDirName);
-//	}
-//}
+	bool						srgb;
+	TextureCompressionSettings	tcs ;
+	ETextureSourceFormat		tsf ;
+	switch( format ){
+	case FormatR8:		tsf = TSF_G8	 ; tcs = TC_Grayscale; srgb = false ; break ;
+	case FormatR16:
+	case FormatL16:		tsf = TSF_G16	 ; tcs = TC_Grayscale; srgb = false ; break ;
+	case FormatF32:		tsf = TSF_R32F	 ; tcs = TC_Grayscale; srgb = false ; break ;
+	case FormatB8G8R8:
+	case FormatB8G8R8A8:tsf = TSF_BGRA8  ; tcs = TC_Default  ; srgb = true  ; break ;
+	default:			tsf = TSF_Invalid; tcs = TC_Default  ; srgb = true  ; break ;
+	}
+    // 16bit グレースケール（G16）ピクセルの初期化
+    tex->Source.Init( mW,mH,mD, 1, tsf, (const uint8*)ConvertImage( format ) );
+
+    // 設定の調整
+    tex->SRGB					= srgb ; // 線形空間
+    tex->CompressionSettings	= tcs  ;
+    tex->MipGenSettings			= TMGS_NoMipmaps;
+    tex->Filter					= TF_Default;
+    tex->UpdateResource();
+
+    // アセット登録と保存
+    FAssetRegistryModule::AssetCreated(tex);
+    package->MarkPackageDirty();
+
+    const FString pkg_filename = FPackageName::LongPackageNameToFilename(package_name, FPackageName::GetAssetPackageExtension());
+    FSavePackageArgs save_args;
+    save_args.TopLevelFlags = RF_Public | RF_Standalone;
+    save_args.SaveFlags = SAVE_NoError;
+    save_args.bWarnOfLongFilename = true;
+    UPackage::SavePackage(package, tex, *pkg_filename, save_args);
+#endif
+    return tex;
+}
+
+
 
 
 int			TsImageCore::GetStride(EImageFormat format) {
@@ -460,8 +499,6 @@ FVector2D	TsImageCore::GetWorldPos(int px, int py) const
 FIntVector2	TsImageCore::GetPixelPos(const FVector2D &p ) const
 {
 	FVector2D pix = p - mWorld->Min;
-	//pix.X -= gSx;
-	//pix.Y -= gSY;
 	return FIntVector2( (int)(pix.X/mStep.X+0.5f), (int)(pix.Y/mStep.Y + 0.5f) ) ;
 }
 
@@ -555,33 +592,3 @@ int			TsImageMap<float>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy
 	return 0;
 }
 
-
-int			TsImageMap<FVector>::SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h) const
-{
-	for (int y = 0; y < h; y++) {
-		for (int x = 0; x < w; x++) {
-			int px = (format & EImageFormat::FmtHFlip) ? (sx + w - 1 - x) : (sx + x);
-			int py = (format & EImageFormat::FmtVFlip) ? (sy + h - 1 - y) : (sx + y);
-			FVector		v = GetPixel(px, py);
-			int			i = 0;
-			switch (format & EImageFormat::FmtMask) {
-			case EImageFormat::FormatG16R16:
-				i = ((int)(32767.0f + v.X * 32767.0f)) | ((int)(32767.0f + v.Z * 32767.0f) << 16);
-				fwrite(&i, GetStride(format), 1, fp);
-				break;
-			case EImageFormat::FormatB8G8R8A8:
-			case EImageFormat::FormatB8G8R8:			//break through
-				i = ((int)(127 + v.X * 127)) | ((int)(127 + v.Y * 127) << 8) | ((int)(127 + v.Z * 127) << 16);
-				fwrite(&i, GetStride(format), 1, fp);
-				break;
-			case EImageFormat::FormatF32:
-			case EImageFormat::FormatL16:
-			case EImageFormat::FormatR16:
-			case EImageFormat::FormatR8:
-				//invalid format
-				break;
-			}
-		}
-	}
-	return 0;
-}

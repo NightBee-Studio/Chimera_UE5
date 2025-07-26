@@ -1,14 +1,14 @@
-#include "TsHeightMesh.h"
-
-#include "AssetRegistry/AssetRegistryModule.h"
-#include "AssetToolsModule.h"
 #include "Engine/StaticMesh.h"
 #include "MeshDescription.h"
 #include "StaticMeshAttributes.h"
+
+#include "AssetRegistry/AssetRegistryModule.h"
+#include "AssetToolsModule.h"
 #include "Misc/PackageName.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 
+#include "TsHeightMesh.h"
 
 // Your original Build function rewritten to match UE5.4-style StaticMesh LOD/mesh description usage
 void TsHeightMesh::Build(

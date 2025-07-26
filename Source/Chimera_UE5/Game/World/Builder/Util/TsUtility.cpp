@@ -22,10 +22,21 @@ float	TsUtil::RandRange(const FVector2D &v){
 
 
 static FString gDirectory;
+static FString gSubDirectory;
 static FString gPackagePath;
 
 #define PROJPATH	"D:\\Works\\Projects\\Chimera\\01_Project\\Chimera_UE5\\Content\\"
 #define GAMEPATH	"/Game/"
+
+void				TsUtil::SetSubDirectory(const FString& name)
+{
+	gSubDirectory = name ;
+
+	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
+	if (!pf.DirectoryExists(*(gDirectory + gSubDirectory))) {		// Directory Exists?
+		pf.CreateDirectory(*(gDirectory + gSubDirectory));
+	}
+}
 
 void				TsUtil::SetDirectory(const FString& path, int no_x, int no_y)
 {
@@ -46,7 +57,7 @@ void				TsUtil::SetDirectory(const FString& path, int no_x, int no_y)
 
 FString TsUtil::GetDirectory(const FString& name)
 {
-	FString fullpath = gDirectory + name.Replace(TEXT("/"), TEXT("\\"));
+	FString fullpath = gDirectory + gSubDirectory.Replace(TEXT("/"), TEXT("\\")) + name.Replace(TEXT("/"), TEXT("\\"));
 
 	FString dir = FPaths::GetPath( *(fullpath.Replace(TEXT("\\"), TEXT("/"))) );
 	IPlatformFile& pf = FPlatformFileManager::Get().GetPlatformFile();
@@ -58,5 +69,5 @@ FString TsUtil::GetDirectory(const FString& name)
 
 FString 	TsUtil::GetPackagePath(const FString& name)
 {
-	return gPackagePath + name ;
+	return gPackagePath + gSubDirectory + name ;
 }

@@ -200,22 +200,9 @@ void	TsMaterialMap::StoreMaterial()
 
 void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 {
-	TMap<EMaterialType, FString> enumname = {
-		{ EBMt_None		,FString("None")		},
-		{ EBMt_Soil_A	,FString("Soil_A")		},
-		{ EBMt_Soil_B	,FString("Soil_B")		},
-		{ EBMt_Soil_C	,FString("Soil_C")		},
-		{ EBMt_Grass_A	,FString("Grass_A")		},
-		{ EBMt_Grass_B	,FString("Grass_B")		},
-		{ EBMt_Forest_A	,FString("Forest_A")	},
-		{ EBMt_Forest_B	,FString("Forest_B")	},
-		{ EBMt_Rock_A	,FString("Rock_A")		},
-		{ EBMt_Moss_A	,FString("Moss_A")		},
-		{ EBMt_Moss_B	,FString("Moss_B")		},
-	};
-	
     const UEnum* enum_ptr = StaticEnum<EMaterialType>();
 
+	TsUtil::SetSubDirectory( TEXT("Materials/") );
 	TsImageMap<float>* bitmap = new TsImageMap<float>( mW, mH, mAlphaMap.GetWorld() );
 	for (auto& i : mMatIndex) {
 		bool need_save = false;
@@ -229,13 +216,12 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 			});
 		if (need_save){
 		    FString name  = enum_ptr->GetNameStringByValue(static_cast<int64>(i)).Mid( 5 ) ;
-
-			FString fname = FString::Printf( TEXT("Materials/MIC_%s.dds"), *name );
-
-//			FString fname = FString::Printf( TEXT("Materials/MIC_%s.dds"), *(enumname[i]) );
-			bitmap->Save( *fname, EImageFile::Dds, EImageFormat::FormatR8, 0, 0, w, h);
+			FString fname = FString::Printf( TEXT("MI_%s"), *name );
+//			bitmap->Save( *fname, EImageFile::Dds, EImageFormat::FormatR8, 0, 0, w, h);
+			bitmap->SaveAsset( *fname, EImageFormat::FormatR8 );
 		}
 	}
+	TsUtil::SetSubDirectory( TEXT("") );	//reset
 
 	//UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
 	//mAlphaMap   .Save("MatAlpha00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );

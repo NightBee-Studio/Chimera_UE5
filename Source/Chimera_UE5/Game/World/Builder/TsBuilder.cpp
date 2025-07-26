@@ -31,7 +31,6 @@ public:
 
 	TsMapOutput							mMapOutParam;
 	TsHeightMap*						mHeightMap;
-	TsNormalMap*						mNormalMap;
 	TsMaterialMap*						mMaterialMap;
 
 private:
@@ -62,7 +61,6 @@ private:
 		mBiomes.Empty();
 
 		SAFE_DELETE(mHeightMap);
-		SAFE_DELETE(mNormalMap);
 		SAFE_DELETE(mMaterialMap);
 	}
 
@@ -86,7 +84,6 @@ public:
 	Builder_Work()
 		: mShape()
 		, mHeightMap(nullptr)
-		, mNormalMap(nullptr)
 		, mMaterialMap(nullptr)
 	{;}
 
@@ -329,7 +326,6 @@ public:
 				int				reso  = mMapOutParam.mWorldReso;
 				const FBox2D*	bound = mMapOutParam.mWorldBound;
 				mHeightMap   = new TsHeightMap  ( reso, reso, bound );
-				mNormalMap	 = new TsNormalMap  ( reso, reso, bound );
 				mMaterialMap = new TsMaterialMap( reso, reso, bound,{
 						EMaterialType::EBMt_None,
 						EMaterialType::EBMt_Soil_A,
@@ -397,7 +393,6 @@ public:
 				reso = 64;
 //				reso = 4096;
 				mHeightMap           = new TsHeightMap( reso, reso, bound );
-				mNormalMap	         = new TsNormalMap( reso, reso, bound );// only for output
 #if 1
 				{///---------------------------------------- HeightMap
 					{///--------------------------------------------------- Create BaseHeightmap
@@ -676,9 +671,6 @@ public:
 						});
 						mMaterialMap->StoreMaterial();
 						mMaterialMap->SaveAll(0,0,0,0);
-
-						//moist_map->Save("Materials/BM_MoistMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
-						//moist_map->Save("Materials/BM_MoistMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
 
 						//TsMaterial::Build( 
 						//		FString( "Resources/World/Landscape/Surface/" ),

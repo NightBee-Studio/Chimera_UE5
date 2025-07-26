@@ -133,15 +133,6 @@ public:
 };
 
 
-class TsNormalMap
-	: public TsImageMap<FVector>
-{
-public:
-	TsNormalMap(int w, int h, const FBox2D* bound)
-		: TsImageMap<FVector>(w, h, bound) {}
-};
-
-
 enum EExtraOp{
 	E_Add,
 	E_Mul,
@@ -184,7 +175,7 @@ struct TsMaterialPixel
 	}
 
 	void Clear() {
-		for ( auto& v : mValues ) v.Value = 0 ;
+		mValues.Empty() ;
 	}
 
 	void Normalize() {
