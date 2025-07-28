@@ -1,4 +1,4 @@
-#include "CoreMinimal.h"
+#include "TsImageMap.h"
 
 #include <stdio.h>
 
@@ -13,8 +13,6 @@
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
 
-#include "TsImageMap.h"
-#include "TsUtility.h"
 
 
 

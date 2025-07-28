@@ -1,8 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+
 #include "TsTextureMap.h"
 #include "TsUtility.h"
+
 
 class UMaterialInterface;
 class TsHeightMesh 

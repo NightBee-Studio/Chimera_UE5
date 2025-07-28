@@ -1,6 +1,4 @@
 #include "TsUtility.h"
-#include "CoreMinimal.h"
-
 
 
 void	TsUtil::RandSeed(int i) {
