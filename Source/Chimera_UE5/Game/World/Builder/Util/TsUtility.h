@@ -7,6 +7,12 @@
 
 // ---------------------------- Utillity -------------------------
 namespace TsUtil {
+	struct TsIPoint{
+		int		mX, mY ; 
+		TsIPoint(int x, int y)
+			: mX(x),mY(y) {}
+	};
+
 	struct TsBox{
 		int		mX, mY ; 
 		int		mW, mH ; 

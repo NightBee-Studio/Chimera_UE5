@@ -92,15 +92,38 @@ int ox=x, oy =y;
 
 float	TsTextureMap::GetValue(float x, float y, EAnchor anc, int reso )
 {
+	auto catmull_rom = [&] ( float p0, float p1, float p2, float p3, float t1 )->float{
+		float t2 = t1 * t1;
+		float t3 = t2 * t1;
+		return 0.5f * (
+				(       2*p1            ) +
+				( -p0 +          p2     ) * t1 +
+				(2*p0 - 5*p1 + 4*p2 - p3) * t2 +
+				( -p0 + 3*p1 - 3*p2 + p3) * t3);
+	};
+	auto get_pixel = [&] ( float _x, float _y )->float{
+		return TsTextureMap::GetPixel( _x, _y, anc, reso ) ;
+	};
 	int   dx  = (int)x ;
 	int   dy  = (int)y ;
 	float sx  = FMath::Frac(x) ;
 	float sy  = FMath::Frac(y) ;
+
+	float h0 = catmull_rom( get_pixel( dx-1, dy-1), get_pixel( dx+0, dy-1), get_pixel( dx+1, dy-1), get_pixel(dx+2, dy-1), sx ) ;
+	float h1 = catmull_rom( get_pixel( dx-1, dy+0), get_pixel( dx+0, dy+0), get_pixel( dx+1, dy+0), get_pixel(dx+2, dy+0), sx ) ;
+	float h2 = catmull_rom( get_pixel( dx-1, dy+1), get_pixel( dx+0, dy+1), get_pixel( dx+1, dy+1), get_pixel(dx+2, dy+1), sx ) ;
+	float h3 = catmull_rom( get_pixel( dx-1, dy+2), get_pixel( dx+0, dy+2), get_pixel( dx+1, dy+2), get_pixel(dx+2, dy+2), sx ) ;
+
+	return catmull_rom( h0, h1, h2, h3, sy ) ;
+
+#if 0
+	//linear interpolation
 	float h00 = TsTextureMap::GetPixel( dx+0, dy+0, anc, reso ) ;
 	float h01 = TsTextureMap::GetPixel( dx+1, dy+0, anc, reso ) ;
 	float h10 = TsTextureMap::GetPixel( dx+0, dy+1, anc, reso ) ;
 	float h11 = TsTextureMap::GetPixel( dx+1, dy+1, anc, reso ) ;
 	return ((h00 * (1-sx) + h01*sx) * (1-sy)+
 			(h10 * (1-sx) + h11*sx) * (  sy)) ;
+#endif
 }
 

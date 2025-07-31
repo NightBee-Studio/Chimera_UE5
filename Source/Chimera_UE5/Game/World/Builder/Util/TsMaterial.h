@@ -4,8 +4,9 @@
 //#include "TsTextureMap.h"
 //#include "TsUtility.h"
 
+#include "Materials/MaterialInstanceConstant.h"
 
-class UMaterialInstanceConstant ;
+//class UMaterialInstanceConstant ;
 
 class TsMaterial 
 {

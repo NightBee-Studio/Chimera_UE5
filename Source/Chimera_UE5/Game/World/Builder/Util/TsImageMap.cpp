@@ -416,7 +416,7 @@ int		TsImageCore::Save(const FString& fname, EImageFile filetype, EImageFormat f
 }
 
 
-UTexture2D*		TsImageCore::SaveAsset(const FString& asset_name, EImageFormat format ) const 
+UTexture2D*		TsImageCore::SaveAsset(const FString& asset_name, EImageFormat format )  
 {
 	UTexture2D* tex = nullptr ;
 #if WITH_EDITOR
@@ -441,8 +441,11 @@ UTexture2D*		TsImageCore::SaveAsset(const FString& asset_name, EImageFormat form
 	case FormatB8G8R8A8:tsf = TSF_BGRA8  ; tcs = TC_Default  ; srgb = true  ; break ;
 	default:			tsf = TSF_Invalid; tcs = TC_Default  ; srgb = true  ; break ;
 	}
-    // 16bit グレースケール（G16）ピクセルの初期化
-    tex->Source.Init( mW,mH,mD, 1, tsf, (const uint8*)ConvertImage( format ) );
+
+	SlotSetup( format ) ;
+	SlotConvert( format ) ;
+
+    tex->Source.Init( mW,mH,mD, 1, tsf, (const uint8*)SlotData( format ) );
 
     // 設定の調整
     tex->SRGB					= srgb ; // 線形空間
@@ -461,6 +464,8 @@ UTexture2D*		TsImageCore::SaveAsset(const FString& asset_name, EImageFormat form
     save_args.SaveFlags = SAVE_NoError;
     save_args.bWarnOfLongFilename = true;
     UPackage::SavePackage(package, tex, *pkg_filename, save_args);
+
+	SlotClear( format ) ;
 #endif
     return tex;
 }
@@ -512,6 +517,41 @@ void		TsImageCore::ForeachPixel( std::function< void(int,int) > func, int inc )
 			func( px, py ) ;
 		}
 	}
+}
+
+
+
+void		TsImageCore::SlotSetup( EImageFormat format )
+{
+	switch ( format & EImageFormat::FmtMask ) {
+	case EImageFormat::FormatF32:	mSlot = new TArray<float > ; break;
+	case EImageFormat::FormatL16:
+	case EImageFormat::FormatR16:	mSlot = new TArray<uint16> ; break;
+	case EImageFormat::FormatR8:	mSlot = new TArray<uint8 > ; break;
+	default:						mSlot = nullptr ; break;
+	}
+}
+
+void *		TsImageCore::SlotData( EImageFormat format ) const 
+{
+	switch ( format & EImageFormat::FmtMask ) {
+	case EImageFormat::FormatF32:	return ((TArray<float >*)mSlot)->GetData() ;
+	case EImageFormat::FormatL16:
+	case EImageFormat::FormatR16:	return ((TArray<uint16>*)mSlot)->GetData() ;
+	case EImageFormat::FormatR8:	return ((TArray<uint8 >*)mSlot)->GetData() ;
+	}
+	return nullptr ;
+}
+
+void		TsImageCore::SlotClear( EImageFormat format )
+{
+	switch ( format & EImageFormat::FmtMask ) {
+	case EImageFormat::FormatF32:	delete ((TArray<float >*)mSlot);
+	case EImageFormat::FormatL16:
+	case EImageFormat::FormatR16:	delete ((TArray<uint16>*)mSlot);
+	case EImageFormat::FormatR8:	delete ((TArray<uint8 >*)mSlot);
+	}
+	mSlot = nullptr ; 
 }
 
 

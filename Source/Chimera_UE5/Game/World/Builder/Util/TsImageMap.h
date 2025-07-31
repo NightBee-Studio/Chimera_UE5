@@ -163,16 +163,23 @@ public:
 	void			ForeachPixel( std::function< void(int, int) >, int inc=1 );
 	
 private:
-	virtual void*	ConvertImage( EImageFormat format ) const { return nullptr ;}
 	virtual int		SaveImage(FILE* fp, EImageFormat format, int x, int y, int w, int h) const { return  0; }
 public:
 	virtual	float	RemapImage(float v, float range = 1.0f) const { return v * range; }
 
-//	static void		SetDirectory(const FString& path, int no_x=-1, int no_y=-1);
+
+	//Slot Service
+protected:
+	void *			mSlot;
+public:
+	void 			SlotSetup( EImageFormat format );
+	virtual void	SlotConvert( EImageFormat format ) {}
+	void *			SlotData( EImageFormat format ) const ;
+	void			SlotClear( EImageFormat format );
 
 	int				Load(const FString& fname, EImageFile file) ;
 	int				Save(const FString& fname, EImageFile file, EImageFormat format,int x=0, int y=0,int w=0, int h=0 ) const;
-	UTexture2D*		SaveAsset(const FString& fname, EImageFormat format ) const;
+	UTexture2D*		SaveAsset(const FString& fname, EImageFormat format ) ;
 	int				Load()		{ return Load(mFileName, mFileType             ); }
 	int				Save() const{ return Save(mFileName, mFileType, mFileFormat,0,0,mW,mH); }
 };
@@ -212,38 +219,6 @@ public:
 			mImage = nullptr;
 		}
 	}
-	
-	void*		ConvertImage( EImageFormat format ) const override{
-		switch (format & EImageFormat::FmtMask) {
-		case EImageFormat::FormatF32:{
-				TArray<float> data ;
-				for (int i = 0; i < mW*mH*mD; i++ ) data.Add( (const float)((T*)mImage)[i] ) ;
-				return data.GetData() ;
-			}
-			break;
-		case EImageFormat::FormatL16:
-		case EImageFormat::FormatR16:{
-				TArray<uint16> data ;
-				for (int i = 0; i < mW*mH*mD; i++ ) data.Add( (const uint16)(((T*)mImage)[i]*65535) ) ;
-				return data.GetData() ;
-			}
-			break;
-		case EImageFormat::FormatR8:{
-				TArray<uint8> data ;
-				for (int y = 0; y < mH ; y++ ){
-					for (int x = 0; x < mW ; x++ ){
-						data.Add( (const uint8)(GetPixel(x,y)*255) ) ;
-					}
-				}
-				return data.GetData() ;
-			}
-			break;
-		default:{
-				UE_LOG(LogTemp, Log, TEXT("Invalid Format %d"), format );
-			}
-			return nullptr ;;
-		}
-	}
 
 	int			SaveImage(FILE* fp, EImageFormat format, int sx, int sy, int w, int h ) const override;
 	T*			GetImage( void ) const { return (T*)mImage ;}
@@ -276,6 +251,27 @@ public:
 		int dy = y < 0 ? 0 : y >= mH ? mH - 1 : y;
 		((T*)mImage)[dx + mW * dy] = v;
 	}
+
+	
+	virtual void	SlotConvert( EImageFormat format ) override {
+		for (int y = 0; y < mH ; y++ ){
+			for (int x = 0; x < mW ; x++ ){
+				switch ( format & EImageFormat::FmtMask ) {
+				case EImageFormat::FormatF32:
+					((TArray<float >*)mSlot)->Add( (const float )(GetPixel(x,y)      ) ) ;
+					break ;
+				case EImageFormat::FormatL16:
+				case EImageFormat::FormatR16:
+					((TArray<uint16>*)mSlot)->Add( (const uint16)(GetPixel(x,y)*65535) ) ;
+					break ;
+				case EImageFormat::FormatR8:
+					((TArray<uint8 >*)mSlot)->Add( (const uint8 )(GetPixel(x,y)*255  ) ) ;
+					break ;
+				}
+			}
+		}
+	}
+
 
 	void		DrawLine(	int x0, int y0, T v0,
 							int x1, int y1, T v1, 

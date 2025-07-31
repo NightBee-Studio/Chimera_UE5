@@ -228,13 +228,22 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 	//mIndexMap   .Save("MatIndex00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 }
 
+void TsMoistureMap::Lock() 
+{
+	for ( auto &ex : mExtras ) ex.mTex.Lock() ;
+}
+
+void TsMoistureMap::UnLock() 
+{
+	for ( auto &ex : mExtras ) ex.mTex.UnLock() ;
+}
 
 float	TsMoistureMap::GetValue( const FVector2D& p )
 {
 	FIntVector2	pos = TsBiomeMap::GetPixelPos( p );
 	float		val = TsBiomeMap::GetValue( p ) ;
 	for ( auto &ex : mExtras ){
-		float pix = ex.mTex->GetPixel( pos.X, pos.Y, EAnchor::E_LB, mW );
+		float pix = ex.mTex.GetPixel( pos.X, pos.Y, EAnchor::E_LB, mW );
 		switch( ex.mOp ){
 		case EExtraOp::E_Mul:
 			val *= (pix    ) * ex.mScale ; 

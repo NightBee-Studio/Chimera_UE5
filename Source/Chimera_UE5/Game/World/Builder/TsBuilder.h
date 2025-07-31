@@ -13,7 +13,10 @@
 UENUM(BlueprintType)
 enum EBuildMode {
 	EBM_Heightmap,
-	EBM_FullGrid,
+
+	EBM_Materialmap,
+	EBM_StaticMesh,
+//	EBM_FullGrid,
 } ;
 
 // -------------------------------- UTsLandscape  --------------------------------

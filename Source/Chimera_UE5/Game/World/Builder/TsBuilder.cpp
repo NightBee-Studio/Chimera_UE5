@@ -157,7 +157,9 @@ public:
 						},
 						new TsBiomeMFunc(
 							EBiomeMapType::E_Moist,{
-								{ 1.00f,0.0f, EMaterialType::EBMt_None  },
+								{ 0.30f, 0.0f, EMaterialType::EBMt_Soil_A },
+								{ 0.30f, 0.0f, EMaterialType::EBMt_Soil_B },
+								{ 0.30f, 0.0f, EMaterialType::EBMt_Soil_C },
 							})
 					)
 				},
@@ -243,9 +245,6 @@ public:
 			}
 #endif
 
-			// lock all of texturemaps
-			//for (auto& tm : texture_maps) tm.Value->Lock();
-
 
 			const float S = 0.5f ;
 			TsMoistureMap* moist_map =
@@ -261,12 +260,14 @@ public:
 						{ 0.10f, 0.064f*S },
 					}),
 					{
-						//{ texture_maps[ETextureMap::ETM_Height   ],	 1.0f, EExtraOp::E_InvMul },
-						//{ texture_maps[ETextureMap::ETM_Flow     ],	-1.2f, EExtraOp::E_Add },
-						//{ texture_maps[ETextureMap::ETM_Slope    ],	-0.8f, EExtraOp::E_Add },
-						//{ texture_maps[ETextureMap::ETM_Curvature],	-0.8f, EExtraOp::E_Add },
+						TsExtraMap( texture_maps[ETextureMap::ETM_Height   ],	 1.0f, EExtraOp::E_InvMul ),
+						TsExtraMap( texture_maps[ETextureMap::ETM_Flow     ],	-1.2f, EExtraOp::E_Add ),
+						TsExtraMap( texture_maps[ETextureMap::ETM_Slope    ],	-0.8f, EExtraOp::E_Add ),
+						TsExtraMap( texture_maps[ETextureMap::ETM_Curvature],	-0.8f, EExtraOp::E_Add ),
 					}
 				);
+			moist_map->Lock() ;// for read extra-maps
+
 			{///---------------------------------------- Setup Biome
 				// world once
 				TArray<TsBiomeItem_SType> surfc_items = {
@@ -629,69 +630,105 @@ public:
 						EMaterialType::EBMt_Moss_A,
 						EMaterialType::EBMt_Moss_B,
 					});
-				TArray<TsBiomeItem_Material> moist_items = {
-					{ 0.04f, 0.0f, EBMt_Soil_A,  },
-					{ 0.02f, 0.0f, EBMt_Soil_B,  },
-					{ 0.02f, 0.0f, EBMt_Soil_C,  },
-					{ 0.10f, 0.0f, EBMt_Grass_A, },
-					{ 0.35f, 0.0f, EBMt_Grass_B, },
-					{ 0.20f, 0.0f, EBMt_Forest_A,},
-					{ 0.15f, 0.0f, EBMt_Forest_B,},
-				};
 				bool first = true;
-				moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items );
+				for ( auto s_type : { EBiomeSType::EBSf_None, EBiomeSType::EBSf_Lake, EBiomeSType::EBSf_Field, EBiomeSType::EBSf_Mountain } ){
+					UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel(s_type %d) ..."), s_type );
+					moist_map->SetupItemsPixel< TsBiomeItem_Material >(
+						mSurfaces[s_type].mMFuncs->mItems,
+						[&]( int px, int py )->bool{
+							FVector2D p = moist_map->GetWorldPos(px, py) ;
+							if ( moist_map->IsWorld(p)) {
+								return SearchBiome(p)->mSType == s_type ;
+							}
+							return false ;
+						} );
+					UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel  done ...") );
+				}
 
-				TsTextureMap height_map( texture_maps[ETextureMap::ETM_Height] ) ;
+				TsTextureMap	height_map( texture_maps[ETextureMap::ETM_Height] ) ;
 
-				const int NN = 5 ;
+				const float NS = 1.0f ;
+				TsNoiseMap		noise_map(
+					TsNoiseParam({
+						{ 0.10f,  8.0f*NS },
+						{ 0.05f, 16.0f*NS },
+						{ 0.25f, 32.0f*NS },
+					}) ) ;
+
+				bool build_material   = true ;
+				bool build_staticmesh = true ;
+				TArray<TsUtil::TsIPoint> points ;
+
+				const int NN = 10 ;
+				//for ( int oy=0 ; oy<NN ; oy++ ){
+				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
+				//}
+				points.Add( TsUtil::TsIPoint(5,5) ) ;
+
 				TsMapOutput	outparam( 24, 24, NN, height_map.GetSizeX(), &mBoundingbox );// 200pix * NN
-				for ( int oy=0 ; oy<NN ; oy++ ){
-					for ( int ox=0 ; ox<NN ; ox++ ){
-						UE_LOG(LogTemp, Log, TEXT("    File Grid(%d %d) ..."), ox, oy );
-						int		loc_reso	= 400 ;
-						FBox2D	loc_bound	= outparam.LocalBound( ox, oy,loc_reso );
+				for ( auto &pn : points ){
+					
+					UE_LOG(LogTemp, Log, TEXT("    File Grid(%d %d) ..."), pn.mX, pn.mY );
+					int		loc_reso	= 2000/NN ;
+					FBox2D	loc_bound	= outparam.LocalBound( pn.mX, pn.mY ,loc_reso );
+					UMaterialInstanceConstant* surf_mat = nullptr ;
 
-						TsUtil::SetDirectory( "Resources/World/Landscape/Surface/", ox, oy);
+					TsUtil::SetDirectory( "Resources/World/Landscape/Surface/", pn.mX, pn.mY );
 
-						{// materials
-							TsUtil::SetSubDirectory( TEXT("Materials/") );
+					TsUtil::SetSubDirectory( TEXT("Materials/") );
+					if ( build_material ){// materials
+						UE_LOG(LogTemp, Log, TEXT("       Material Start ...") );
+						mMaterialMap->Clear();
+						mMaterialMap->SetWorld( &loc_bound );
+						mMaterialMap->ForeachPixel([&](int px, int py) {
+							TsMaterialPixel	pix;
+							FVector2D p = mMaterialMap->GetWorldPos(px, py) ;
+							if (moist_map->IsWorld(p)) {
+								//TsUtil::ForeachGaussian(p, moist_map->GetStep(),
+								//	[&](const FVector2D& pos, float weight) {
+								//		int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
+								//		pix.Add(moist_items[idx].mItem, weight);
+								//	}); 
+								TArray<TsBiomeItem_Material>  &items = mSurfaces[SearchBiome(p)->mSType].mMFuncs->mItems ;
 
-							mMaterialMap->Clear();
-							mMaterialMap->SetWorld( &loc_bound );
-							mMaterialMap->ForeachPixel([&](int px, int py) {
-								TsMaterialPixel	pix;
-								FVector2D p = mMaterialMap->GetWorldPos(px, py) ;
-								if (moist_map->IsWorld(p)) {
-									TsUtil::ForeachGaussian(p, moist_map->GetStep(),
-										[&](const FVector2D& pos, float weight) {
-											int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
-											pix.Add(moist_items[idx].mItem, weight);
-										}); 
-								}
-								mMaterialMap->MergePixel(px, py, pix);
-							});
-							mMaterialMap->StoreMaterial();
-							mMaterialMap->SaveAll(0,0,0,0);
+								int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(p, items);
+								pix.Add( items[idx].mItem, 1.0f );
+							}
+							mMaterialMap->MergePixel(px, py, pix);
+						});
+						mMaterialMap->StoreMaterial();
+						mMaterialMap->SaveAll(0,0,0,0);
 
-							TsMaterial::Build( 
-									FString( "/Game/Resources/World/Landscape/Materials/M_Landscape.M_Landscape"),
-									FString::Printf(TEXT("MT_Surface_%1d%1d"), ox, oy),
-									mMaterialMap->GetTexParams()
-								) ;
-							TsUtil::SetSubDirectory( TEXT("") );	//reset
-						}
-
-						TsHeightMesh::Build(
-								&height_map, 
-								outparam.TexBound(ox,oy,loc_reso),	//TsUtil::TsBox(0,0,1024,1024)
-								100,//1000,
-								20000.0f, 10000.0f,
-								FString::Printf(TEXT("SM_Surface_%1d%1d"), ox, oy)
-							);
-						UE_LOG(LogTemp, Log, TEXT("    File exporting done."));
+						surf_mat = TsMaterial::Build( 
+								FString( "/Game/Resources/World/Landscape/Materials/M_Landscape.M_Landscape"),
+								FString::Printf(TEXT("MT_Surface_%1d%1d"), pn.mX, pn.mY ),
+								mMaterialMap->GetTexParams()
+							) ;
+						UE_LOG(LogTemp, Log, TEXT("       Material done.") );
+					} else {
+						FString asset_name = FString::Printf(TEXT("MT_Surface_%1d%1d"), pn.mX, pn.mY );
+						FString package_path = TsUtil::GetPackagePath( asset_name + "." + asset_name ) ;
+						surf_mat = LoadObject<UMaterialInstanceConstant>(nullptr, *package_path);
+						UE_LOG(LogTemp, Log, TEXT("       Material loaded.") );
 					}
+					TsUtil::SetSubDirectory( TEXT("") );	//reset
+
+					if ( build_staticmesh ){
+						TsHeightMesh::Build(
+								&height_map,
+								outparam.TexBound(pn.mX, pn.mY ,loc_reso),	//TsUtil::TsBox(0,0,1024,1024)
+								&noise_map,
+								0.0005f,			// noise scale
+								2000,		
+								20000.0f, 17000.0f,
+								FString::Printf(TEXT("SM_Surface_%1d%1d"), pn.mX, pn.mY ),
+								static_cast<UMaterialInterface*>(surf_mat)
+							);
+					}
+					UE_LOG(LogTemp, Log, TEXT("    File Grid(%d,%d) exporting done."), pn.mX, pn.mY );
 				}
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  done."));
+				moist_map->UnLock() ;
 			}
 		}
 	}

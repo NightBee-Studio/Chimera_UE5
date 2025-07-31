@@ -11,10 +11,14 @@
 #include "UObject/SavePackage.h"
 
 
+
+
 // Your original Build function rewritten to match UE5.4-style StaticMesh LOD/mesh description usage
 void TsHeightMesh::Build(
     TsTextureMap*       tex_map,
     const TsUtil::TsBox&tex_rect,
+    TsNoiseMap *		noise_map,
+    float       		noise_scale,
     int                 mesh_div,
     float               mesh_size,
     float               mesh_height,
@@ -33,13 +37,16 @@ void TsHeightMesh::Build(
     TArray<FVector2f> uv_list;
     TArray<int32    > pl_list;
 
+    UE_LOG(LogTemp, Log, TEXT("TsHeightMesh::Build  row%d"),nv );
+
     tex_map->Lock();
     for (int y = 0; y < nv; ++y){
         for (int x = 0; x < nv; ++x){
             auto    make_pos = [&] (float dx, float dy) {
                 float px = tex_rect.mX + (x+dx) * sx;
                 float py = tex_rect.mY + (y+dy) * sy;
-                return FVector3f( (x+dx)*s, (y+dy)*s, tex_map->GetValue(px, py) * mesh_height ) ;
+                float h = tex_map->GetValue(px, py) + noise_map->GetValue(FVector2D(px,py))*noise_scale ;
+                return FVector3f( (x+dx)*s, (y+dy)*s, h * mesh_height ) ;
             } ;
 
             vt_list.Add( make_pos(0,0) );
@@ -56,6 +63,7 @@ void TsHeightMesh::Build(
             n11 *= n11.Z<0 ? -1 : 1 ;
             nm_list.Add( (n00+n11).GetSafeNormal() ) ;
         }
+        if ( (y % 100)==0 ) UE_LOG(LogTemp, Log, TEXT("    %d/%d"),y, nv );
     }
     tex_map->UnLock();
 

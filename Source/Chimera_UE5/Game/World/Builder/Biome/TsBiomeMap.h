@@ -78,9 +78,9 @@ public:
 		TArray<float>	samples;
 		ForeachPixel(
 			[&](int px, int py) {
-				//if (chk_pixel ? chk_pixel(px,py) : true ){
+				if (chk_pixel ? chk_pixel(px,py) : true ){
 					samples.Add(GetValue(GetWorldPos(px, py)));
-				//}
+				}
 			});
 		samples.Sort();		// sort to determine the ratio of the group.
 
@@ -140,20 +140,27 @@ enum EExtraOp{
 } ;
 
 struct TsExtraMap {
-	TsTextureMap *	mTex ;
+	TsTextureMap 	mTex ;
 	float			mScale;
 	EExtraOp		mOp;
+	TsExtraMap( UTexture2D *tex, float scale, EExtraOp op ) : mTex(tex), mScale( scale), mOp( op ){}
 } ;
 
 class TsMoistureMap
 	: public TsBiomeMap
 {
 public:
-	TsMoistureMap( int w, int h, const FBox2D* bound, const TsNoiseParam& cnf, const TArray<TsExtraMap>& extra )
+	TsMoistureMap( int w, int h, const FBox2D* bound, const TsNoiseParam& cnf, 
+std::initializer_list<TsExtraMap> extra
+//const TArray<TsExtraMap>& extra 
+)
 		: TsBiomeMap( w, h, bound, cnf )
 		, mExtras( extra ){}
 
 	TArray<TsExtraMap>	mExtras ;
+
+	void Lock() ;
+	void UnLock() ;
 
 	virtual float	GetValue(const FVector2D& p) override;
 };
