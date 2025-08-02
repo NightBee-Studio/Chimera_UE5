@@ -54,12 +54,12 @@ class	TsBiomeSurface {
 public:
 	//private:
 	TArray<TsBiomeSFunc*>	mSFuncs;
-	TsBiomeMFunc*			mMFuncs;
+	TArray<TsBiomeMFunc*>	mMFuncs;
 
 public:
 	TsBiomeSurface(
 		TArray<TsBiomeSFunc*>	s_funcs,
-		TsBiomeMFunc*			m_funcs )
+		TArray<TsBiomeMFunc*>	m_funcs )
 		: mSFuncs(s_funcs)
 		, mMFuncs(m_funcs) {}
 

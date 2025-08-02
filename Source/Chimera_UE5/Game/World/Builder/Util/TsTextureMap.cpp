@@ -45,24 +45,11 @@ int	TsTextureMap::GetSizeY() const
 	return mTex->GetSizeY();
 }
 
-float TsTextureMap::GetPixel(int x, int y, EAnchor anc, int reso ) 
+float TsTextureMap::GetPixel(int x, int y, int reso ) 
 {
 	int channel = 0;///////
 	int w = GetSizeX();
 	int h = GetSizeY();
-
-int ox=x, oy =y;
-	//anchor control
-	switch( anc & (_Right|_Left  ) ){
-	case EAnchor::_Left:	           break ;
-	case EAnchor::_Center:	x = x+w/2; break ;
-	case EAnchor::_Right:	x = w-  x; break ;
-	}
-	switch( anc & (_Upper|_Bottom) ){
-	case EAnchor::_Bottom:	           break ;
-	case EAnchor::_Center:	y = y+h/2; break ;
-	case EAnchor::_Upper:	y = h-  y; break ;
-	}
 
 	int px = FMath::Clamp( (reso>0 ? w*x/reso : x), 0, w-1 ) ;
 	int py = FMath::Clamp( (reso>0 ? h*y/reso : y), 0, h-1 ) ;
@@ -90,7 +77,7 @@ int ox=x, oy =y;
 	return r;
 }
 
-float	TsTextureMap::GetValue(float x, float y, EAnchor anc, int reso )
+float	TsTextureMap::GetValue(float x, float y, int reso )
 {
 	auto catmull_rom = [&] ( float p0, float p1, float p2, float p3, float t1 )->float{
 		float t2 = t1 * t1;
@@ -101,8 +88,8 @@ float	TsTextureMap::GetValue(float x, float y, EAnchor anc, int reso )
 				(2*p0 - 5*p1 + 4*p2 - p3) * t2 +
 				( -p0 + 3*p1 - 3*p2 + p3) * t3);
 	};
-	auto get_pixel = [&] ( float _x, float _y )->float{
-		return TsTextureMap::GetPixel( _x, _y, anc, reso ) ;
+	auto get_pixel = [&] ( int _x, int _y )->float{
+		return TsTextureMap::GetPixel( _x, _y, reso ) ;
 	};
 	int   dx  = (int)x ;
 	int   dy  = (int)y ;
@@ -115,15 +102,21 @@ float	TsTextureMap::GetValue(float x, float y, EAnchor anc, int reso )
 	float h3 = catmull_rom( get_pixel( dx-1, dy+2), get_pixel( dx+0, dy+2), get_pixel( dx+1, dy+2), get_pixel(dx+2, dy+2), sx ) ;
 
 	return catmull_rom( h0, h1, h2, h3, sy ) ;
+}
 
-#if 0
 	//linear interpolation
-	float h00 = TsTextureMap::GetPixel( dx+0, dy+0, anc, reso ) ;
-	float h01 = TsTextureMap::GetPixel( dx+1, dy+0, anc, reso ) ;
-	float h10 = TsTextureMap::GetPixel( dx+0, dy+1, anc, reso ) ;
-	float h11 = TsTextureMap::GetPixel( dx+1, dy+1, anc, reso ) ;
+float	TsTextureMap::GetLinear(float x, float y, int reso )
+{
+	int   dx  = (int)x ;
+	int   dy  = (int)y ;
+	float sx  = FMath::Frac(x) ;
+	float sy  = FMath::Frac(y) ;
+
+	float h00 = TsTextureMap::GetPixel( dx+0, dy+0, reso ) ;
+	float h01 = TsTextureMap::GetPixel( dx+1, dy+0, reso ) ;
+	float h10 = TsTextureMap::GetPixel( dx+0, dy+1, reso ) ;
+	float h11 = TsTextureMap::GetPixel( dx+1, dy+1, reso ) ;
 	return ((h00 * (1-sx) + h01*sx) * (1-sy)+
 			(h10 * (1-sx) + h11*sx) * (  sy)) ;
-#endif
 }
 

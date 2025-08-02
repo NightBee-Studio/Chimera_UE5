@@ -157,7 +157,8 @@ public:
 	void			SetWorld(const FBox2D* bound);
 	const FBox2D*	GetWorld() const { return mWorld; }
 	FVector2D		GetWorldPos(int px, int py) const ;		// tex-coord -> world-coord
-	FIntVector2		GetPixelPos(const FVector2D& p) const;	// world-coord -> tex-coord
+	FIntVector2		GetPixelPos(const FVector2D& p) const;	// world-coord -> tex-coord(int  )
+	FVector2D		GetTexcoord(const FVector2D& p) const;	// world-coord -> tex-coord(float)
 	void			SetMapping(const TsMapOutput& conf) { mConfig = conf; }
 
 	void			ForeachPixel( std::function< void(int, int) >, int inc=1 );
@@ -177,11 +178,12 @@ public:
 	void *			SlotData( EImageFormat format ) const ;
 	void			SlotClear( EImageFormat format );
 
+	//File I/O Service
 	int				Load(const FString& fname, EImageFile file) ;
 	int				Save(const FString& fname, EImageFile file, EImageFormat format,int x=0, int y=0,int w=0, int h=0 ) const;
-	UTexture2D*		SaveAsset(const FString& fname, EImageFormat format ) ;
 	int				Load()		{ return Load(mFileName, mFileType             ); }
 	int				Save() const{ return Save(mFileName, mFileType, mFileFormat,0,0,mW,mH); }
+	UTexture2D*		SaveAsset(const FString& fname, EImageFormat format ) ;
 };
 
 
@@ -254,20 +256,18 @@ public:
 
 	
 	virtual void	SlotConvert( EImageFormat format ) override {
-		for (int y = 0; y < mH ; y++ ){
-			for (int x = 0; x < mW ; x++ ){
-				switch ( format & EImageFormat::FmtMask ) {
-				case EImageFormat::FormatF32:
-					((TArray<float >*)mSlot)->Add( (const float )(GetPixel(x,y)      ) ) ;
-					break ;
-				case EImageFormat::FormatL16:
-				case EImageFormat::FormatR16:
-					((TArray<uint16>*)mSlot)->Add( (const uint16)(GetPixel(x,y)*65535) ) ;
-					break ;
-				case EImageFormat::FormatR8:
-					((TArray<uint8 >*)mSlot)->Add( (const uint8 )(GetPixel(x,y)*255  ) ) ;
-					break ;
-				}
+		for (int i=0 ; i<mH*mW ; i++ ){
+			switch ( format & EImageFormat::FmtMask ) {
+			case EImageFormat::FormatF32:
+				((float *)mSlot)[i] = ((T *)mImage)[i]       ;
+				break ;
+			case EImageFormat::FormatL16:
+			case EImageFormat::FormatR16:
+				((uint16*)mSlot)[i] = ((T *)mImage)[i]*65535 ;
+				break ;
+			case EImageFormat::FormatR8:
+				((uint8 *)mSlot)[i] = ((T *)mImage)[i]*255   ;
+				break ;
 			}
 		}
 	}

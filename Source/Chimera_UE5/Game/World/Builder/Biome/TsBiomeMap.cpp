@@ -151,7 +151,7 @@ TsMaterialPixel& TsMaterialMap::GetPixel(int x, int y)
 void	TsMaterialMap::MergePixel(int x, int y, const TsMaterialPixel& px)
 {
 	GetPixel(x, y).Merge( px );
-	GetPixel(x, y).Normalize();
+	//GetPixel(x, y).Normalize();
 }
 
 void	TsMaterialMap::Clear()
@@ -218,14 +218,11 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 		if (need_save){
 		    FString name  = enum_ptr->GetNameStringByValue(static_cast<int64>(i)).Mid( 5 ) ;
 			FString fname = FString::Printf( TEXT("MI_%s"), *name );
-//			bitmap->Save( *fname, EImageFile::Dds, EImageFormat::FormatR8, 0, 0, w, h);
-			mTexParams.Emplace( *name, bitmap->SaveAsset( *fname, EImageFormat::FormatR8 ) );
+			bitmap->Save( *(fname + FString(".dds")), EImageFile::Dds, EImageFormat::FormatL16, 0, 0, w, h);
+			UTexture2D*		tex_asset = bitmap->SaveAsset( *fname, EImageFormat::FormatR8 ) ;
+			if ( tex_asset ) mTexParams.Emplace( *name, tex_asset );
 		}
 	}
-
-	//UE_LOG(LogTemp, Log, TEXT("TsMaterialMap::SaveAll"));
-	//mAlphaMap   .Save("MatAlpha00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
-	//mIndexMap   .Save("MatIndex00.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8, x, y, w, h );
 }
 
 void TsMoistureMap::Lock() 
@@ -240,10 +237,18 @@ void TsMoistureMap::UnLock()
 
 float	TsMoistureMap::GetValue( const FVector2D& p )
 {
-	FIntVector2	pos = TsBiomeMap::GetPixelPos( p );
+	//FIntVector2	pos = TsBiomeMap::GetPixelPos( p );
+	FVector2D	pos = TsBiomeMap::GetTexcoord( p );
 	float		val = TsBiomeMap::GetValue( p ) ;
+
 	for ( auto &ex : mExtras ){
-		float pix = ex.mTex.GetPixel( pos.X, pos.Y, EAnchor::E_LB, mW );
+		float pix = 0;
+		TsUtil::ForeachGaussian(
+			pos, 1,
+			[&]( const FVector2D &p, float wt){
+				pix += ex.mTex.GetLinear( p.X, p.Y ) * wt ;
+			} ) ;
+
 		switch( ex.mOp ){
 		case EExtraOp::E_Mul:
 			val *= (pix    ) * ex.mScale ; 

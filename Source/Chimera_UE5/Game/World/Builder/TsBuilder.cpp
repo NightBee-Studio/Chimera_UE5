@@ -154,56 +154,57 @@ public:
 					TsBiomeSurface({
 							new TsSurfaceField(1.0f, -5.0f     ),
 							new TsSurfacePondNoise( TsNoiseParam({{0.8f,0.01f},{0.2f,0.03f}}), 0.5f, 0.1f),
-						},
-						new TsBiomeMFunc(
-							EBiomeMapType::E_Moist,{
-								{ 0.30f, 0.0f, EMaterialType::EBMt_Soil_A },
-								{ 0.30f, 0.0f, EMaterialType::EBMt_Soil_B },
-								{ 0.30f, 0.0f, EMaterialType::EBMt_Soil_C },
-							})
-					)
+						},{
+							new TsBiomeMFunc(
+								EBiomeMapType::E_Moist,{
+									{ 0.30f, -0.346294f, EMaterialType::EBMt_Soil_A },
+									{ 0.30f, -0.100636f, EMaterialType::EBMt_Soil_B },
+									{ 0.30f,  0.195321f, EMaterialType::EBMt_Soil_C },
+								}),
+						})
 				},
 				{ EBiomeSType::EBSf_Lake,
 					TsBiomeSurface({
-						new TsSurfaceLake(TsNoiseParam({{1.0f, 0.001f},{ 0.2f, 0.003f}}), -4.0f),
-					},
-						new TsBiomeMFunc(
-							EBiomeMapType::E_Moist,{
-								{ 0.60f, 0.0f, EMaterialType::EBMt_Soil_A },
-								{ 0.50f, 0.0f, EMaterialType::EBMt_Soil_B },
-							})
-					)
+							new TsSurfaceLake(TsNoiseParam({{1.0f, 0.001f},{ 0.2f, 0.003f}}), -4.0f),
+						},{
+							new TsBiomeMFunc(
+								EBiomeMapType::E_Moist,{
+									{ 0.60f, 0.039049f, EMaterialType::EBMt_Soil_A },
+									{ 0.50f, 0.545154f, EMaterialType::EBMt_Soil_B },
+								}),
+						})
 				},
 				{ EBiomeSType::EBSf_Field,
 					TsBiomeSurface({
 							new TsSurfaceField	  (1.00f, 5.0f     ),
 							new TsSurfacePondNoise(TsNoiseParam({{0.40f,0.01f},{0.15f,0.03f}}), 0.5f, 0.1f),
-						},
-						new TsBiomeMFunc(
-							EBiomeMapType::E_Moist,{
-								{ 0.05f, 0.0f, EMaterialType::EBMt_Soil_A   },
-								{ 0.10f, 0.0f, EMaterialType::EBMt_Soil_B   },
-								{ 0.10f, 0.0f, EMaterialType::EBMt_Grass_A  },
-								{ 0.35f, 0.0f, EMaterialType::EBMt_Grass_B  },
-								{ 0.10f, 0.0f, EMaterialType::EBMt_Forest_A },
-								{ 0.15f, 0.0f, EMaterialType::EBMt_Forest_B },
-							})
-					)
+						},{
+							new TsBiomeMFunc(
+								EBiomeMapType::E_Moist,{
+									{ 0.05f, -1.055513f, EMaterialType::EBMt_Soil_A   },
+									{ 0.10f, -0.780525f, EMaterialType::EBMt_Soil_B   },
+									{ 0.10f, -0.568300f, EMaterialType::EBMt_Grass_A  },
+									{ 0.35f, -0.132078f, EMaterialType::EBMt_Grass_B  },
+									{ 0.10f, -0.038899f, EMaterialType::EBMt_Forest_A },
+									{ 0.15f,  0.153128f, EMaterialType::EBMt_Forest_B },
+								})
+						})
 				},
 				{ EBiomeSType::EBSf_Mountain,
 					TsBiomeSurface({
 							new TsSurfaceMountain ( 20       ),
 							//new TsSurfacePondNoise(TsNoiseParam({{0.8f , 0.010f},{ 0.2f, 0.030f}}), 0.5f, 0.5f),
 							//new TsSurfaceNoise    (10.0f, 2.0f, 1.4f),
-						},
-						new TsBiomeMFunc(
-							EBiomeMapType::E_Moist,{
-								{  0.20f, 0.0f, EMaterialType::EBMt_Grass_A },
-								{  0.35f, 0.0f, EMaterialType::EBMt_Grass_B },
-								{  0.10f, 0.0f, EMaterialType::EBMt_Soil_B  },
-								{  0.45f, 0.0f, EMaterialType::EBMt_Soil_A  },
-							})
-					)
+						},{
+							new TsBiomeMFunc(
+								EBiomeMapType::E_Moist,{
+									{  0.05f, -1.382976f, EMaterialType::EBMt_Grass_A },
+									{  0.05f, -1.232047f, EMaterialType::EBMt_Grass_B },
+									{  0.30f, -0.882804f, EMaterialType::EBMt_Soil_B  },
+									{  0.40f, -0.282588f, EMaterialType::EBMt_Soil_A  },
+									{  0.58f,  0.608419f, EMaterialType::EBMt_Soil_C  },
+								})
+						})
 				},
 			} ;
 
@@ -249,7 +250,7 @@ public:
 			const float S = 0.5f ;
 			TsMoistureMap* moist_map =
 				new TsMoistureMap(
-					IMG_SIZE, IMG_SIZE,
+					//2048, 2048,// reso must be same as TsExtramap
 					&mBoundingbox, 
 					TsNoiseParam({
 						{ 0.90f, 0.001f*S },
@@ -285,7 +286,7 @@ public:
 
 				surfc_map->SetupItems< TsBiome, TsBiomeItem_SType >(mBiomes, surfc_items);
 				moist_map->SetupItems< TsBiome, TsBiomeItem_MType >(mBiomes, moist_items);
-				
+
 				for ( auto& b : mBiomes ) {
 					if (mShape.IsInside(b)) {
 						b.SetSType( surfc_map->SelectItem<TsBiome, TsBiomeItem_SType>( b, surfc_items).mItem );
@@ -615,6 +616,18 @@ public:
 			{	///--------------------------------------------------- Generating  Meshes & Textures
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  generate start..."));
 
+				bool build_material   = true ;
+				bool build_staticmesh = false ;
+				bool build_threshold  = false ;
+				TArray<TsUtil::TsIPoint> points ;
+
+				const int NN = 5 ;
+				//for ( int oy=0 ; oy<NN ; oy++ ){
+				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
+				//}
+				points.Add( TsUtil::TsIPoint(0,4) ) ;
+
+
 				int				reso  = mMapOutParam.mWorldReso;
 				const FBox2D*	bound = mMapOutParam.mWorldBound;
 				mMaterialMap = new TsMaterialMap( reso, reso, bound,{
@@ -630,20 +643,41 @@ public:
 						EMaterialType::EBMt_Moss_A,
 						EMaterialType::EBMt_Moss_B,
 					});
-				bool first = true;
-				for ( auto s_type : { EBiomeSType::EBSf_None, EBiomeSType::EBSf_Lake, EBiomeSType::EBSf_Field, EBiomeSType::EBSf_Mountain } ){
-					UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel(s_type %d) ..."), s_type );
-					moist_map->SetupItemsPixel< TsBiomeItem_Material >(
-						mSurfaces[s_type].mMFuncs->mItems,
-						[&]( int px, int py )->bool{
-							FVector2D p = moist_map->GetWorldPos(px, py) ;
-							if ( moist_map->IsWorld(p)) {
-								return SearchBiome(p)->mSType == s_type ;
+				if ( build_threshold ) {
+					for ( auto s_type : {
+							EBiomeSType::EBSf_None ,
+							EBiomeSType::EBSf_Lake ,
+							EBiomeSType::EBSf_Field,
+							EBiomeSType::EBSf_Mountain } ){
+						UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel(s_type %d) ..."), s_type );
+						for ( auto *m : mSurfaces[s_type].mMFuncs ){
+							moist_map->SetupItemsPixel< TsBiomeItem_Material >(
+								m->mItems,
+								[&]( int px, int py )->bool{
+									FVector2D p = moist_map->GetWorldPos(px, py) ;
+									if ( moist_map->IsWorld(p)) {
+										return SearchBiome(p)->mSType == s_type ;
+									}
+									return false ;
+								} );
+
+							for ( auto &it : m->mItems ){
+								UE_LOG(LogTemp, Log, TEXT("        [%d] r%f t%f"), it.mItem, it.mRatio, it.mThreshold );
 							}
-							return false ;
-						} );
-					UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel  done ...") );
+							UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel  done ...") );
+						}
+					}
 				}
+				TArray<TsBiomeItem_Material> moist_items = {
+					{ 0.04f, 0.0f, EBMt_Soil_A,  },
+					{ 0.02f, 0.0f, EBMt_Soil_B,  },
+					{ 0.02f, 0.0f, EBMt_Soil_C,  },
+					{ 0.10f, 0.0f, EBMt_Grass_A, },
+					{ 0.35f, 0.0f, EBMt_Grass_B, },
+					{ 0.20f, 0.0f, EBMt_Forest_A,},
+					{ 0.15f, 0.0f, EBMt_Forest_B,},
+				};
+				moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items );
 
 				TsTextureMap	height_map( texture_maps[ETextureMap::ETM_Height] ) ;
 
@@ -654,16 +688,6 @@ public:
 						{ 0.05f, 16.0f*NS },
 						{ 0.25f, 32.0f*NS },
 					}) ) ;
-
-				bool build_material   = true ;
-				bool build_staticmesh = true ;
-				TArray<TsUtil::TsIPoint> points ;
-
-				const int NN = 10 ;
-				//for ( int oy=0 ; oy<NN ; oy++ ){
-				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
-				//}
-				points.Add( TsUtil::TsIPoint(5,5) ) ;
 
 				TsMapOutput	outparam( 24, 24, NN, height_map.GetSizeX(), &mBoundingbox );// 200pix * NN
 				for ( auto &pn : points ){
@@ -683,20 +707,25 @@ public:
 						mMaterialMap->ForeachPixel([&](int px, int py) {
 							TsMaterialPixel	pix;
 							FVector2D p = mMaterialMap->GetWorldPos(px, py) ;
-							if (moist_map->IsWorld(p)) {
-								//TsUtil::ForeachGaussian(p, moist_map->GetStep(),
-								//	[&](const FVector2D& pos, float weight) {
-								//		int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(pos, moist_items);
-								//		pix.Add(moist_items[idx].mItem, weight);
-								//	}); 
-								TArray<TsBiomeItem_Material>  &items = mSurfaces[SearchBiome(p)->mSType].mMFuncs->mItems ;
+							if ( moist_map->IsWorld(p)){
+								//int		idx = moist_map->SelectItemIdx  <FVector2D, TsBiomeItem_Material>(p, moist_items);
+								//float	val = moist_map->SelectItemValue<FVector2D, TsBiomeItem_Material>(p, moist_items);
+								//pix.Add( moist_items[idx].mItem, val );
 
-								int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(p, items);
-								pix.Add( items[idx].mItem, 1.0f );
+								EBiomeSType s_type = SearchBiome( p )->mSType ;
+								for ( auto *m : mSurfaces[s_type].mMFuncs ){
+									TArray<TsBiomeItem_Material>  &items = m->mItems ;
+
+									int idx = moist_map->SelectItemIdx<FVector2D, TsBiomeItem_Material>(p, items);
+									if ( items[idx].mItem > 0 ){
+										pix.Add( items[idx].mItem, 1.0f );
+									}else {
+										UE_LOG(LogTemp, Log, TEXT("      [%d,%d] NoneTex S%d"), px,py, s_type );
+									}
+								}
 							}
 							mMaterialMap->MergePixel(px, py, pix);
 						});
-						mMaterialMap->StoreMaterial();
 						mMaterialMap->SaveAll(0,0,0,0);
 
 						surf_mat = TsMaterial::Build( 
@@ -719,11 +748,14 @@ public:
 								outparam.TexBound(pn.mX, pn.mY ,loc_reso),	//TsUtil::TsBox(0,0,1024,1024)
 								&noise_map,
 								0.0005f,			// noise scale
-								2000,		
-								20000.0f, 17000.0f,
+								100,		
+								40000.0f, 17000.0f,
 								FString::Printf(TEXT("SM_Surface_%1d%1d"), pn.mX, pn.mY ),
 								static_cast<UMaterialInterface*>(surf_mat)
 							);
+								//0.0005f,			// noise scale
+								//2000,		
+								//20000.0f, 17000.0f,
 					}
 					UE_LOG(LogTemp, Log, TEXT("    File Grid(%d,%d) exporting done."), pn.mX, pn.mY );
 				}

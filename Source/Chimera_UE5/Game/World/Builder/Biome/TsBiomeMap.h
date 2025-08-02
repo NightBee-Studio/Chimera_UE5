@@ -30,6 +30,26 @@ enum EBiomeMapType {
 
 typedef TsImageMap<float>  TsLevelMap;
 
+//class TsTextureMap : public TsLevelMap
+//{
+//public:
+//	TsTextureMap( UTexture2D *tex, const FBox2D* bound )
+//		: TsLevelMap( tex->GetSizeX(), tex->GetSizeY(), bound )
+//		, mTex(tex)
+//		, mData(nullptr) {}
+//
+//	TObjectPtr<UTexture2D>	mTex;
+//
+//	bool	Lock();
+//	void	UnLock() ;
+//
+//	int		GetSizeX() const ;
+//	int		GetSizeY() const ;
+//
+//	float	GetPixel(int   x, int   y, int reso = 0);
+//	float	GetValue(float x, float y, int reso = 0);
+//} ;
+
 
 //	Hue Sat Val		=>	 	Genre Temp Moist
 class TsBiomeMap
@@ -103,6 +123,21 @@ public:
 		}
 		return items.Num() - 1;
 	}
+	template<
+		DerivedFVector2D T_point,
+		DerivedBiomeItem T_item
+	>
+	float SelectItemValue( const T_point& point, TArray<T_item>& items ) {
+		float h = GetValue(point);
+		for (int i = 0; i < items.Num(); i++) {
+			if (h < items[i].mThreshold){
+				float min = (i>0 ? items[i-1].mThreshold : mMin) ;
+				float max = items[i].mThreshold ;
+				return (h-min)/(max-min) ;
+			}
+		}
+		return 0 ;
+	}
 
 	template<
 		DerivedFVector2D T_point,
@@ -150,11 +185,12 @@ class TsMoistureMap
 	: public TsBiomeMap
 {
 public:
-	TsMoistureMap( int w, int h, const FBox2D* bound, const TsNoiseParam& cnf, 
-std::initializer_list<TsExtraMap> extra
-//const TArray<TsExtraMap>& extra 
-)
-		: TsBiomeMap( w, h, bound, cnf )
+	TsMoistureMap(
+			const FBox2D*						bound,
+			const TsNoiseParam&					cnf, 
+			std::initializer_list<TsExtraMap>	extra
+		)
+		: TsBiomeMap( extra.begin()->mTex.GetSizeX(), extra.begin()->mTex.GetSizeY(), bound, cnf )
 		, mExtras( extra ){}
 
 	TArray<TsExtraMap>	mExtras ;

@@ -78,6 +78,22 @@ namespace TsUtil {
 	}
 
 	static inline
+	void		ForeachGaussian( int ox, int oy, std::function<void( int px, int py, float weight )> func) {
+		static float w25[5][5] = {
+			{1, 4, 7, 4,1},
+			{4,16,26,16,4},
+			{7,26,41,26,7},
+			{4,16,26,16,4},
+			{1, 4, 7, 4,1},
+		};
+		for (int y = 0; y < 5; y++) {
+			for (int x = 0; x < 5; x++) {
+				func( ox+x-2, oy+y-2, w25[x][y] / 273.0f );
+			}
+		}
+	}
+
+	static inline
 		void ForeachGaussianEx(
 			const FVector2D& p,
 			float pixel,

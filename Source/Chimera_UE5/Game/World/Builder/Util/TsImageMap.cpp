@@ -445,7 +445,11 @@ UTexture2D*		TsImageCore::SaveAsset(const FString& asset_name, EImageFormat form
 	SlotSetup( format ) ;
 	SlotConvert( format ) ;
 
-    tex->Source.Init( mW,mH,mD, 1, tsf, (const uint8*)SlotData( format ) );
+    tex->Source.Init( mW,mH,mD, 1, tsf);
+
+	uint8* data = tex->Source.LockMip(0);
+	FMemory::Memcpy( data, SlotData(format), mW * mH );
+	tex->Source.UnlockMip(0) ;
 
     // Ý’è‚Ì’²®
     tex->SRGB					= srgb ; // üŒ`‹óŠÔ
@@ -490,7 +494,7 @@ int			TsImageCore::GetStride(EImageFormat format) {
 void		TsImageCore::SetWorld(const FBox2D* bound) 
 {
 	FVector2D	size = bound->GetSize();
-	mStep = FVector2D((size.X + 1) / mW, (size.Y + 1) / mH);
+	mStep = FVector2D( size.X/mW, size.Y/mH );
 	mWorld = bound;
 }
 
@@ -499,10 +503,16 @@ FVector2D	TsImageCore::GetWorldPos(int px, int py) const
 	return FVector2D(mStep.X * px, mStep.Y * py) + mWorld->Min;
 }
 
+FVector2D	TsImageCore::GetTexcoord(const FVector2D &p ) const
+{
+	FVector2D lc = p - mWorld->Min;
+	return FVector2D( lc.X/mStep.X, lc.Y/mStep.Y ) ;
+}
+
 FIntVector2	TsImageCore::GetPixelPos(const FVector2D &p ) const
 {
-	FVector2D pix = p - mWorld->Min;
-	return FIntVector2( (int)(pix.X/mStep.X+0.5f), (int)(pix.Y/mStep.Y + 0.5f) ) ;
+	FVector2D tc = GetTexcoord( p );
+	return FIntVector2( (int)(tc.X+0.5f), (int)(tc.Y+0.5f) ) ;
 }
 
 bool		TsImageCore::IsWorld(const FVector2D& p) const
@@ -524,10 +534,10 @@ void		TsImageCore::ForeachPixel( std::function< void(int,int) > func, int inc )
 void		TsImageCore::SlotSetup( EImageFormat format )
 {
 	switch ( format & EImageFormat::FmtMask ) {
-	case EImageFormat::FormatF32:	mSlot = new TArray<float > ; break;
+	case EImageFormat::FormatF32:	mSlot = new float  [mW*mH] ; break;
 	case EImageFormat::FormatL16:
-	case EImageFormat::FormatR16:	mSlot = new TArray<uint16> ; break;
-	case EImageFormat::FormatR8:	mSlot = new TArray<uint8 > ; break;
+	case EImageFormat::FormatR16:	mSlot = new uint16 [mW*mH] ; break;
+	case EImageFormat::FormatR8:	mSlot = new uint8  [mW*mH] ; break;
 	default:						mSlot = nullptr ; break;
 	}
 }
@@ -535,10 +545,11 @@ void		TsImageCore::SlotSetup( EImageFormat format )
 void *		TsImageCore::SlotData( EImageFormat format ) const 
 {
 	switch ( format & EImageFormat::FmtMask ) {
-	case EImageFormat::FormatF32:	return ((TArray<float >*)mSlot)->GetData() ;
+	case EImageFormat::FormatF32:
 	case EImageFormat::FormatL16:
-	case EImageFormat::FormatR16:	return ((TArray<uint16>*)mSlot)->GetData() ;
-	case EImageFormat::FormatR8:	return ((TArray<uint8 >*)mSlot)->GetData() ;
+	case EImageFormat::FormatR16:
+	case EImageFormat::FormatR8:
+		return mSlot;
 	}
 	return nullptr ;
 }
@@ -546,10 +557,10 @@ void *		TsImageCore::SlotData( EImageFormat format ) const
 void		TsImageCore::SlotClear( EImageFormat format )
 {
 	switch ( format & EImageFormat::FmtMask ) {
-	case EImageFormat::FormatF32:	delete ((TArray<float >*)mSlot);
+	case EImageFormat::FormatF32:	delete [] (float *)mSlot ;
 	case EImageFormat::FormatL16:
-	case EImageFormat::FormatR16:	delete ((TArray<uint16>*)mSlot);
-	case EImageFormat::FormatR8:	delete ((TArray<uint8 >*)mSlot);
+	case EImageFormat::FormatR16:	delete [] (uint16*)mSlot ;
+	case EImageFormat::FormatR8:	delete [] (uint8 *)mSlot ;
 	}
 	mSlot = nullptr ; 
 }

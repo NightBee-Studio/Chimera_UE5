@@ -38,6 +38,7 @@ public:
 	int		GetSizeX() const ;
 	int		GetSizeY() const ;
 
-	float	GetPixel(int   x, int   y, EAnchor anc=E_LB, int reso = 0);
-	float	GetValue(float x, float y, EAnchor anc=E_LB, int reso = 0);
+	float	GetPixel(int   x, int   y, int reso = 0);
+	float	GetValue(float x, float y, int reso = 0);
+	float	GetLinear(float x, float y, int reso = 0);
 } ;
