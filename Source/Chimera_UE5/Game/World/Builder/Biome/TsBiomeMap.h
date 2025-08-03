@@ -28,7 +28,6 @@ enum EBiomeMapType {
 };
 
 
-typedef TsImageMap<float>  TsLevelMap;
 
 //class TsTextureMap : public TsLevelMap
 //{

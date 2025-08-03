@@ -1,8 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "TsTextureMap.h"
-//#include "TsUtility.h"
 
 #include "Materials/MaterialInstanceConstant.h"
 

@@ -309,3 +309,4 @@ public:
 	}
 };
 
+typedef TsImageMap<float>  TsLevelMap;

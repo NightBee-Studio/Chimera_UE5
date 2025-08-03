@@ -37,7 +37,39 @@ private:
 	TsBiome*		SearchBiome(const FVector2D& p)		// world-coord
 	{
 		for (auto& b : mBiomes) {
-			if (b.IsInside(p)) return &b;
+	//		if ( b.IsInside(p) ) return &b;
+#if 1
+			if ( b.mEdges.Num() == 0) continue ;
+
+			auto cross = [&](const TsVoronoi::Edge& e) {
+				return e.mD.X * (p.Y - e.mP.Y) - e.mD.Y * (p.X - e.mP.X);
+			} ;
+
+			TsBiome	*	bio = nullptr ;
+			float		msk = 1 ;
+
+			auto checkedge = [&]() {
+				float dd = 0;
+				for ( auto e : b.mEdges ) {
+					if ( e.mShared ){
+						TsBiome	*a = (TsBiome*)e.mShared->mOwner ;
+						if ( a->mSType < b.mSType ){
+							float m = FMath::Clamp(e.GetDistance(p) / 100, 0.0f, 1.0f);
+							if ( msk > m  ) { msk = m; bio = a ;}
+						}
+					}
+					if      (dd == 0.0f) dd = cross(e);
+					else if (dd * cross(e) <= 0.0f) return false ;
+				}
+				return true ;
+			} ;
+			if ( checkedge()){////inside the voronoi
+				if ( msk < 0.5f && bio ){
+					return bio ;
+				}
+				return &b;
+			}
+#endif
 		}
 		return nullptr;
 	}
@@ -250,7 +282,6 @@ public:
 			const float S = 0.5f ;
 			TsMoistureMap* moist_map =
 				new TsMoistureMap(
-					//2048, 2048,// reso must be same as TsExtramap
 					&mBoundingbox, 
 					TsNoiseParam({
 						{ 0.90f, 0.001f*S },
@@ -617,7 +648,7 @@ public:
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Grid-Resource  generate start..."));
 
 				bool build_material   = true ;
-				bool build_staticmesh = false ;
+				bool build_staticmesh = true ;
 				bool build_threshold  = false ;
 				TArray<TsUtil::TsIPoint> points ;
 
@@ -625,7 +656,13 @@ public:
 				//for ( int oy=0 ; oy<NN ; oy++ ){
 				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
 				//}
-				points.Add( TsUtil::TsIPoint(0,4) ) ;
+				//points.Add( TsUtil::TsIPoint(1,0) ) ;
+				points.Add( TsUtil::TsIPoint(1,1) ) ;
+				//points.Add( TsUtil::TsIPoint(2,0) ) ;
+				//points.Add( TsUtil::TsIPoint(2,1) ) ;
+				//points.Add( TsUtil::TsIPoint(2,2) ) ;
+				//points.Add( TsUtil::TsIPoint(3,4) ) ;
+				//points.Add( TsUtil::TsIPoint(3,3) ) ;
 
 
 				int				reso  = mMapOutParam.mWorldReso;
@@ -643,6 +680,15 @@ public:
 						EMaterialType::EBMt_Moss_A,
 						EMaterialType::EBMt_Moss_B,
 					});
+				TArray<TsBiomeItem_Material> moist_items = {
+					{ 0.04f,-0.949390f, EBMt_Soil_A,  },
+					{ 0.02f,-0.847115f, EBMt_Soil_B,  },
+					{ 0.02f,-0.759212f, EBMt_Soil_C,  },
+					{ 0.10f,-0.523851f, EBMt_Grass_A, },
+					{ 0.35f,-0.199413f, EBMt_Grass_B, },
+					{ 0.20f,-0.033374f, EBMt_Forest_A,},
+					{ 0.15f, 0.125472f, EBMt_Forest_B,},
+				};
 				if ( build_threshold ) {
 					for ( auto s_type : {
 							EBiomeSType::EBSf_None ,
@@ -667,17 +713,12 @@ public:
 							UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel  done ...") );
 						}
 					}
+
+					moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items );
+					for ( auto &it : moist_items ){
+						UE_LOG(LogTemp, Log, TEXT("   moist_items [%d] r%f t%f"), it.mItem, it.mRatio, it.mThreshold );
+					}
 				}
-				TArray<TsBiomeItem_Material> moist_items = {
-					{ 0.04f, 0.0f, EBMt_Soil_A,  },
-					{ 0.02f, 0.0f, EBMt_Soil_B,  },
-					{ 0.02f, 0.0f, EBMt_Soil_C,  },
-					{ 0.10f, 0.0f, EBMt_Grass_A, },
-					{ 0.35f, 0.0f, EBMt_Grass_B, },
-					{ 0.20f, 0.0f, EBMt_Forest_A,},
-					{ 0.15f, 0.0f, EBMt_Forest_B,},
-				};
-				moist_map->SetupItemsPixel< TsBiomeItem_Material >( moist_items );
 
 				TsTextureMap	height_map( texture_maps[ETextureMap::ETM_Height] ) ;
 
@@ -689,10 +730,11 @@ public:
 						{ 0.25f, 32.0f*NS },
 					}) ) ;
 
-				TsMapOutput	outparam( 24, 24, NN, height_map.GetSizeX(), &mBoundingbox );// 200pix * NN
+
+				TsMapOutput	outparam( 0, 0, NN, height_map.GetSizeX(), &mBoundingbox );// 200pix * NN
 				for ( auto &pn : points ){
 					
-					UE_LOG(LogTemp, Log, TEXT("    File Grid(%d %d) ..."), pn.mX, pn.mY );
+					UE_LOG(LogTemp, Log, TEXT("    File Grid(%d %d) ...Bound(%f %f)-(%f %f)"), pn.mX, pn.mY, mBoundingbox.Min.X, mBoundingbox.Min.Y, mBoundingbox.Max.X, mBoundingbox.Max.Y );
 					int		loc_reso	= 2000/NN ;
 					FBox2D	loc_bound	= outparam.LocalBound( pn.mX, pn.mY ,loc_reso );
 					UMaterialInstanceConstant* surf_mat = nullptr ;
@@ -712,7 +754,12 @@ public:
 								//float	val = moist_map->SelectItemValue<FVector2D, TsBiomeItem_Material>(p, moist_items);
 								//pix.Add( moist_items[idx].mItem, val );
 
-								EBiomeSType s_type = SearchBiome( p )->mSType ;
+							TsBiome *b = SearchBiome( p );
+
+						//	UE_LOG(LogTemp, Log, TEXT("  MM px[%d,%d] w(%f %f) Bio(%f %f)"), px,py, p.X,p.Y, b->X,b->Y );
+
+#if 1
+								EBiomeSType s_type = b ? b->mSType : EBiomeSType::EBSf_None ;
 								for ( auto *m : mSurfaces[s_type].mMFuncs ){
 									TArray<TsBiomeItem_Material>  &items = m->mItems ;
 
@@ -723,6 +770,10 @@ public:
 										UE_LOG(LogTemp, Log, TEXT("      [%d,%d] NoneTex S%d"), px,py, s_type );
 									}
 								}
+#else
+								EBiomeSType s_type = SearchBiome( p )->mSType ;
+								pix.Add( (EMaterialType)s_type, 1 );
+#endif
 							}
 							mMaterialMap->MergePixel(px, py, pix);
 						});
