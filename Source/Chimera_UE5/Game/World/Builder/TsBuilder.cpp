@@ -13,6 +13,7 @@
 #include "Util/TsMaterial.h"
 #include "Util/TsTextureMap.h"
 #include "Util/TsHeightMesh.h"
+#include "Util/TsMaskMap.h"
 
 
 
@@ -32,44 +33,52 @@ public:
 	TsMapOutput							mMapOutParam;
 	TsHeightMap*						mHeightMap;
 	TsMaterialMap*						mMaterialMap;
+	TsMaskMap*							mMaskMap;
 
 private:
-	TsBiome*		SearchBiome(const FVector2D& p)		// world-coord
+	TsBiome*		SearchBiome(const FVector2D& p, bool simple = true )		// world-coord
 	{
-		for (auto& b : mBiomes) {
-	//		if ( b.IsInside(p) ) return &b;
-#if 1
-			if ( b.mEdges.Num() == 0) continue ;
+		if ( simple ){
+			for (auto& b : mBiomes) {
+				if ( b.IsInside(p) ) return &b;
+			}
+		} else {
+			for (auto& b : mBiomes) {
+				if ( b.mEdges.Num() == 0) continue ;
 
-			auto cross = [&](const TsVoronoi::Edge& e) {
-				return e.mD.X * (p.Y - e.mP.Y) - e.mD.Y * (p.X - e.mP.X);
-			} ;
+				auto cross = [&](const TsVoronoi::Edge& e) {
+					return e.mD.X * (p.Y - e.mP.Y) - e.mD.Y * (p.X - e.mP.X);
+				} ;
 
-			TsBiome	*	bio = nullptr ;
-			float		msk = 1 ;
+				TsBiome	*	bio = nullptr ;
+				float		msk = 1 ;
 
-			auto checkedge = [&]() {
-				float dd = 0;
-				for ( auto e : b.mEdges ) {
-					if ( e.mShared ){
-						TsBiome	*a = (TsBiome*)e.mShared->mOwner ;
-						if ( a->mSType < b.mSType ){
-							float m = FMath::Clamp(e.GetDistance(p) / 100, 0.0f, 1.0f);
-							if ( msk > m  ) { msk = m; bio = a ;}
+				auto checkedge = [&]() {
+					float dd = 0;
+					for ( auto e : b.mEdges ) {
+						if ( e.mShared ){
+							TsBiome	*a = (TsBiome*)e.mShared->mOwner ;
+							if ( a->mSType < b.mSType ){
+								float m = FMath::Clamp(e.GetDistance(p) / 100, 0.0f, 1.0f);
+								if ( msk > m  ) { msk = m; bio = a ;}
+							}
+						}
+						if      (dd == 0.0f) dd = cross(e);
+						else if (dd * cross(e) <= 0.0f) return false ;
+					}
+					return true ;
+				} ;
+				if ( checkedge()){////inside the voronoi
+					if ( bio){
+						float mp = mMaskMap->Remap( mMaskMap->GetValue(p)) ;
+//						UE_LOG(LogTemp, Log, TEXT("  Found biome (%f,%f) mp %f < msk %f  "), bio->X, bio->Y, mp, 1-msk );
+						if ( mp < 1-msk  ){
+							return bio ;
 						}
 					}
-					if      (dd == 0.0f) dd = cross(e);
-					else if (dd * cross(e) <= 0.0f) return false ;
+					return &b;
 				}
-				return true ;
-			} ;
-			if ( checkedge()){////inside the voronoi
-				if ( msk < 0.5f && bio ){
-					return bio ;
-				}
-				return &b;
 			}
-#endif
 		}
 		return nullptr;
 	}
@@ -656,14 +665,15 @@ public:
 				//for ( int oy=0 ; oy<NN ; oy++ ){
 				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
 				//}
-				//points.Add( TsUtil::TsIPoint(1,0) ) ;
+				points.Add( TsUtil::TsIPoint(1,0) ) ;
 				points.Add( TsUtil::TsIPoint(1,1) ) ;
-				//points.Add( TsUtil::TsIPoint(2,0) ) ;
-				//points.Add( TsUtil::TsIPoint(2,1) ) ;
+				points.Add( TsUtil::TsIPoint(2,0) ) ;
+				points.Add( TsUtil::TsIPoint(2,1) ) ;
 				//points.Add( TsUtil::TsIPoint(2,2) ) ;
 				//points.Add( TsUtil::TsIPoint(3,4) ) ;
 				//points.Add( TsUtil::TsIPoint(3,3) ) ;
 
+				mMaskMap = new TsMaskMap( 0.1f,16 ) ;
 
 				int				reso  = mMapOutParam.mWorldReso;
 				const FBox2D*	bound = mMapOutParam.mWorldBound;
@@ -754,10 +764,9 @@ public:
 								//float	val = moist_map->SelectItemValue<FVector2D, TsBiomeItem_Material>(p, moist_items);
 								//pix.Add( moist_items[idx].mItem, val );
 
-							TsBiome *b = SearchBiome( p );
+								TsBiome *b = SearchBiome( p, false );
 
 						//	UE_LOG(LogTemp, Log, TEXT("  MM px[%d,%d] w(%f %f) Bio(%f %f)"), px,py, p.X,p.Y, b->X,b->Y );
-
 #if 1
 								EBiomeSType s_type = b ? b->mSType : EBiomeSType::EBSf_None ;
 								for ( auto *m : mSurfaces[s_type].mMFuncs ){

@@ -4,13 +4,17 @@
 
 // ---------------------------- Utillity -------------------------
 class TsMaskMap
-	: public TsValueMap
-	, public TsLevelMap {
+	: //public TsValueMap
+//	, 
+public TsNoiseMap 
+//	, public TsLevelMap
+{
 public:
 	int					mN ;
+float mGap ;
 	TArray<FVector2D>	mPoints;
 
-	TsMaskMap(float w, float h, int n) ;
+	TsMaskMap(float s, int n) ;
 
 	virtual float	GetValue(const FVector2D& p) override;	// world-coord
 } ;
