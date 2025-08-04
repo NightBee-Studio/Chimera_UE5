@@ -7,7 +7,7 @@
 void FTsBiomeModel::Setup()
 {
 	for (auto& tm : mTextures ) {
-		mTextureMaps.Add(tm.Key, new TsTextureMap(tm.Value));
+		mTextureMaps.Add(tm.Key, new TsBiomeMap(tm.Value));
 	}
 }
 
@@ -23,11 +23,11 @@ void FTsBiomeModel::UnLock()
 
 int FTsBiomeModel::GetSizeX()
 {
-	return mTextureMaps[ETM_Height]->mTex->GetSizeX();
+	return mTextureMaps[ETM_Height]->GetW();
 }
 int FTsBiomeModel::GetSizeY()
 {
-	return mTextureMaps[ETM_Height]->mTex->GetSizeY();
+	return mTextureMaps[ETM_Height]->GetH();
 }
 
 

@@ -5,7 +5,7 @@
 
 
 
-TMap<EBiomeMapType, TsBiomeMap*>	TsBiomeMap::gBiomeMaps;
+TMap<ETextureMap, TsBiomeMap*>	TsBiomeMap::gBiomeMaps;
 
 
 // -------------------------------- TsBiomeMap  --------------------------------
@@ -14,12 +14,14 @@ TMap<EBiomeMapType, TsBiomeMap*>	TsBiomeMap::gBiomeMaps;
 float	TsBiomeMap::GetValue(const FVector2D& p)	// world-coord
 {
 	float v = 0;
-	if ( mLayers.Num() == 0 ) {
+	if ( TsImageCore::mTex ){
+		v = TsLevelMap::GetValueTex2D(p.X, p.Y);// lock before access
+	}else if ( mLayers.Num() == 0 ) {
 		FIntVector2	px = GetPixelPos(p);
-		v = TsImageMap<float>::GetPixel(px.X, px.Y);	// get pixel value
+		v = TsLevelMap::GetPixel(px.X, px.Y);	// get pixel value
 	} else {
 		v = TsNoiseMap::GetValue(p);					// calc noise value
-		TsImageMap<float>::SetPixel(p, v);
+		TsLevelMap::SetPixel(p, v);
 	}
 	mMin = FMath::Min(mMin, v);// update ing the remap
 	mMax = FMath::Max(mMax, v);
@@ -30,7 +32,7 @@ void	TsBiomeMap::SetPixel(int x, int y, float v)
 {
 	mMin = FMath::Min(mMin, v);// update ing the remap
 	mMax = FMath::Max(mMax, v);
-	TsImageMap<float>::SetPixel(x, y, v);
+	TsLevelMap::SetPixel(x, y, v);
 }
 
 float	TsBiomeMap::RemapImage(float v, float range) const {
@@ -227,12 +229,12 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 
 void TsMoistureMap::Lock() 
 {
-	for ( auto &ex : mExtras ) ex.mTex.Lock() ;
+	for ( auto &ex : mExtras ) ex.Lock() ;
 }
 
 void TsMoistureMap::UnLock() 
 {
-	for ( auto &ex : mExtras ) ex.mTex.UnLock() ;
+	for ( auto &ex : mExtras ) ex.UnLock() ;
 }
 
 float	TsMoistureMap::GetValue( const FVector2D& p )
@@ -246,7 +248,7 @@ float	TsMoistureMap::GetValue( const FVector2D& p )
 		TsUtil::ForeachGaussian(
 			pos, 1,
 			[&]( const FVector2D &p, float wt){
-				pix += ex.mTex.GetLinear( p.X, p.Y ) * wt ;
+				pix += ex.GetLinearTex2D( p.X, p.Y ) * wt ;
 			} ) ;
 
 		switch( ex.mOp ){

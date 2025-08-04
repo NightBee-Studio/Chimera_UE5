@@ -35,12 +35,12 @@ public:
 class	TsBiomeMFunc {
 //protected:
 public:
-	EBiomeMapType					mMapType;
+	ETextureMap					mMapType;
 	TArray<TsBiomeItem_Material>	mItems;
 
 public:
 	TsBiomeMFunc(
-			EBiomeMapType			type ,
+			ETextureMap			type ,
 			const TArray<TsBiomeItem_Material>&	items
 		): mMapType(type), mItems(items) {}
 };

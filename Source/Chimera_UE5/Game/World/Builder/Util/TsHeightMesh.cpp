@@ -1,5 +1,6 @@
 #include "TsHeightMesh.h"
 
+#include "../Biome/TsBiomeMap.h"
 #include "Engine/StaticMesh.h"
 #include "MeshDescription.h"
 #include "StaticMeshAttributes.h"
@@ -15,7 +16,7 @@
 
 // Your original Build function rewritten to match UE5.4-style StaticMesh LOD/mesh description usage
 void TsHeightMesh::Build(
-    TsTextureMap*       tex_map,
+    TsBiomeMap*       tex_map,
     const TsUtil::TsBox&tex_rect,
     TsNoiseMap *		noise_map,
     float       		noise_scale,
@@ -43,9 +44,9 @@ void TsHeightMesh::Build(
     for (int y = 0; y < nv; ++y){
         for (int x = 0; x < nv; ++x){
             auto    make_pos = [&] (float dx, float dy) {
-                float px = tex_rect.mX + (x+dx) * sx;
-                float py = tex_rect.mY + (y+dy) * sy;
-                float h = tex_map->GetValue(px, py) + noise_map->GetValue(FVector2D(px,py))*noise_scale ;
+                FVector2D p = FVector2D( tex_rect.mX + (x+dx) * sx,
+                                         tex_rect.mY + (y+dy) * sy) ;
+                float h = tex_map->GetValue(p) + noise_map->GetValue(p)*noise_scale ;
                 return FVector3f( (x+dx)*s, (y+dy)*s, h * mesh_height ) ;
             } ;
 

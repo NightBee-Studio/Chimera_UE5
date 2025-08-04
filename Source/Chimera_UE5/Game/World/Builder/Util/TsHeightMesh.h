@@ -2,8 +2,7 @@
 
 #include "CoreMinimal.h"
 
-#include "TsTextureMap.h"
-#include "TsImageMap.h"
+#include "../Biome/TsBiomeMap.h"
 #include "TsUtility.h"
 
 
@@ -13,7 +12,7 @@ class TsHeightMesh
 public:
 	static 
 	void Build(
-			TsTextureMap*			tex_map ,
+			TsBiomeMap*			tex_map ,
 			const TsUtil::TsBox &	tex_rect,
 			TsNoiseMap *			noise_map,
 			float					noise_scale,

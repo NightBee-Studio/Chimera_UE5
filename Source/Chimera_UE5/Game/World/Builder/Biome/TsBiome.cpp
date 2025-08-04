@@ -213,7 +213,7 @@ float	TsBiomeGroup::GetPixel(ETextureMap mp, const FVector2D& p) const
 	if ( mModel && mModel->mTextureMaps.Contains(mp) ) {
 		FVector local = mTransform.InverseTransformPosition( FVector( p.X, p.Y, 0 ));
 
-		float h = mModel->mTextureMaps[mp]->GetValue( local.X, local.Y, EAnchor::E_CC ) ;
+		float h = mModel->mTextureMaps[mp]->GetValue( FVector2D(local.X, local.Y) ) ;
 		UE_LOG(LogTemp, Log, TEXT("(%f %f)->(%f %f)  Transf(%f %f) h=%f"), p.X, p.Y, local.X, local.Y, mTransform.GetLocation().X, mTransform.GetLocation().Y, h );
 
 		return mHeightRange.X + (mHeightRange.Y - mHeightRange.X) * h ;

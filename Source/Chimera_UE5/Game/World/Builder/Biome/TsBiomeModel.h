@@ -3,8 +3,7 @@
 #include "CoreMinimal.h"
 
 #include "TsBiome.h"
-#include "../Util/TsImageMap.h"
-#include "../Util/TsTextureMap.h"
+#include "TsBiomeMap.h"
 
 #include "TsBiomeModel.generated.h"
 
@@ -17,7 +16,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Textures"))
 	TMap<TEnumAsByte<ETextureMap>,TObjectPtr<UTexture2D>>
 									mTextures;
-	TMap<TEnumAsByte<ETextureMap>,TsTextureMap*>
+	TMap<TEnumAsByte<ETextureMap>,TsBiomeMap*>
 									mTextureMaps;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Material"))
 	TObjectPtr<UMaterialInstance>	mMaterial;

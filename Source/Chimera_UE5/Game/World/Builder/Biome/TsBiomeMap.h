@@ -4,50 +4,30 @@
 
 #include "TsBiome.h"
 #include "../Util/TsImageMap.h"
-#include "../Util/TsTextureMap.h"
 
 
 
 // -------------------------------- TsBiomeMaps  --------------------------------
 
-
-enum EBiomeMapType {
-	E_None,	//nothing
-
-	E_Moist,	//moisture
-	E_Tempr,	//temperture
-	E_Genre,	//genre
-	E_Flow,	//flow
-	E_Pond,	//Pond
-
-	E_Mountain,	//
-	E_Slope,	//
-	E_Plant,	//bigger = taller
-
-	E_Normal,	//
-};
-
-
-
-//class TsTextureMap : public TsLevelMap
-//{
-//public:
-//	TsTextureMap( UTexture2D *tex, const FBox2D* bound )
-//		: TsLevelMap( tex->GetSizeX(), tex->GetSizeY(), bound )
-//		, mTex(tex)
-//		, mData(nullptr) {}
 //
-//	TObjectPtr<UTexture2D>	mTex;
+//enum EBiomeMapType {
+//	E_None,	//nothing
 //
-//	bool	Lock();
-//	void	UnLock() ;
+//	E_Moist,	//moisture
+//	E_Tempr,	//temperture
+//	E_Genre,	//genre
+//	E_Flow,	//flow
+//	E_Pond,	//Pond
 //
-//	int		GetSizeX() const ;
-//	int		GetSizeY() const ;
+//	E_Mountain,	//
+//	E_Slope,	//
+//	E_Plant,	//bigger = taller
 //
-//	float	GetPixel(int   x, int   y, int reso = 0);
-//	float	GetValue(float x, float y, int reso = 0);
-//} ;
+//	E_Normal,	//
+//};
+
+
+
 
 
 //	Hue Sat Val		=>	 	Genre Temp Moist
@@ -56,14 +36,17 @@ class TsBiomeMap
 	, public TsNoiseMap {
 private:
 	static
-	TMap<EBiomeMapType, TsBiomeMap*>	gBiomeMaps;
+	TMap<ETextureMap, TsBiomeMap*>	gBiomeMaps;
 public:
-	static TsBiomeMap*	GetBiomeMap(EBiomeMapType ty	             ) { return gBiomeMaps[ty]; }
-	static void			AddBiomeMap(EBiomeMapType ty, TsBiomeMap* map) { gBiomeMaps.Emplace( ty, map ); }
+	static TsBiomeMap*	GetBiomeMap(ETextureMap ty	             ) { return gBiomeMaps[ty]; }
+	static void			AddBiomeMap(ETextureMap ty, TsBiomeMap* map) { gBiomeMaps.Emplace( ty, map ); }
 
 public:
-	TsBiomeMap(int w, int h, const FBox2D* bound, const TsNoiseParam& cnf = TsNoiseParam())
+	TsBiomeMap(int w, int h, const FBox2D* bound=nullptr, const TsNoiseParam& cnf = TsNoiseParam())
 		: TsLevelMap(w, h, bound)
+		, TsNoiseMap(cnf) {}
+	TsBiomeMap(UTexture2D *tex, const FBox2D* bound=nullptr, const TsNoiseParam& cnf = TsNoiseParam())
+		: TsLevelMap(tex, bound)
 		, TsNoiseMap(cnf) {}
 	virtual ~TsBiomeMap() {}
 
@@ -79,7 +62,7 @@ public:
 	>
 	void SetupItems( TArray<T_point>& points, TArray<T_item>& items ) {
 		TArray<float>	samples;
-		for (const auto& p : points) samples.Add(GetValue(p));
+		for (const auto& p : points) samples.Add( TsBiomeMap::GetValue(p) );
 		samples.Sort();		// sort to determine the ratio of the group.
 
 		int max_idx = (samples.Num() - 1);
@@ -93,12 +76,13 @@ public:
 	template<
 		DerivedBiomeItem T_item
 	>
-	void SetupItemsPixel( TArray<T_item>& items, std::function< bool(int, int) > chk_pixel = nullptr ) {
+	void SetupItemsPixel( TArray<T_item>& items, std::function< bool(int, int) > chk_pixel = nullptr, bool valueskip = true ) {
 		TArray<float>	samples;
 		ForeachPixel(
 			[&](int px, int py) {
 				if (chk_pixel ? chk_pixel(px,py) : true ){
-					samples.Add(GetValue(GetWorldPos(px, py)));
+					float val = TsBiomeMap::GetValue( GetWorldPos(px, py) ) ;
+					if ( valueskip ? val!=0.0f : true ) samples.Add( val );
 				}
 			});
 		samples.Sort();		// sort to determine the ratio of the group.
@@ -173,11 +157,14 @@ enum EExtraOp{
 	E_InvMul,
 } ;
 
-struct TsExtraMap {
-	TsTextureMap 	mTex ;
-	float			mScale;
-	EExtraOp		mOp;
-	TsExtraMap( UTexture2D *tex, float scale, EExtraOp op ) : mTex(tex), mScale( scale), mOp( op ){}
+struct TsExtraMap 
+: public TsBiomeMap {
+	float		mScale;
+	EExtraOp	mOp;
+	TsExtraMap( ETextureMap texkey, UTexture2D *tex, const FBox2D* bound, float scale, EExtraOp op )
+		: TsBiomeMap(tex, bound), mScale( scale), mOp( op ){
+	//	TsBiomeMap::AddBiomeMap( texkey, this ) ;
+	}
 } ;
 
 class TsMoistureMap
@@ -189,7 +176,7 @@ public:
 			const TsNoiseParam&					cnf, 
 			std::initializer_list<TsExtraMap>	extra
 		)
-		: TsBiomeMap( extra.begin()->mTex.GetSizeX(), extra.begin()->mTex.GetSizeY(), bound, cnf )
+		: TsBiomeMap( extra.begin()->GetW(), extra.begin()->GetH(), bound, cnf )
 		, mExtras( extra ){}
 
 	TArray<TsExtraMap>	mExtras ;

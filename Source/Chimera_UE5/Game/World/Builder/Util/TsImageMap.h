@@ -143,13 +143,25 @@ public:
 		, mFileName(name)
 		, mFileType(EImageFile::Dds)
 		, mFileFormat(EImageFormat::FormatL16)
-		, mConfig() {}
+		, mConfig()
+		, mTex(nullptr) {}
+	TsImageCore(UTexture2D *tex)
+		: mW(tex->GetSizeX()), mH(tex->GetSizeX()), mD(1)
+		, mImage(nullptr)
+		, mWorld(nullptr)
+		, mFileName( "(no name)" )
+		, mFileType(EImageFile::Dds)
+		, mFileFormat(EImageFormat::FormatL16)
+		, mConfig()
+		, mTex(tex)  {}
+
 	virtual			~TsImageCore() {}
 
 	bool			IsInside(int x, int y) const { return (x >= 0 && x < mW) && (y >= 0 && y < mH) ; }
 	static int		GetStride(EImageFormat format) ;
 	int				GetW() const { return mW; }
 	int				GetH() const { return mH; }
+	int				GetD() const { return mD; }
 	float			GetStep() const { return mStep.X; }
 
 public:
@@ -169,6 +181,18 @@ public:
 	virtual	float	RemapImage(float v, float range = 1.0f) const { return v * range; }
 
 
+protected:
+	TObjectPtr<UTexture2D>	mTex;
+public:
+	bool			Lock();
+	void			UnLock() ;
+
+	float			GetPixelTex2D(int x, int y, int reso=0 ) ;
+	float			GetValueTex2D(float x, float y, int reso=0 );
+	float			GetLinearTex2D(float x, float y, int reso=0 );
+
+
+
 	//Slot Service
 protected:
 	void *			mSlot;
@@ -179,6 +203,7 @@ public:
 	void			SlotClear( EImageFormat format );
 
 	//File I/O Service
+public:
 	int				Load(const FString& fname, EImageFile file) ;
 	int				Save(const FString& fname, EImageFile file, EImageFormat format,int x=0, int y=0,int w=0, int h=0 ) const;
 	int				Load()		{ return Load(mFileName, mFileType             ); }
@@ -204,14 +229,20 @@ public:
 			AllocImage();
 		}
 	}
+	TsImageMap(UTexture2D *tex, const FBox2D* bound=nullptr)
+		: TsImageCore( tex ) {
+		if (bound != nullptr ){
+			SetWorld(bound);
+		}
+	}
 	virtual ~TsImageMap() {}
 
 	void 		ClearImage() {
-		FMemory::Memzero(mImage, sizeof(T) * mW * mH);
+		FMemory::Memzero(mImage, sizeof(T) * mW * mH * mD);
 	}
 	void		AllocImage() {
 		if (mImage == nullptr) {
-			mImage = FMemory::Malloc(sizeof(T) * mW * mH);
+			mImage = FMemory::Malloc(sizeof(T) * mW * mH * mD);
 			ClearImage();
 		}
 	}
@@ -310,3 +341,4 @@ public:
 };
 
 typedef TsImageMap<float>  TsLevelMap;
+

@@ -42,16 +42,27 @@ enum class EBiomeGType : uint8 {	// Genre
 UENUM(BlueprintType)
 enum EMaterialType {
 	EBMt_None,		//0
+	EBMt_Clay_A,
+	EBMt_Clay_B,
+	EBMt_Clay_C,
+	EBMt_Clay_D,
 	EBMt_Soil_A,
 	EBMt_Soil_B,
 	EBMt_Soil_C,
-	EBMt_Grass_A,		//8
+	EBMt_Soil_D,	//8
+	EBMt_Sand_A,
+	EBMt_Grass_A,	//10
 	EBMt_Grass_B,		
-	EBMt_Forest_A,	//10
+	EBMt_Forest_A,	//12
 	EBMt_Forest_B,	
-	EBMt_Rock_A,		//12
+	EBMt_Mountain_A,//14
+	EBMt_Mountain_B,
+	EBMt_Mountain_C,
+	EBMt_Mountain_D,
+	EBMt_Mountain_E,
+	EBMt_Rock_A,	
 	EBMt_Moss_A,		
-	EBMt_Moss_B,		//14
+	EBMt_Moss_B,	
 };
 
 
@@ -64,6 +75,7 @@ enum ETextureMap {
 	ETM_Slope,
 	ETM_Deposite,
 	ETM_Curvature,
+	ETM_Moisture,
 } ;
 
 

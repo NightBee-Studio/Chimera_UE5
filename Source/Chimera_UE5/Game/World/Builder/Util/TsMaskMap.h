@@ -4,10 +4,7 @@
 
 // ---------------------------- Utillity -------------------------
 class TsMaskMap
-	: //public TsValueMap
-//	, 
-public TsNoiseMap 
-//	, public TsLevelMap
+	: public TsNoiseMap 
 {
 public:
 	int					mN ;
