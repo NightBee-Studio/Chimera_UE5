@@ -7,6 +7,7 @@
 #include "Biome/TsBiomeSite.h"
 #include "Biome/TsBiomeSurface.h"
 
+#include "Util/TsBuilderTool.h"
 #include "Util/TsErosion.h"
 #include "Util/TsVoronoi.h"
 #include "Util/TsUtility.h"
@@ -683,7 +684,7 @@ if ( m->mMapType==ETextureMap::ETM_Moisture) continue ;//skip moisture
 									TsBiomeMap *	biomap = TsBiomeMap::GetBiomeMap(m->mMapType) ;
 
 									int		idx = biomap->SelectItemIdx  <FVector2D, TsBiomeItem_Material>(p, items) ;
-									float	val = biomap->SelectItemValue<FVector2D, TsBiomeItem_Material>(p, items) ;
+									float	val = 1.0f;//biomap->SelectItemValue<FVector2D, TsBiomeItem_Material>(p, items) ;
 									if ( items[idx].mItem > 0 ){
 										pix.Add( items[idx].mItem, val );
 									}
@@ -693,7 +694,7 @@ if ( m->mMapType==ETextureMap::ETM_Moisture) continue ;//skip moisture
 						});
 						mMaterialMap->SaveAll(0,0,0,0);
 
-						surf_mat = TsMaterial::Build( 
+						surf_mat = TsBuilderTool::Build_MaterialInstance( 
 								FString( "/Game/Resources/World/Landscape/Materials/M_Landscape.M_Landscape"),
 								FString::Printf(TEXT("MT_Surface_%1d%1d"), pn.mX, pn.mY ),
 								mMaterialMap->GetTexParams()
@@ -708,7 +709,7 @@ if ( m->mMapType==ETextureMap::ETM_Moisture) continue ;//skip moisture
 					TsUtil::SetSubDirectory( TEXT("") );	//reset
 
 					if ( build_staticmesh ){
-						TsHeightMesh::Build(
+						TsBuilderTool::Build_HeightMesh(
 								&height_map,
 								outparam.TexBound(pn.mX, pn.mY ,loc_reso),	//TsUtil::TsBox(0,0,1024,1024)
 								&noise_map,

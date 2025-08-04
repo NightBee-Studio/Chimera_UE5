@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 
 #include "Biome/TsBiome.h"
+#include "Util/TsBuilderTool.h"
 
 #include "Engine/DataTable.h"
 
@@ -54,6 +55,9 @@ public:
 	int						mUnitDiv;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Unit Reso"))
 	int						mUnitReso;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Texture Sets"))
+	TMap<TEnumAsByte<EMaterialType>,FTsGroundTex>	mMaterialSets;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Heightmap"))
 	UTexture2D*				mHeightmap;

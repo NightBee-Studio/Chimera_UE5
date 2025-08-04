@@ -1,21 +1,143 @@
-#include "TsHeightMesh.h"
+#include "TsBuilderTool.h"
 
-#include "../Biome/TsBiomeMap.h"
-#include "Engine/StaticMesh.h"
-#include "MeshDescription.h"
-#include "StaticMeshAttributes.h"
-
+//package関連
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
 #include "Misc/PackageName.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 
+//Static Mesh
+#include "Engine/StaticMesh.h"
+#include "MeshDescription.h"
+#include "StaticMeshAttributes.h"
 
+//TextureArray
+#include "Engine/Texture2DArray.h"
+
+
+//Material Instance
+#include "Materials/MaterialInstanceConstant.h"
+
+
+#include "../Biome/TsBiomeMap.h"
+
+
+
+UTexture2D*		 TsBuilderTool::Build_Texture(
+			TMap<EChannel, UTexture2D*>&    textures ,
+    		const FString&			        assetname
+	)
+{
+    return nullptr ;
+}
+
+
+UTexture2DArray* TsBuilderTool::Build_TexArray(
+		TArray<UTexture2D*>&    textures ,
+		const FString&			asset_name
+	)
+{
+    if (textures.Num() == 0) return nullptr;
+
+    FString         package_path = TsUtil::GetPackagePath( asset_name ) ;
+    FString         package_name = FPackageName::ObjectPathToPackageName(package_path);
+    UPackage*       package      = CreatePackage(*package_name);
+
+    FTexturePlatformData * pl_data = new FTexturePlatformData();
+    pl_data->SizeX      = textures[0]->GetSizeX();
+    pl_data->SizeY      = textures[0]->GetSizeY();
+    pl_data->PixelFormat= textures[0]->GetPixelFormat();
+    pl_data->SetNumSlices( textures.Num() ) ;
+
+    // テクスチャ配列生成
+    UTexture2DArray* tex_array = NewObject<UTexture2DArray>(package, *asset_name, RF_Public | RF_Standalone);
+    tex_array->SetPlatformData(pl_data);
+
+    // 各テクスチャのスライスデータをコピー
+    for ( auto t : textures ){
+//        FTexture2DMipMap& Mip = t.Value->PlatformData->Mips[0];
+        // Mip.BulkData → tex_array にコピーする処理が必要
+    }
+
+    tex_array->UpdateResource();
+
+    // アセット登録と保存
+    FAssetRegistryModule::AssetCreated(tex_array);
+    package->MarkPackageDirty();
+
+    const FString pkg_filename = FPackageName::LongPackageNameToFilename(package_name, FPackageName::GetAssetPackageExtension());
+    FSavePackageArgs save_args;
+    save_args.TopLevelFlags = RF_Public | RF_Standalone;
+    save_args.SaveFlags = SAVE_NoError;
+    save_args.bWarnOfLongFilename = true;
+    UPackage::SavePackage(package, tex_array, *pkg_filename, save_args);
+
+    return tex_array;
+}
+
+
+	 
+void	TsBuilderTool::Build_MaterialSet(
+		TArray<FTsGroundTex>&	texsets ,
+		const FString&			assetname
+	)
+{
+}
+
+
+
+UMaterialInstanceConstant* 
+    TsBuilderTool::Build_MaterialInstance(
+        const FString& msmat_path,
+        const FString& asset_name,
+        const TMap<FName, UTexture2D*>& tex_table
+    )
+{
+    UMaterialInstanceConstant* material = nullptr ;
+#if WITH_EDITOR
+    UMaterialInterface* master_mat = LoadObject<UMaterialInterface>(nullptr, *msmat_path);//TEXT("/Game/Materials/M_Master.M_Master")
+    if (!master_mat ){
+        UE_LOG(LogTemp, Error, TEXT("Failed to load the Material"));
+        return nullptr ;
+    }
+
+    //FString   package_path = TEXT("/Game/Materials/MI_Grass");
+    //
+    FString     package_path = TsUtil::GetPackagePath( asset_name ) ;
+    FString     package_name = FPackageName::ObjectPathToPackageName(package_path);
+    UPackage*   package      = CreatePackage(*package_name);
+
+    //
+    material = NewObject<UMaterialInstanceConstant>(
+                    package,
+                    *asset_name,//FName("MI_Grass"),
+                    RF_Public | RF_Standalone | RF_Transactional
+               );
+    material->SetParentEditorOnly(master_mat); //
+    for ( auto& param : tex_table ){
+        material->SetTextureParameterValueEditorOnly(param.Key, param.Value);
+    }
+
+    //
+    material->PostEditChange();
+    material->MarkPackageDirty();
+    FAssetRegistryModule::AssetCreated(material);
+
+    FString fname = FPackageName::LongPackageNameToFilename(package_name, FPackageName::GetAssetPackageExtension());
+    FSavePackageArgs save_args;
+    save_args.TopLevelFlags = RF_Public | RF_Standalone;
+    save_args.SaveFlags = SAVE_NoError;
+    UPackage::SavePackage(package, material, *fname, save_args);
+
+    UE_LOG(LogTemp, Log, TEXT("Material Instance '%s' Saved suceessfully"), *package_path);
+#endif
+    return material;
+}
 
 
 // Your original Build function rewritten to match UE5.4-style StaticMesh LOD/mesh description usage
-void TsHeightMesh::Build(
+void TsBuilderTool::Build_HeightMesh(
     TsBiomeMap*       tex_map,
     const TsUtil::TsBox&tex_rect,
     TsNoiseMap *		noise_map,
@@ -154,3 +276,4 @@ void TsHeightMesh::Build(
     UPackage::SavePackage(package, static_mesh, *pkg_filename, save_args);
 #endif
 }
+
