@@ -2,7 +2,8 @@
 
 #include "CoreMinimal.h"
 
-#include "../Biome/TsBiomeMap.h"
+#include "../Biome/TsBiome.h"
+#include "TsUtility.h"
 
 #include "TsBuilderTool.generated.h"
 
@@ -25,12 +26,15 @@ struct CHIMERA_UE5_API FTsGroundTex
 	TObjectPtr<UTexture2D>		mTexDisplacement ;
 };
 
+struct TsGroundSlot{
+	UTexture2D	*	mTex ;
+	EMaterialType	mMat ;
+	TsGroundSlot(EMaterialType m, UTexture2D *t	): mTex(t),mMat(m) {} 
+};
 
-enum EChannel{
-	ER,
-	EG,
-	EB,
-} ;
+class TsBiomeMap ;
+class TsNoiseMap;
+class UMaterialInstanceConstant ;
 
 namespace TsBuilderTool
 {
@@ -39,20 +43,19 @@ namespace TsBuilderTool
 			const FString&			assetname
 		);
 
-	UTexture2D*		 Build_Texture(
-			TMap<EChannel, UTexture2D*>&	textures ,
+	UTexture2D*		 Combine_Texture(
+			TMap<int, UTexture2D*>&	textures ,
 			const FString&			assetname
 		);
 
 	void	Build_MaterialSet(
-			TArray<FTsGroundTex>&	texsets ,
-			const FString&			assetname
+			TArray<FTsGroundTex>&	texsets
 		);
 
 	UMaterialInstanceConstant*	Build_MaterialInstance(
 		const FString& mm_path,
 		const FString& assetname,
-        const TMap<FName, UTexture2D*>& tex_table
+        const TArray<TsGroundSlot>& slots
 	);
 
 	void	Build_HeightMesh(

@@ -127,12 +127,11 @@ void	TsHeightMap::Normalize()
 
 
 
-TsMaterialMap::TsMaterialMap(int w, int h, const FBox2D* bound, const TArray<EMaterialType>& mat_index)
+TsMaterialMap::TsMaterialMap(int w, int h, const FBox2D* bound)
 	: TsImageCore(w, h, 1, FString() ) 
 	, mPixels()
 	, mIndexMap(w, h, bound)
 	, mAlphaMap(w, h, bound)
-	, mMatIndex(mat_index)
 {
 	if (bound != nullptr) {
 		SetWorld(bound);
@@ -174,6 +173,7 @@ void	TsMaterialMap::ForeachPix(std::function< void(int, int, TsMaterialPixel&) >
 
 void	TsMaterialMap::StoreMaterial()
 {
+#if 0
 	auto get_pixel_index = [&](int t, int i) {
 		return	((t & 0xff) << (i * 8));
 	};
@@ -198,6 +198,7 @@ void	TsMaterialMap::StoreMaterial()
 			mAlphaMap.SetPixel(px, py, alpha);
 			mIndexMap.SetPixel(px, py, index);
 		});
+#endif
 }
 
 void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
@@ -207,22 +208,23 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 	mTexParams.Empty() ;
 
 	TsImageMap<float>* bitmap = new TsImageMap<float>( mW, mH, mAlphaMap.GetWorld() );
-	for (auto& i : mMatIndex) {
+	for (int i =0 ; i<EMaterialType::EBMt_Max ; i++ ) {
+		EMaterialType ty = (EMaterialType)i ;
 		bool need_save = false;
 		bitmap->ForeachPixel([&](int x, int y) {
 				float val = 0.0f;
-				if ( mPixels[x + y * mW].mValues.Contains(i)) {
-					val = mPixels[x + y * mW].mValues[i];
+				if ( mPixels[x + y * mW].mValues.Contains(ty)) {
+					val = mPixels[x + y * mW].mValues[ty];
 					need_save = true;
 				}
 				bitmap->SetPixel(x, y, val );
 			});
 		if (need_save){
-		    FString name  = enum_ptr->GetNameStringByValue(static_cast<int64>(i)).Mid( 5 ) ;
+		    FString name  = enum_ptr->GetNameStringByValue(static_cast<int64>(ty)).Mid( 5 ) ;
 			FString fname = FString::Printf( TEXT("MI_%s"), *name );
 			bitmap->Save( *(fname + FString(".dds")), EImageFile::Dds, EImageFormat::FormatL16, 0, 0, w, h);
 			UTexture2D*		tex_asset = bitmap->SaveAsset( *fname, EImageFormat::FormatR8 ) ;
-			if ( tex_asset ) mTexParams.Emplace( *name, tex_asset );
+			if ( tex_asset ) mTexParams.Add( TsGroundSlot( ty, tex_asset ) );
 		}
 	}
 }

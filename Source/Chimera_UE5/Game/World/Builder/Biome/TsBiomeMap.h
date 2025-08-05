@@ -4,6 +4,7 @@
 
 #include "TsBiome.h"
 #include "../Util/TsImageMap.h"
+#include "../Util/TsBuilderTool.h"
 
 
 
@@ -229,17 +230,17 @@ private:
 	TsImageMap<int>			mIndexMap;	//RGBA
 	TsImageMap<int>			mAlphaMap;	//RGBA
 	TArray<EMaterialType>	mMatIndex;
-	TMap<FName,UTexture2D*>	mTexParams;
+	TArray<TsGroundSlot>	mTexParams;
 
 public:
-	TsMaterialMap(int w, int h, const FBox2D* bound, const TArray<EMaterialType> &mat_index  );
+	TsMaterialMap(int w, int h, const FBox2D* bound );
 	virtual ~TsMaterialMap() {}
 
 
 	void				MergePixel(int x, int y, const TsMaterialPixel& px );
 	void				SetPixel(int x, int y, EMaterialType ty, float val);
 	TsMaterialPixel&	GetPixel(int x, int y) ;
-	const TMap<FName,UTexture2D*>&	GetTexParams()	{ return mTexParams ;}
+	const TArray<TsGroundSlot>&	GetTexParams()	{ return mTexParams ;}
 
 	void				ForeachPix(std::function< void(int, int, TsMaterialPixel&) >, int inc = 1);
 

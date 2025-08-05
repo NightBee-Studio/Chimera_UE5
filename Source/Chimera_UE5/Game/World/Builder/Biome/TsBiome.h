@@ -46,23 +46,26 @@ enum EMaterialType {
 	EBMt_Clay_B,
 	EBMt_Clay_C,
 	EBMt_Clay_D,
+	EBMt_Forest_A,	//5
+	EBMt_Forest_B,	
+	EBMt_Grass_A,
+	EBMt_Grass_B,		
+	EBMt_Grass_C,
+	EBMt_Moss_A,	//10		
+	EBMt_Moss_B,	
+	EBMt_Mountain_A,
+	EBMt_Mountain_B,
+	EBMt_Mountain_C,
+	EBMt_Mountain_D,//15
+	EBMt_Mountain_E,
+	EBMt_Mountain_F,
+	EBMt_Sand_A,
 	EBMt_Soil_A,
 	EBMt_Soil_B,
 	EBMt_Soil_C,
-	EBMt_Soil_D,	//8
-	EBMt_Sand_A,
-	EBMt_Grass_A,	//10
-	EBMt_Grass_B,		
-	EBMt_Forest_A,	//12
-	EBMt_Forest_B,	
-	EBMt_Mountain_A,//14
-	EBMt_Mountain_B,
-	EBMt_Mountain_C,
-	EBMt_Mountain_D,
-	EBMt_Mountain_E,
-	EBMt_Rock_A,	
-	EBMt_Moss_A,		
-	EBMt_Moss_B,	
+	EBMt_Soil_D,
+	EBMt_Soil_E,
+EBMt_Max,
 };
 
 

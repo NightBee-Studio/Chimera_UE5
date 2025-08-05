@@ -11,10 +11,9 @@
 #include "Util/TsErosion.h"
 #include "Util/TsVoronoi.h"
 #include "Util/TsUtility.h"
-#include "Util/TsMaterial.h"
-#include "Util/TsHeightMesh.h"
 #include "Util/TsMaskMap.h"
 
+#include "Materials/MaterialInstanceConstant.h"
 
 
 
@@ -140,6 +139,7 @@ public:
 			int			unit_div ,
 			int			unit_reso,
 
+			TMap<TEnumAsByte<EMaterialType>,FTsGroundTex>&			texture_sets,
 			TMap<TEnumAsByte<ETextureMap>,TObjectPtr<UTexture2D>>&	texture_maps,
 
 			UDataTable*	biome_specs
@@ -198,9 +198,10 @@ public:
 						},{
 							new TsBiomeMFunc(
 								ETextureMap::ETM_Moisture,{
-									{ 0.30f, -0.489634f, EMaterialType::EBMt_Soil_A },
-									{ 0.30f, -0.216571f, EMaterialType::EBMt_Soil_B },
-									{ 0.30f,  0.035302f, EMaterialType::EBMt_Soil_C },
+									{ 0.30f, -0.133543f, EMaterialType::EBMt_Clay_A },
+									{ 0.30f,  0.102713f, EMaterialType::EBMt_Clay_C },
+									{ 0.30f,  0.391136f, EMaterialType::EBMt_Clay_B },
+									{ 0.30f,  0.889921f, EMaterialType::EBMt_Clay_D },
 								}),
 						})
 				},
@@ -210,8 +211,8 @@ public:
 						},{
 							new TsBiomeMFunc(
 								ETextureMap::ETM_Moisture,{
-									{ 0.60f,-0.114924f, EMaterialType::EBMt_Soil_A },
-									{ 0.50f, 0.052641f, EMaterialType::EBMt_Soil_B },
+									{ 0.60f, 0.577534f, EMaterialType::EBMt_Soil_A },
+									{ 0.50f, 0.885273f, EMaterialType::EBMt_Soil_B },
 								}),
 						})
 				},
@@ -222,12 +223,12 @@ public:
 						},{
 							new TsBiomeMFunc(
 								ETextureMap::ETM_Moisture,{
-									{ 0.05f, -0.963314f, EMaterialType::EBMt_Soil_A   },
-									{ 0.10f, -0.801807f, EMaterialType::EBMt_Soil_B   },
-									{ 0.10f, -0.602206f, EMaterialType::EBMt_Grass_A  },
-									{ 0.35f, -0.275827f, EMaterialType::EBMt_Grass_B  },
-									{ 0.10f, -0.213043f, EMaterialType::EBMt_Forest_A },
-									{ 0.15f, -0.118459f, EMaterialType::EBMt_Forest_B },
+									{ 0.05f, -0.345403f, EMaterialType::EBMt_Soil_A   },
+									{ 0.10f, -0.180670f, EMaterialType::EBMt_Soil_B   },
+									{ 0.10f, -0.083835f, EMaterialType::EBMt_Grass_A  },
+									{ 0.35f,  0.224810f, EMaterialType::EBMt_Grass_B  },
+									{ 0.10f,  0.372727f, EMaterialType::EBMt_Forest_A },
+									{ 0.15f,  0.560586f, EMaterialType::EBMt_Forest_B },
 								}),
 						})
 				},
@@ -239,11 +240,14 @@ public:
 						},{
 							new TsBiomeMFunc(
 								ETextureMap::ETM_Moisture,{
-									{  0.05f, -1.084059f, EMaterialType::EBMt_Grass_A },
-									{  0.05f, -0.994435f, EMaterialType::EBMt_Grass_B },
-									{  0.30f, -0.479797f, EMaterialType::EBMt_Soil_B  },
-									{  0.40f, -0.161269f, EMaterialType::EBMt_Soil_A  },
-									{  0.58f,  0.293089f, EMaterialType::EBMt_Soil_C  },
+									{  0.05f, -0.476578f, EMaterialType::EBMt_Grass_A },
+									{  0.05f, -0.428476f, EMaterialType::EBMt_Grass_B },
+									{  0.30f, -0.237330f, EMaterialType::EBMt_Mountain_A  },
+									{  0.40f,  0.230635f, EMaterialType::EBMt_Mountain_B  },
+									{  0.05f,  0.337056f, EMaterialType::EBMt_Mountain_C  },
+									{  0.05f,  0.612218f, EMaterialType::EBMt_Mountain_D  },
+									{  0.05f,  0.755940f, EMaterialType::EBMt_Mountain_E  },
+									{  0.05f,  0.943471f, EMaterialType::EBMt_Mountain_F  },
 								}),
 							new TsBiomeMFunc(
 								ETextureMap::ETM_Flow,{
@@ -383,19 +387,7 @@ public:
 				int				reso  = mMapOutParam.mWorldReso;
 				const FBox2D*	bound = mMapOutParam.mWorldBound;
 				mHeightMap   = new TsHeightMap  ( reso, reso, bound );
-				mMaterialMap = new TsMaterialMap( reso, reso, bound,{
-						EMaterialType::EBMt_None,
-						EMaterialType::EBMt_Soil_A,
-						EMaterialType::EBMt_Soil_B,
-						EMaterialType::EBMt_Soil_C,
-						EMaterialType::EBMt_Grass_A,
-						EMaterialType::EBMt_Grass_B,
-						EMaterialType::EBMt_Forest_A,
-						EMaterialType::EBMt_Forest_B,
-						EMaterialType::EBMt_Rock_A,
-						EMaterialType::EBMt_Moss_A,
-						EMaterialType::EBMt_Moss_B,
-					});
+				mMaterialMap = new TsMaterialMap( reso, reso, bound );
 				//TsBiomeMap* surf_map = new TsBiomeMap( reso, reso, &bound );
 				//surf_map->ForeachPixel(
 				//	[&](int px, int py) {	/////////// This is for debug use.
@@ -528,20 +520,7 @@ public:
 				{// Layered Material			for Landscape(UE5) based material texture output.
 					UE_LOG(LogTemp, Log, TEXT("BiomeSystem:: MaterialMap preparing..."));
 
-					mMaterialMap         = new TsMaterialMap( reso, reso, &bound,{
-							EMaterialType::EBMt_None,
-							EMaterialType::EBMt_Soil_A,
-							EMaterialType::EBMt_Soil_B,
-							EMaterialType::EBMt_Soil_C,
-							EMaterialType::EBMt_Grass_A,
-							EMaterialType::EBMt_Grass_B,
-							EMaterialType::EBMt_Forest_A,
-							EMaterialType::EBMt_Forest_B,
-							EMaterialType::EBMt_Rock_A,
-							EMaterialType::EBMt_Moss_A,
-							EMaterialType::EBMt_Moss_B,
-						});
-
+					mMaterialMap         = new TsMaterialMap( reso, reso, &bound) ;
 					TArray<TsBiomeItem_Material> moist_items = {
 						{ 0.04f, 0.0f, EBMt_Soil_A,  },
 						{ 0.02f, 0.0f, EBMt_Soil_B,  },
@@ -587,60 +566,47 @@ public:
 
 				bool build_material   = true ;
 				bool build_staticmesh = true ;
-				bool build_threshold  = false ;
+				bool build_threshold  = true ;
 				TArray<TsUtil::TsIPoint> points ;
 
 				const int NN = 5 ;
-				//for ( int oy=0 ; oy<NN ; oy++ ){
-				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
-				//}
+				for ( int oy=0 ; oy<NN ; oy++ ){
+					for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
+				}
 				//points.Add( TsUtil::TsIPoint(1,0) ) ;
-				points.Add( TsUtil::TsIPoint(1,1) ) ;
+				//points.Add( TsUtil::TsIPoint(1,1) ) ;
 				//points.Add( TsUtil::TsIPoint(2,0) ) ;
-				points.Add( TsUtil::TsIPoint(2,1) ) ;
-				//points.Add( TsUtil::TsIPoint(2,2) ) ;
-				//points.Add( TsUtil::TsIPoint(3,4) ) ;
-				//points.Add( TsUtil::TsIPoint(3,3) ) ;
+				//points.Add( TsUtil::TsIPoint(2,1) ) ;
 
 				mMaskMap = new TsMaskMap( 0.1f,16 ) ;
 
 				int				reso  = mMapOutParam.mWorldReso;
 				const FBox2D*	bound = mMapOutParam.mWorldBound;
-				mMaterialMap = new TsMaterialMap( reso, reso, bound,{
-						EMaterialType::EBMt_None,
-						EMaterialType::EBMt_Soil_A,
-						EMaterialType::EBMt_Soil_B,
-						EMaterialType::EBMt_Soil_C,
-						EMaterialType::EBMt_Grass_A,
-						EMaterialType::EBMt_Grass_B,
-						EMaterialType::EBMt_Forest_A,
-						EMaterialType::EBMt_Forest_B,
-						EMaterialType::EBMt_Rock_A,
-						EMaterialType::EBMt_Moss_A,
-						EMaterialType::EBMt_Moss_B,
-					});
+				mMaterialMap = new TsMaterialMap( reso, reso, bound);
 				if ( build_threshold ) {
 					for ( auto s_type : {
 							EBiomeSType::EBSf_None ,
 							EBiomeSType::EBSf_Lake ,
 							EBiomeSType::EBSf_Field,
 							EBiomeSType::EBSf_Mountain } ){
-						UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel(s_type %d) ..."), s_type );
+						UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel(s_type %s) ..."), *StaticEnum<EBiomeSType>()->GetNameStringByValue(static_cast<int64>(s_type)) );
+
 						for ( auto *m : mSurfaces[s_type].mMFuncs ){
-if ( m->mMapType==ETextureMap::ETM_Moisture) continue ;//skip moisture
 							TsBiomeMap *	biomap = TsBiomeMap::GetBiomeMap(m->mMapType) ;
 							biomap->SetupItemsPixel< TsBiomeItem_Material >(
 								m->mItems,
 								[&]( int px, int py )->bool{
 									FVector2D p = biomap->GetWorldPos(px, py) ;
-									if ( biomap->IsWorld(p)) {
-										return SearchBiome(p)->mSType == s_type ;
+									if ( biomap->IsWorld( p )) {
+										return SearchBiome( p, false )->mSType == s_type ;
 									}
 									return false ;
 								} );
 
 							for ( auto &it : m->mItems ){
-								UE_LOG(LogTemp, Log, TEXT("     maptype<%d> [%d] r%f t%f"),m->mMapType, it.mItem, it.mRatio, it.mThreshold );
+								UE_LOG(LogTemp, Log, TEXT("         <%s> [%s] r%f t%f"),
+									*StaticEnum<ETextureMap  >()->GetNameStringByValue(static_cast<int64>(m->mMapType)), 
+									*StaticEnum<EMaterialType>()->GetNameStringByValue(static_cast<int64>(it.mItem)), it.mRatio, it.mThreshold );
 							}
 						}
 						UE_LOG(LogTemp, Log, TEXT("    SetupItemsPixel  done ...") );
@@ -768,6 +734,7 @@ void	ATsBuilder::Build()
 
 		mUnitSize, mUnitDiv, mUnitReso,
 
+		mMaterialSets,
 		mTextureMaps,
 
 		mBiomeTable

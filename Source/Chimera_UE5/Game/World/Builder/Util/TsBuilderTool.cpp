@@ -12,11 +12,8 @@
 #include "MeshDescription.h"
 #include "StaticMeshAttributes.h"
 
-//TextureArray
 #include "Engine/Texture2DArray.h"
-
-
-//Material Instance
+#include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceConstant.h"
 
 
@@ -24,12 +21,71 @@
 
 
 
-UTexture2D*		 TsBuilderTool::Build_Texture(
-			TMap<EChannel, UTexture2D*>&    textures ,
-    		const FString&			        assetname
+UTexture2D*		 TsBuilderTool::Combine_Texture(
+			TMap<int, UTexture2D*>&    textures ,
+    		const FString&			   asset_name
 	)
 {
-    return nullptr ;
+    int w = 0;
+    int h = 0;
+    TArray<FColor> OutputPixels;
+    for ( auto & tx : textures ){
+        w = tx.Value->GetSizeX() ;
+        h = tx.Value->GetSizeY() ;
+		// mip0 の取得
+		const FTexture2DMipMap& mip  = tx.Value->GetPlatformData()->Mips[0];
+        EPixelFormat            fmt  = tx.Value->GetPixelFormat();
+		// ロックして読み取り
+		const uint8* src_data = static_cast<const uint8*>(mip.BulkData.LockReadOnly());
+		for (int32 i = 0; i < w*h ; ++i){
+			uint8 v = src_data[i * 4]; // 1chテクスチャだとして Red チャンネルを取得
+			switch ( tx.Key ){
+				case 0: OutputPixels[i].R = v; break;
+				case 1: OutputPixels[i].G = v; break;
+				case 2: OutputPixels[i].B = v; break;
+				case 3: OutputPixels[i].A = v; break;
+			}
+		}
+		mip.BulkData.Unlock();
+    }
+
+    FString         package_path = TsUtil::GetPackagePath( asset_name ) ;
+    FString         package_name = FPackageName::ObjectPathToPackageName(package_path);
+    UPackage*       package      = CreatePackage(*package_name);
+
+    UTexture2D* tex = NewObject<UTexture2D>(package, *asset_name, RF_Public | RF_Standalone);
+	tex->AddToRoot();
+
+	FTexture2DMipMap* new_mip = new FTexture2DMipMap();
+	new_mip->SizeX = w;
+	new_mip->SizeY = h;
+	new_mip->BulkData.Lock(LOCK_READ_WRITE);
+	void*   dest_data = new_mip->BulkData.Realloc(w * h * sizeof(FColor));
+	FMemory::Memcpy(dest_data, OutputPixels.GetData(), w * h * sizeof(FColor));
+	new_mip->BulkData.Unlock();
+
+    FTexturePlatformData * pl_data = new FTexturePlatformData();
+	pl_data->SizeX = w;
+	pl_data->SizeY = h;
+	pl_data->PixelFormat = PF_B8G8R8A8;
+	pl_data->Mips.Add(new_mip);
+
+    tex->SetPlatformData(pl_data);
+	//tex->SRGB = false;
+    tex->UpdateResource();
+
+    // アセット登録と保存
+    FAssetRegistryModule::AssetCreated(tex);
+    package->MarkPackageDirty();
+
+    const FString pkg_filename = FPackageName::LongPackageNameToFilename(package_name, FPackageName::GetAssetPackageExtension());
+    FSavePackageArgs save_args;
+    save_args.TopLevelFlags = RF_Public | RF_Standalone;
+    save_args.SaveFlags = SAVE_NoError;
+    save_args.bWarnOfLongFilename = true;
+    UPackage::SavePackage(package, tex, *pkg_filename, save_args);
+
+    return tex;
 }
 
 
@@ -50,16 +106,72 @@ UTexture2DArray* TsBuilderTool::Build_TexArray(
     pl_data->PixelFormat= textures[0]->GetPixelFormat();
     pl_data->SetNumSlices( textures.Num() ) ;
 
+#if 0
+
+#if WITH_EDITORONLY_DATA
+    // 各テクスチャのスライスデータをコピー
+    for ( auto t : textures ){
+        if (!t || !t->GetPlatformData() || t->GetPlatformData()->Mips.Num() == 0)
+            continue;
+
+        // 元テクスチャの Mip0 を取得
+        FTexture2DMipMap&   src_mip  = t->GetPlatformData()->Mips[0];
+        const int32         mip_size = src_mip.BulkData.GetBulkDataSize();
+
+        // 新しいスライス用の MipMap を作成
+        FTexture2DMipMap* new_mip = new FTexture2DMipMap();
+        new_mip->SizeX = src_mip.SizeX;
+        new_mip->SizeY = src_mip.SizeY;
+        new_mip->BulkData.Lock(LOCK_READ_WRITE);
+
+	    if ( !t || !t->Source.IsValid() ) continue ; 
+        // バッファ確保してコピー
+		const void* src_data = (void*)t->Source.LockMip(0);
+        void*       dst_data = new_mip->BulkData.Realloc(mip_size);
+        FMemory::Memcpy(dst_data, src_data, mip_size);
+        new_mip->BulkData.Unlock();
+		t->Source.UnlockMip(0) ;
+
+        // Mipsに追加（注意：これは本来 mip per slice ではなく slice per mip）
+        pl_data->Mips.Add(new_mip);
+    }
+#endif
+#else
+#if WITH_EDITORONLY_DATA
+    const int32 tex_width  = textures[0]->GetSizeX();
+    const int32 tex_height = textures[0]->GetSizeY();
+    const ETextureSourceFormat src_format = textures[0]->Source.GetFormat();
+    const int32 bytes_per_pixel = textures[0]->Source.GetBytesPerPixel();
+    const int32 slice_size = tex_width * tex_height * bytes_per_pixel;
+    const int32 num_slices = textures.Num();
+    const int32 total_size = slice_size * num_slices;
+
+    // すべてのスライスを一括で保持する Mip を作成
+    FTexture2DMipMap* new_mip = new FTexture2DMipMap();
+    new_mip->SizeX = tex_width;
+    new_mip->SizeY = tex_height;
+    new_mip->BulkData.Lock(LOCK_READ_WRITE);
+    void* dst_data = new_mip->BulkData.Realloc(total_size);
+    uint8* dst_ptr = reinterpret_cast<uint8*>(dst_data);
+
+    for (int32 slice_idx = 0; slice_idx < num_slices; ++slice_idx){
+        UTexture2D* t = textures[slice_idx];
+        if (!t || !t->Source.IsValid())
+            continue;
+
+        const void* src_data = t->Source.LockMip(0);
+        FMemory::Memcpy(dst_ptr + slice_idx * slice_size, src_data, slice_size);
+        t->Source.UnlockMip(0);
+    }
+
+    new_mip->BulkData.Unlock();
+    pl_data->Mips.Add(new_mip);
+#endif
+
+#endif
     // テクスチャ配列生成
     UTexture2DArray* tex_array = NewObject<UTexture2DArray>(package, *asset_name, RF_Public | RF_Standalone);
     tex_array->SetPlatformData(pl_data);
-
-    // 各テクスチャのスライスデータをコピー
-    for ( auto t : textures ){
-//        FTexture2DMipMap& Mip = t.Value->PlatformData->Mips[0];
-        // Mip.BulkData → tex_array にコピーする処理が必要
-    }
-
     tex_array->UpdateResource();
 
     // アセット登録と保存
@@ -79,10 +191,17 @@ UTexture2DArray* TsBuilderTool::Build_TexArray(
 
 	 
 void	TsBuilderTool::Build_MaterialSet(
-		TArray<FTsGroundTex>&	texsets ,
-		const FString&			assetname
+		TArray<FTsGroundTex>&	texsets
 	)
 {
+    TArray<UTexture2D*> alb_array ;
+    TArray<UTexture2D*> nrm_array ;
+    for ( auto& set : texsets ){
+        alb_array.Add(set.mTexAlbedo) ;
+        nrm_array.Add(set.mTexNormal) ;
+    }
+    Build_TexArray( alb_array, TEXT("TA_GroundAlbedo") ) ;
+    Build_TexArray( nrm_array, TEXT("TA_GroundNormal") ) ;
 }
 
 
@@ -91,7 +210,7 @@ UMaterialInstanceConstant*
     TsBuilderTool::Build_MaterialInstance(
         const FString& msmat_path,
         const FString& asset_name,
-        const TMap<FName, UTexture2D*>& tex_table
+        const TArray<TsGroundSlot>& slots
     )
 {
     UMaterialInstanceConstant* material = nullptr ;
@@ -115,10 +234,14 @@ UMaterialInstanceConstant*
                     RF_Public | RF_Standalone | RF_Transactional
                );
     material->SetParentEditorOnly(master_mat); //
-    for ( auto& param : tex_table ){
-        material->SetTextureParameterValueEditorOnly(param.Key, param.Value);
+    int idx = 0 ;
+    for ( auto& s : slots ){
+        FString idx_name = FString::Printf(TEXT("Slot%d_Index"), idx );
+        FString tex_name = FString::Printf(TEXT("Slot%d_Mask" ), idx );
+        material->SetTextureParameterValueEditorOnly( FName(*tex_name), s.mTex ) ;
+        material->SetScalarParameterValueEditorOnly ( FName(*idx_name), s.mMat ) ;
+        idx++;
     }
-
     //
     material->PostEditChange();
     material->MarkPackageDirty();
