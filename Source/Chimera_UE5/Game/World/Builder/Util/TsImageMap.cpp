@@ -575,7 +575,7 @@ float TsImageCore::GetPixelTex2D(int x, int y, int reso )
 	return r;
 }
 
-float	TsImageCore::GetValueTex2D(float x, float y, int reso )
+float	TsImageCore::GetPixelTex2D_Catmull(float x, float y, int reso )
 {
 	auto catmull_rom = [&] ( float p0, float p1, float p2, float p3, float t1 )->float{
 		float t2 = t1 * t1;
@@ -603,7 +603,7 @@ float	TsImageCore::GetValueTex2D(float x, float y, int reso )
 }
 
 	//linear interpolation
-float	TsImageCore::GetLinearTex2D(float x, float y, int reso )
+float	TsImageCore::GetPixelTex2D_Linear(float x, float y, int reso )
 {
 	int   dx  = (int)x ;
 	int   dy  = (int)y ;

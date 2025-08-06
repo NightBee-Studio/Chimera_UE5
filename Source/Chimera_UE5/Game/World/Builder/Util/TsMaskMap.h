@@ -7,11 +7,9 @@ class TsMaskMap
 	: public TsNoiseMap 
 {
 public:
-	int					mN ;
-float mGap ;
 	TArray<FVector2D>	mPoints;
 
-	TsMaskMap(float s, int n) ;
+	TsMaskMap(float s) ;
 
 	virtual float	GetValue(const FVector2D& p) override;	// world-coord
 } ;

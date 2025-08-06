@@ -188,8 +188,8 @@ public:
 	void			UnLock() ;
 
 	float			GetPixelTex2D(int x, int y, int reso=0 ) ;
-	float			GetValueTex2D(float x, float y, int reso=0 );
-	float			GetLinearTex2D(float x, float y, int reso=0 );
+	float			GetPixelTex2D_Catmull(float x, float y, int reso=0 );
+	float			GetPixelTex2D_Linear (float x, float y, int reso=0 );
 
 
 

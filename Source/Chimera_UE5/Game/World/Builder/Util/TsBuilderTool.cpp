@@ -236,13 +236,16 @@ UMaterialInstanceConstant*
     material->SetParentEditorOnly(master_mat); //
     int idx = 0 ;
     for ( auto& s : slots ){
-        FString idx_name = FString::Printf(TEXT("Slot%d_Index"), idx );
-        FString tex_name = FString::Printf(TEXT("Slot%d_Mask" ), idx );
+        FString idx_name = FString::Printf(TEXT("Slot%02d_Index"), idx );
+        FString tex_name = FString::Printf(TEXT("Slot%02d_Mask" ), idx );
         material->SetTextureParameterValueEditorOnly( FName(*tex_name), s.mTex ) ;
-        material->SetScalarParameterValueEditorOnly ( FName(*idx_name), s.mMat ) ;
+        material->SetScalarParameterValueEditorOnly ( FName(*idx_name), s.mMat-1 ) ;
+
+        UE_LOG(LogTemp, Log, TEXT("   Material Parameter'%s': idx%02d [%s]"), *idx_name, s.mMat-1 , *StaticEnum<EMaterialType>()->GetNameStringByValue(static_cast<int64>(s.mMat)));
+
         idx++;
     }
-    //
+    
     material->PostEditChange();
     material->MarkPackageDirty();
     FAssetRegistryModule::AssetCreated(material);
@@ -291,7 +294,7 @@ void TsBuilderTool::Build_HeightMesh(
             auto    make_pos = [&] (float dx, float dy) {
                 FVector2D p = FVector2D( tex_rect.mX + (x+dx) * sx,
                                          tex_rect.mY + (y+dy) * sy) ;
-                float h = tex_map->GetValue(p) + noise_map->GetValue(p)*noise_scale ;
+                float h = tex_map->GetPixelTex2D_Catmull( p.X, p.Y ) + noise_map->GetValue( p ) * noise_scale ;
                 return FVector3f( (x+dx)*s, (y+dy)*s, h * mesh_height ) ;
             } ;
 

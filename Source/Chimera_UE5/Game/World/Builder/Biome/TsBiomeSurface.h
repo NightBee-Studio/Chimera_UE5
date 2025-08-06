@@ -9,13 +9,36 @@
 // -------------------------------- BiomeSurface  --------------------------------
 struct TsOp;
 
+enum EBiomeParamType
+{
+	EBPt_None = 0,
+	EBPt_Height,
+	EBPt_Scale,
+	EBPt_Object,
+} ;
+
+
+union TsBiomeValue 
+{
+	float		f ;
+	int			i ;
+	UObject *	o ;
+};
+
+typedef TMap<EBiomeParamType,TsBiomeValue>	TsBiomeParams ;
+typedef TArray<TsBiomeItem_Material>		TsBiomeMatItems ;
+
 class	TsBiomeSFunc
 	: public TsNoiseMap {
 protected:
 	float			mHeight;
+	//TsBiomeParams	mParams ;
 public:
-	TsBiomeSFunc( const TsNoiseParam& cnf, float h = 1)
-		: TsNoiseMap(cnf), mHeight(h) {}
+	TsBiomeSFunc( const TsNoiseParam& cnf, float h
+//const TsBiomeParams&	params 
+)
+		: TsNoiseMap(cnf)  
+		, mHeight(h)	{}
 
 public:
 	virtual float	Remap(float val) const override { return  mHeight * (val - mMin) / (mMax - mMin); }
@@ -35,14 +58,16 @@ public:
 class	TsBiomeMFunc {
 //protected:
 public:
-	ETextureMap					mMapType;
+	ETextureMap						mMapType;
 	TArray<TsBiomeItem_Material>	mItems;
+	TsBiomeParams					mParams ;
 
 public:
 	TsBiomeMFunc(
-			ETextureMap			type ,
-			const TArray<TsBiomeItem_Material>&	items
-		): mMapType(type), mItems(items) {}
+			ETextureMap							type ,
+			const TArray<TsBiomeItem_Material>&	items,
+			const TsBiomeParams &				params
+		): mMapType(type), mItems(items), mParams(params) {}
 };
 
 
@@ -52,7 +77,6 @@ public:
 
 class	TsBiomeSurface {
 public:
-	//private:
 	TArray<TsBiomeSFunc*>	mSFuncs;
 	TArray<TsBiomeMFunc*>	mMFuncs;
 

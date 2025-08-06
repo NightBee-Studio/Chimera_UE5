@@ -15,7 +15,8 @@ float	TsBiomeMap::GetValue(const FVector2D& p)	// world-coord
 {
 	float v = 0;
 	if ( TsImageCore::mTex ){
-		v = TsLevelMap::GetValueTex2D(p.X, p.Y);// lock before access
+		FVector2D tc = GetTexcoord( p );
+		v = TsImageCore::GetPixelTex2D_Linear(tc.X, tc.Y);// lock before access
 	}else if ( mLayers.Num() == 0 ) {
 		FIntVector2	px = GetPixelPos(p);
 		v = TsLevelMap::GetPixel(px.X, px.Y);	// get pixel value
@@ -250,7 +251,7 @@ float	TsMoistureMap::GetValue( const FVector2D& p )
 		TsUtil::ForeachGaussian(
 			pos, 1,
 			[&]( const FVector2D &p, float wt){
-				pix += ex.GetLinearTex2D( p.X, p.Y ) * wt ;
+				pix += ex.GetPixelTex2D_Linear( p.X, p.Y ) * wt ;
 			} ) ;
 
 		switch( ex.mOp ){
