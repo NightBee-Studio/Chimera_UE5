@@ -33,11 +33,11 @@ FBox2D	TsMapOutput::LocalBound( int x, int y, int reso )
 	if (mDiv == 1) return *mWorldBound;
 
 	float ratio = mWorldBound->GetSize().X / mWorldReso  ;
-	float sx    = (mX+12) * ratio ;
+	float sx    = (mX) * ratio ;
 	float sy    = (mY) * ratio ;
 	float size  = reso * ratio ;
 
-	FVector2D	min = mWorldBound->Min + FVector2D( size*x, size*y* (1.097f) ) + FVector2D( sx, sy );// y
+	FVector2D	min = mWorldBound->Min + FVector2D( size*x, size*y ) + FVector2D( sx, sy );// y
 	FVector2D	max = min              + FVector2D( size  , size   ) ;
 	return FBox2D( min, max );
 }

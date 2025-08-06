@@ -161,8 +161,18 @@ public:
 
 		{//-------------------------------------------------------------------------------------- create voronois
 			mShape.UpdateBoundingbox(mBoundingbox);
-			mBoundingbox.Min -= FVector2D(500, 500);
-			mBoundingbox.Max += FVector2D(500, 500);
+			FVector2D size = mBoundingbox.GetSize() ;
+			float hx=500, hy=500 ;
+			if ( size.X < size.Y ){// try to fix as same size...
+				hy -= (size.Y - size.X)*0.5f;
+			} else {
+				hx -= (size.X - size.Y)*0.5f;
+			}
+			mBoundingbox.Min -= FVector2D(hx, hy);
+			mBoundingbox.Max += FVector2D(hx, hy);
+
+			UE_LOG(LogTemp, Log, TEXT("mBoundingbox size(%f,%f)"), mBoundingbox.GetSize().X,mBoundingbox.GetSize().Y  );
+
 
 			TsVoronoiSite<TsBiome> voronoi_site;
 			voronoi_site.GenerateSite(
@@ -613,15 +623,15 @@ public:
 				//}
 
 				points.Add( TsUtil::TsIPoint(1,0) ) ;
-				points.Add( TsUtil::TsIPoint(1,1) ) ;
-				points.Add( TsUtil::TsIPoint(1,2) ) ;
-				points.Add( TsUtil::TsIPoint(1,3) ) ;
+				//points.Add( TsUtil::TsIPoint(1,1) ) ;
+				//points.Add( TsUtil::TsIPoint(1,2) ) ;
+				//points.Add( TsUtil::TsIPoint(1,3) ) ;
 				points.Add( TsUtil::TsIPoint(2,2) ) ;
-				points.Add( TsUtil::TsIPoint(2,1) ) ;
-				points.Add( TsUtil::TsIPoint(2,3) ) ;
-				points.Add( TsUtil::TsIPoint(3,2) ) ;
-				points.Add( TsUtil::TsIPoint(3,3) ) ;
-				points.Add( TsUtil::TsIPoint(4,3) ) ;
+				//points.Add( TsUtil::TsIPoint(2,1) ) ;
+				//points.Add( TsUtil::TsIPoint(2,3) ) ;
+				//points.Add( TsUtil::TsIPoint(3,2) ) ;
+				//points.Add( TsUtil::TsIPoint(3,3) ) ;
+				//points.Add( TsUtil::TsIPoint(4,3) ) ;
 
 				mMaskMap = new TsMaskMap( 0.1f ) ;
 
