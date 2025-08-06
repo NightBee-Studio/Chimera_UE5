@@ -2,8 +2,6 @@
 
 #include "CoreMinimal.h"
 
-//#include "../Util/TsImageMap.h"
-
 #include "TsBiomeSurface.h"
 
 

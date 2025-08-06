@@ -19,9 +19,22 @@ struct TsMapOutput {
 		, mDiv(_n)
 		, mWorldReso(world_reso), mWorldBound(world_bound) {}
 
-	FBox2D			LocalBound( int x, int y, int reso );
-	TsUtil::TsBox	TexBound( int x, int y, int reso ) ;
-};
+	FBox2D			LocalBound( int x, int y, int reso ){
+		if (mDiv == 1) return *mWorldBound;
+		FVector2D	size  = mWorldBound->GetSize() ;
+		FVector2D	ratio = size / mWorldReso ;
+		FVector2D	start = FVector2D( mX * ratio.X, mY * ratio.Y ) + mWorldBound->Min ;
+		FVector2D	step  = reso * ratio ;
+
+		FVector2D	min = start + FVector2D( step.X*x, step.Y*y );
+		FVector2D	max = min + step ;
+		return FBox2D( min, max ) ;
+	}
+
+	TsUtil::TsBox	TexBound( int x, int y, int reso ) {
+		return TsUtil::TsBox( mX+x*reso, mY+y*reso, reso, reso );
+	}
+} ;
 
 
 

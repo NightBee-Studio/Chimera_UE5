@@ -242,7 +242,6 @@ void TsMoistureMap::UnLock()
 
 float	TsMoistureMap::GetValue( const FVector2D& p )
 {
-	//FIntVector2	pos = TsBiomeMap::GetPixelPos( p );
 	FVector2D	pos = TsBiomeMap::GetTexcoord( p );
 	float		val = TsBiomeMap::GetValue( p ) ;
 
@@ -267,5 +266,8 @@ float	TsMoistureMap::GetValue( const FVector2D& p )
 			break ;
 		}
 	}
+	mMin = FMath::Min(mMin, val);// update ing the remap
+	mMax = FMath::Max(mMax, val);
+
 	return val ;
 }

@@ -5,48 +5,12 @@
 #include "GenericPlatform/GenericPlatformFile.h"
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/Texture2D.h"
-//#include "PackageTools.h"
 
 #include "Misc/PackageName.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
-
-
-
-
-// -------------------------------- TsMapOutput  --------------------------------
-//
-//
-
-//FBox2D	TsMapOutput::WorldBound( int x, int y )
-//{
-//	return TsUtil::TsBox( mX+x*mReso, mY+y*mReso, mReso, mReso );
-//
-//	return FBox2D(	world_bound.Min + size * FVector2D( mX-0.5f, mY-0.5f ),
-//					world_bound.Min + size * FVector2D( mX+1.5f, mY+1.5f ) );
-//}
-
-FBox2D	TsMapOutput::LocalBound( int x, int y, int reso )
-{
-	if (mDiv == 1) return *mWorldBound;
-
-	float ratio = mWorldBound->GetSize().X / mWorldReso  ;
-	float sx    = (mX) * ratio ;
-	float sy    = (mY) * ratio ;
-	float size  = reso * ratio ;
-
-	FVector2D	min = mWorldBound->Min + FVector2D( size*x, size*y ) + FVector2D( sx, sy );// y
-	FVector2D	max = min              + FVector2D( size  , size   ) ;
-	return FBox2D( min, max );
-}
-
-TsUtil::TsBox	TsMapOutput::TexBound( int x, int y, int reso )
-{
-	return TsUtil::TsBox( mX+x*reso, mY+y*reso, reso, reso );
-}
-
 
 
 
@@ -93,28 +57,6 @@ float	TsNoiseMap::GetValue(const FVector2D& p) {
 	}
 	return val;
 }
-
-//	switch (mType) {
-//	default:
-//	case ENoiseType::NoiseNormal:
-//		return (    mN0 * FMath::PerlinNoise2D(         mS0 * p + mNoisePos)
-//				  + mN1 * FMath::PerlinNoise2D(         mS1 * p + mNoisePos));
-//	case ENoiseType::NoiseMaterial:
-//		return (  0.80f * FMath::PerlinNoise2D(0.001f * mN0 * p + mNoisePos)
-//				+ 0.50f * FMath::PerlinNoise2D(0.002f * mN0 * p + mNoisePos)
-//				+ 0.25f * FMath::PerlinNoise2D(0.004f * mN0 * p + mNoisePos)
-//				+ 0.13f * FMath::PerlinNoise2D(0.008f * mN0 * p + mNoisePos)
-//				+ 0.60f * FMath::PerlinNoise2D(0.016f * mN0 * p + mNoisePos)
-//				+ 0.30f * FMath::PerlinNoise2D(0.032f * mN0 * p + mNoisePos));
-//	case ENoiseType::NoiseField:
-//		return (  1.00f * FMath::PerlinNoise2D(0.001f * mN0 * p + mNoisePos)
-//				+ 0.50f * FMath::PerlinNoise2D(0.002f * mN0 * p + mNoisePos)
-//				+ 0.25f * FMath::PerlinNoise2D(0.004f * mN0 * p + mNoisePos)
-//				+ 0.13f * FMath::PerlinNoise2D(0.008f * mN0 * p + mNoisePos)
-//				+ 0.06f * FMath::PerlinNoise2D(0.016f * mN0 * p + mNoisePos)
-//				+ 0.03f * FMath::PerlinNoise2D(0.032f * mN0 * p + mNoisePos));
-//	}
-//}
 
 
 // -------------------------------- TsImageCore  --------------------------------

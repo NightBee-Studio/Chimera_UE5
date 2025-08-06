@@ -128,6 +128,7 @@ public:
 	{;}
 
 	void			BuildLandscape(
+			int			mode,
 			float _x, float _y, float radius,
 			int			seed,
 			float		voronoi_size,
@@ -145,6 +146,12 @@ public:
 			UDataTable*	biome_specs
 		)
 	{
+		mode = 0 ;
+		mode |= (int)EBuildMode::EBM_HeightMap   ;
+//		mode |= (int)EBuildMode::EBM_MaterialMap ;
+//		mode |= (int)EBuildMode::EBM_StaticMesh	 ;
+//		mode |= (int)EBuildMode::EBM_UpdateRatio ;
+
 		TsUtil::RandSeed( seed );
 
 		UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Build Start.... center(%f,%f) radius%f"), _x, _y, radius );
@@ -155,21 +162,26 @@ public:
 		// create island shape
 		mShape.Generate(_x, _y, radius,
 			{TsBiomeSite::CircleConf(1.0f,1.5f, 0.06f,0.4f, 3, -40, 40),
-			 TsBiomeSite::CircleConf(0.8f,1.0f, 0.06f,0.5f, 1,  20, 40),
-			 TsBiomeSite::CircleConf(0.7f,0.9f, 0.06f,0.5f, 1, -40,-20),
-			 TsBiomeSite::CircleConf(1.0f,1.2f, 0.06f,0.5f, 0, -40,-20),} );
+			 TsBiomeSite::CircleConf(0.4f,0.8f, 0.06f,0.5f, 1,  20, 40),
+//			 TsBiomeSite::CircleConf(0.6f,0.9f, 0.06f,0.5f, 1, -40,-20),
+			 TsBiomeSite::CircleConf(0.8f,1.2f, 0.06f,0.5f, 0, -40,-20),} );
 
 		{//-------------------------------------------------------------------------------------- create voronois
 			mShape.UpdateBoundingbox(mBoundingbox);
-			FVector2D size = mBoundingbox.GetSize() ;
-			float hx=500, hy=500 ;
+			FVector2D size   = mBoundingbox.GetSize() ;
+			FVector2D center = mBoundingbox.GetCenter() ;
+			UE_LOG(LogTemp, Log, TEXT("mBoundingbox center(%f,%f) size(%f,%f)"), center.X,center.Y , size.X,size.Y  );
+
+			float hx=300, hy=300 ;
 			if ( size.X < size.Y ){// try to fix as same size...
-				hy -= (size.Y - size.X)*0.5f;
+				hx += (size.Y - size.X)*0.5f;
 			} else {
-				hx -= (size.X - size.Y)*0.5f;
+				hy += (size.X - size.Y)*0.5f;
 			}
 			mBoundingbox.Min -= FVector2D(hx, hy);
 			mBoundingbox.Max += FVector2D(hx, hy);
+			mBoundingbox.Min -= center ;
+			mBoundingbox.Max -= center ;
 
 			UE_LOG(LogTemp, Log, TEXT("mBoundingbox size(%f,%f)"), mBoundingbox.GetSize().X,mBoundingbox.GetSize().Y  );
 
@@ -192,10 +204,17 @@ public:
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group"));
 			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: BiomeMap creating ..."));
 
-		//	heightmap_reso = 2048;
-			heightmap_reso = 1024 ;
+			heightmap_reso = 2048;
 			if (heightmap_reso == 0) heightmap_reso = 512;
 #define IMG_SIZE heightmap_reso
+
+
+			////// apply the biome from PerlinNoise
+			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Apply Surface ..."));
+
+			TsBiomeMap* genre_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam({ {1.0f, 0.0010f},{0.2f, 0.0030f} }));
+			TsBiomeMap* surfc_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam({ {1.0f, 0.0010f},{0.2f, 0.0030f} }));
+
 
 			mMapOutParam = TsMapOutput(0, 0, 1, heightmap_reso, &mBoundingbox);
 			TsUtil::SetDirectory("Resources/World/Landscape/Surface/");
@@ -310,12 +329,6 @@ public:
 				},
 			} ;
 
-			////// apply the biome from PerlinNoise
-			UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Apply Surface ..."));
-
-			TsBiomeMap* surfc_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam({ {1.0f, 0.0010f},{0.2f, 0.0030f} }));
-			TsBiomeMap* genre_map = new TsBiomeMap(IMG_SIZE, IMG_SIZE, &mBoundingbox, TsNoiseParam({ {1.0f, 0.0010f},{0.2f, 0.0030f} }));
-
 #if 0   ///later
 			{
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Genre map ...") );
@@ -358,8 +371,8 @@ public:
 						{ 0.50f, 0.002f*S },
 						{ 0.25f, 0.004f*S },
 						{ 0.10f, 0.016f*S },
-						{ 0.10f, 0.032f*S },
-						{ 0.10f, 0.064f*S },
+						{ 0.08f, 0.032f*S },
+						{ 0.08f, 0.064f*S },
 					}),
 					{
 						TsExtraMap( ETextureMap::ETM_Height   , texture_maps[ETextureMap::ETM_Height   ], &mBoundingbox,	 1.0f, EExtraOp::E_InvMul ),
@@ -412,86 +425,19 @@ public:
 			// surface service initialize 
 			TsSurfaceMountain::Initialize( mBiomes ) ;
 
-#if 0//////////////////////////////////////////////////////////////////////////////////////// Integration of Generated Boime -----------bad result...
-			{// Biome Specs
-				TsBiomeGroup::ClearDone() ;
-				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Specs ..."));
-
-				FTsBiomeModels	biome_models(biome_specs) ;
-				biome_models.Lock() ;
-
-				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Biome Group ..."));
-				// Grouping the Biomes.
-				for ( auto &b : mBiomes ){
-					if ( b.mSType != EBiomeSType::EBSf_None ){
-						if ( !TsBiomeGroup::TryDone( &b ) ){
-							mBiomeGroups.Add( TsBiomeGroup( &b, biome_models ) ) ;
-						}
-					}
-				}
-
-				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Construct Heightmap..."));
-				// Generate heightmap.
-				int				reso  = mMapOutParam.mWorldReso;
-				const FBox2D*	bound = mMapOutParam.mWorldBound;
-				mHeightMap   = new TsHeightMap  ( reso, reso, bound );
-				mMaterialMap = new TsMaterialMap( reso, reso, bound );
-				//TsBiomeMap* surf_map = new TsBiomeMap( reso, reso, &bound );
-				//surf_map->ForeachPixel(
-				//	[&](int px, int py) {	/////////// This is for debug use.
-				//		FVector2D p = surf_map->GetWorldPos(px, py);
-				//		if ( surf_map->IsWorld(p) ) {
-				//			if (TsBiome* b = SearchBiome(p)) {
-				//				surf_map->SetPixel(px, py, (float)b->GetSType() );
-				//			}
-				//		}
-				//	} );
-				//surf_map->Save("SurfMap.dds", EImageFile::Dds, EImageFormat::FormatL16 );
-
-				mHeightMap->ForeachPixel(
-					[&](int px, int py) {
-						FVector2D p = mHeightMap->GetWorldPos(px, py);
-						if ( mHeightMap->IsWorld(p) ) {
-							if (TsBiomeGroup* g = SearchBiomeGroup(p)) {
-								float h = g->GetPixel( ETextureMap::ETM_Height, p );
-
-								UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: [%d,%d] %f"), px, py, h );
-
-								mHeightMap->SetPixel(px, py, h );
-							}
-						}
-					} );
-				mHeightMap->Save("HeightMap.dds", EImageFile::Dds, EImageFormat::FormatL16);
-				mHeightMap->Save("HeightMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
-
-				//TsBiomeMap* surf_map = new TsBiomeMap( reso, reso, &bound );
-				//surf_map->ForeachPixel(
-				//	[&](int px, int py) {	/////////// This is for debug use.
-				//		FVector2D p = surf_map->GetWorldPos(px, py);
-				//		if ( surf_map->IsWorld(p) ) {
-				//			if (TsBiomeGroup* g = SearchBiomeGroup(p)) {
-				//				surf_map->SetPixel(px, py, (float)g->GetSeqID() );
-				//			}
-				//		}
-				//	} );
-				//surf_map->Save("SurfMap.dds", EImageFile::Dds, EImageFormat::FormatL16 );
-
-				biome_models.UnLock() ;
-
-				return ;//stop
-			}
-#endif
-
-			{///---------------------------------------- Generate Mapping
+		
+			///---------------------------------------- Generate Mapping
+			{
 				UE_LOG(LogTemp, Log, TEXT("UTsLandscape:: Generate Mappings ..."));
 				int				reso  = mMapOutParam.mWorldReso;
 				const FBox2D*	bound = mMapOutParam.mWorldBound;
 
-				reso = 64;
-//				reso = 4096;
+				reso = 4096;
+				reso = 512;
 				mHeightMap           = new TsHeightMap( reso, reso, bound );
-#if 1
-				{///---------------------------------------- HeightMap
+
+				///---------------------------------------- HeightMap
+				if ( mode & (int)EBuildMode::EBM_HeightMap ){
 					{///--------------------------------------------------- Create BaseHeightmap
 						UE_LOG(LogTemp, Log, TEXT("   Base Heightmap start ...."));
 						mHeightMap->ForeachPixel(
@@ -557,10 +503,8 @@ public:
 					//}
 					//mNormalMap->Save("NormalMap.dds", EImageFile::Dds, EImageFormat::FormatB8G8R8A8);
 
-
 					UE_LOG(LogTemp, Log, TEXT("   HeightMap done."));
 				}
-#endif 
 
 
 
@@ -622,11 +566,11 @@ public:
 				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
 				//}
 
-				points.Add( TsUtil::TsIPoint(1,0) ) ;
-				//points.Add( TsUtil::TsIPoint(1,1) ) ;
+				//points.Add( TsUtil::TsIPoint(1,0) ) ;
+				points.Add( TsUtil::TsIPoint(2,2) ) ;
 				//points.Add( TsUtil::TsIPoint(1,2) ) ;
 				//points.Add( TsUtil::TsIPoint(1,3) ) ;
-				points.Add( TsUtil::TsIPoint(2,2) ) ;
+				//points.Add( TsUtil::TsIPoint(2,2) ) ;
 				//points.Add( TsUtil::TsIPoint(2,1) ) ;
 				//points.Add( TsUtil::TsIPoint(2,3) ) ;
 				//points.Add( TsUtil::TsIPoint(3,2) ) ;
@@ -638,7 +582,7 @@ public:
 				int				reso  = mMapOutParam.mWorldReso;
 				const FBox2D*	bound = mMapOutParam.mWorldBound;
 				mMaterialMap = new TsMaterialMap( reso, reso, bound);
-				if ( build_threshold ) {
+				if ( mode & (int)EBuildMode::EBM_UpdateRatio  ) {
 					for ( auto s_type : {
 							EBiomeSType::EBSf_None ,
 							EBiomeSType::EBSf_Lake ,
@@ -695,7 +639,7 @@ public:
 					TsUtil::SetDirectory( "Resources/World/Landscape/Surface/", pn.mX, pn.mY );
 
 					TsUtil::SetSubDirectory( TEXT("Materials/") );
-					if ( build_material ){// materials
+					if ( mode & (int)EBuildMode::EBM_MaterialMap ){// materials
 						UE_LOG(LogTemp, Log, TEXT("       Material Start ...") );
 						mMaterialMap->Clear();
 						mMaterialMap->SetWorld( &loc_bound );
@@ -706,17 +650,17 @@ public:
 								TsBiome *		biome  = SearchBiome( p, false );
 								EBiomeSType		s_type = biome ? biome->mSType : EBiomeSType::EBSf_None ;
 								for ( auto *m : mSurfaces[s_type].mMFuncs ){
-//if ( m->mMapType == ETextureMap::ETM_Moisture) continue ;
 									TArray<TsBiomeItem_Material>  &items = m->mItems ;
-									TsBiomeMap *	biomap = TsBiomeMap::GetBiomeMap(m->mMapType) ;
+									TsBiomeMap *biomap = TsBiomeMap::GetBiomeMap(m->mMapType) ;
 
 									if ( items.Num()==1 ){
 										pix.Add( items[0].mItem, biomap->GetValue(p) * m->mParams[EBiomeParamType::EBPt_Scale].f );
 									} else {
 										int		idx = biomap->SelectItemIdx  <FVector2D, TsBiomeItem_Material>(p, items) ;
-										float	val = 1.0f;//biomap->SelectItemValue<FVector2D, TsBiomeItem_Material>(p, items) ;
+										float	val = biomap->SelectItemValue<FVector2D, TsBiomeItem_Material>(p, items) ;
 										if ( items[idx].mItem > 0 ){
 											pix.Add( items[idx].mItem, val );
+											if ( idx > 0 ) pix.Add( items[idx-1].mItem, 1.0f );
 										}
 									}
 								}
@@ -739,7 +683,7 @@ public:
 					}
 					TsUtil::SetSubDirectory( TEXT("") );	//reset
 
-					if ( build_staticmesh ){
+					if ( mode & (int)EBuildMode::EBM_StaticMesh ){
 						TsBuilderTool::Build_HeightMesh(
 								&height_map,
 								outparam.TexBound(pn.mX, pn.mY ,loc_reso),	//TsUtil::TsBox(0,0,1024,1024)
@@ -789,11 +733,12 @@ void	ATsBuilder::Build()
 	Builder_Work * work = (Builder_Work*)mImplement;
 
 	FVector  pos = GetActorLocation();
-
+		
 	work->BuildLandscape(
+		mMode,
 		pos.X, pos.Y, mRadius,
-		123789,
-		mVoronoiSize, mVoronoiJitter,
+		0x189,
+		mVoronoiSize, mVoronoiJitter,//0x8ac79,
 		mReso,
 		mErodeCycle,
 

@@ -11,14 +11,17 @@
 
 
 
-UENUM(BlueprintType)
-enum EBuildMode {
-	EBM_Heightmap,
+UENUM(BlueprintType, meta = (Bitflags))
+enum class EBuildMode : uint8 {
+	EBM_None		= 0		UMETA(DisplayName = "None"),
 
-	EBM_Materialmap,
-	EBM_StaticMesh,
-//	EBM_FullGrid,
+	EBM_HeightMap	= 1<<0	UMETA(DisplayName = "HeightMap"),
+
+	EBM_MaterialMap	= 1<<1	UMETA(DisplayName = "MaterialMap"),
+	EBM_StaticMesh	= 1<<2	UMETA(DisplayName = "StaticMesh"),
+	EBM_UpdateRatio	= 1<<3	UMETA(DisplayName = "UpdateRatio"),
 } ;
+
 
 // -------------------------------- UTsLandscape  --------------------------------
 UCLASS(Blueprintable)
@@ -33,8 +36,8 @@ private:
 public:
 	ATsBuilder();
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Mode"))
-	TEnumAsByte<EBuildMode>	mMode ;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (Bitmask, BitmaskEnum = "EBuildMode", DisplayName = "Mode"))
+	int32					mMode ;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Meta = (DisplayName = "Seed"))
 	int						mSeed;

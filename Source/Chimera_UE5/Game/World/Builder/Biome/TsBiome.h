@@ -156,7 +156,6 @@ private:
 	FTransform			mTransform;
 
 	int					mID ;
-	//int					mSeqID ;
 	FTsBiomeModel*		mModel  ;
 	FVector2D			mHeightRange ;
 

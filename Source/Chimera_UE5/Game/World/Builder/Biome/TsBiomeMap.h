@@ -82,7 +82,7 @@ public:
 		ForeachPixel(
 			[&](int px, int py) {
 				if (chk_pixel ? chk_pixel(px,py) : true ){
-					float val = TsBiomeMap::GetValue( GetWorldPos(px, py) ) ;
+					float val = GetValue( GetWorldPos(px, py) ) ;
 					if ( valueskip ? val!=0.0f : true ) samples.Add( val );
 				}
 			});
