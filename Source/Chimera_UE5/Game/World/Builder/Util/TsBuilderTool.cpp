@@ -11,6 +11,7 @@
 #include "Engine/StaticMesh.h"
 #include "MeshDescription.h"
 #include "StaticMeshAttributes.h"
+#include "PhysicsEngine/BodySetup.h"
 
 #include "Engine/Texture2DArray.h"
 #include "Engine/Texture2D.h"
@@ -382,11 +383,24 @@ void TsBuilderTool::Build_HeightMesh(
 
     if ( !material ) material = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
     static_mesh->GetStaticMaterials().Add( FStaticMaterial(material) );
-
     static_mesh->NaniteSettings.bEnabled = true;
-
     static_mesh->CommitMeshDescription(LODIndex);
     static_mesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
+
+    //add collisom
+    UBodySetup* body_setup = static_mesh->GetBodySetup();
+    if (!body_setup){
+        static_mesh->CreateBodySetup();
+        body_setup = static_mesh->GetBodySetup();
+    }
+    body_setup->RemoveSimpleCollision();
+    FKAggregateGeom& agg_geom = body_setup->AggGeom;
+    agg_geom.BoxElems.Add(FKBoxElem(50.0f, 50.0f, 50.0f));  // ƒTƒCƒY‚Í”CˆÓ’²®
+    body_setup->CollisionTraceFlag = CTF_UseComplexAsSimple;
+    body_setup->bDoubleSidedGeometry = true;
+    body_setup->InvalidatePhysicsData();
+    body_setup->CreatePhysicsMeshes();
+
     static_mesh->Build();
     static_mesh->MarkPackageDirty();
     static_mesh->PostEditChange();

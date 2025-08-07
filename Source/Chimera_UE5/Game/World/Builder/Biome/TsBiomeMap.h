@@ -79,13 +79,14 @@ public:
 	>
 	void SetupItemsPixel( TArray<T_item>& items, std::function< bool(int, int) > chk_pixel = nullptr, bool valueskip = true ) {
 		TArray<float>	samples;
+		int inc =  mW>8000 ? 8 : mW>4000 ? 4: mW>2000 ? 2 : 1 ;
 		ForeachPixel(
 			[&](int px, int py) {
 				if (chk_pixel ? chk_pixel(px,py) : true ){
 					float val = GetValue( GetWorldPos(px, py) ) ;
 					if ( valueskip ? val!=0.0f : true ) samples.Add( val );
 				}
-			});
+			}, inc );
 		samples.Sort();		// sort to determine the ratio of the group.
 
 		int    max_idx = (samples.Num() - 1);
