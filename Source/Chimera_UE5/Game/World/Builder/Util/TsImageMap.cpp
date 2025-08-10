@@ -603,10 +603,10 @@ void TsImageCore::UnLock()
 void		TsImageCore::SlotSetup( EImageFormat format )
 {
 	switch ( format & EImageFormat::FmtMask ) {
-	case EImageFormat::FormatF32:	mSlot = new float  [mW*mH] ; break;
+	case EImageFormat::FormatF32:	mSlot = FMemory::Malloc(sizeof(float ) * mW*mH); break;
 	case EImageFormat::FormatL16:
-	case EImageFormat::FormatR16:	mSlot = new uint16 [mW*mH] ; break;
-	case EImageFormat::FormatR8:	mSlot = new uint8  [mW*mH] ; break;
+	case EImageFormat::FormatR16:	mSlot = FMemory::Malloc(sizeof(uint16) * mW*mH); break;
+	case EImageFormat::FormatR8:	mSlot = FMemory::Malloc(sizeof(uint8 ) * mW*mH); break;
 	default:						mSlot = nullptr ; break;
 	}
 }
@@ -625,13 +625,10 @@ void *		TsImageCore::SlotData( EImageFormat format ) const
 
 void		TsImageCore::SlotClear( EImageFormat format )
 {
-	switch ( format & EImageFormat::FmtMask ) {
-	case EImageFormat::FormatF32:	delete [] (float *)mSlot ;
-	case EImageFormat::FormatL16:
-	case EImageFormat::FormatR16:	delete [] (uint16*)mSlot ;
-	case EImageFormat::FormatR8:	delete [] (uint8 *)mSlot ;
+	if ( mSlot ){
+		FMemory::Free(mSlot);
+		mSlot = nullptr ;
 	}
-	mSlot = nullptr ; 
 }
 
 

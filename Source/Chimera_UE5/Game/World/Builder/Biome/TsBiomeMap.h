@@ -89,39 +89,38 @@ public:
 			}, inc );
 		samples.Sort();		// sort to determine the ratio of the group.
 
-		int    max_idx = (samples.Num() - 1);
-		float  ratio = 0.0f;
-		for (auto& it : items) {
-			ratio += it.mRatio;
-			it.mThreshold = samples[max_idx * FMath::Min(1, ratio)];
+		if ( samples.Num() >0 ){
+			int    max_idx = (samples.Num() - 1);
+			float  ratio = 0.0f;
+			for (auto& it : items) {
+				ratio += it.mRatio;
+				it.mThreshold = samples[max_idx * FMath::Min(1, ratio)];
+			}
 		}
 	}
+
+	struct ItemResult{
+		int		mIndex;
+		float	mValue ;
+	} ;
 
 	template<
 		DerivedFVector2D T_point,
 		DerivedBiomeItem T_item
 	>
-	int SelectItemIdx( const T_point& point, TArray<T_item>& items ) {
-		float h = GetValue(point);
-		for (int i = 0; i < items.Num(); i++) {
-			if (h < items[i].mThreshold) return i;
-		}
-		return items.Num() - 1;
-	}
-	template<
-		DerivedFVector2D T_point,
-		DerivedBiomeItem T_item
-	>
-	float SelectItemValue( const T_point& point, TArray<T_item>& items ) {
-		float h = GetValue(point);
-		for (int i = 0; i < items.Num(); i++) {
-			if (h < items[i].mThreshold){
+	ItemResult SelectItemIdx( const T_point& point, TArray<T_item>& items ) {
+		float	h = GetValue(point);
+		int		n = items.Num();
+		for (int i = 0; i < n; i++) {
+			if (h < items[i].mThreshold) {
 				float min = (i>0 ? items[i-1].mThreshold : mMin) ;
 				float max = items[i].mThreshold ;
-				return (h-min)/(max-min) ;
+				float v = (h-min)/(max-min) ;
+				v = FMath::Clamp( v*2.0f, 0, 1 ) ;
+				return { .mIndex=i, .mValue=v };
 			}
 		}
-		return 0 ;
+		return { .mIndex=n-1, .mValue=0.0f };
 	}
 
 	template<
@@ -129,7 +128,7 @@ public:
 		DerivedBiomeItem T_item
 	>
 	T_item SelectItem( const T_point& point, TArray<T_item>& items ) {
-		return items[SelectItemIdx(point, items)];
+		return items[SelectItemIdx(point, items).mIndex];
 	}
 };
 

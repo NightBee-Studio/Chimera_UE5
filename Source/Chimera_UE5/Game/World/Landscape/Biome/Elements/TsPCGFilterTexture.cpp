@@ -105,11 +105,13 @@ bool FPCGFilterTextureElement::ExecuteInternal(FPCGContext* Context) const// can
 					break;
 				case EPixelFormat::PF_B8G8R8A8:
 				case EPixelFormat::PF_R8G8B8A8:
+				case EPixelFormat::PF_R8:
+				case EPixelFormat::PF_G8:
 					r = ((uint8 *)data_ptr)[idx+0] / 255.0f   ;
 					break;
 				}
 				if (min <= r && r <= max) {
-					//UE_LOG(LogTemp, Log, TEXT("(pix%d  r%f fmt%d) "), ((uint16*)data_ptr)[idx / 2], r, tex->GetPixelFormat());
+					//UE_LOG(LogTemp, Log, TEXT("(pix%d  r%f fmt%d) "), ((uint8*)data_ptr)[idx], r, tex->GetPixelFormat());
 					out_points.Add(p);
 				}
 			}

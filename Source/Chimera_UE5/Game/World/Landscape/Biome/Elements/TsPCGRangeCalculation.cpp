@@ -46,17 +46,25 @@ bool FPCGRangeCalculationElement::ExecuteInternal(FPCGContext* Context) const
 		for (int x = 0; x < w; x += 2) {
 			for (int y = 0; y < h; y += 2) {
 				int idx = (y * w + x);
-				switch (tex->GetPixelFormat()) {
+				int fmt = tex->GetPixelFormat();
+				float value = 0 ;
+				switch (fmt) {
 				case EPixelFormat::PF_G16:
 				case EPixelFormat::PF_R16_UINT:
 				case EPixelFormat::PF_R16_SINT:
-					samples.Add((float)((uint16*)data_ptr)[idx] / 65535.0f);
+					value = (float)((uint16*)data_ptr)[idx] / 65535.0f;
 					break;
 				case EPixelFormat::PF_B8G8R8A8:
 				case EPixelFormat::PF_R8G8B8A8:
-					samples.Add((float)((uint8*)data_ptr)[idx * 4] / 255.0f);
+					value = (float)((uint8*)data_ptr)[idx * 4] / 255.0f ;
+					break;
+				case EPixelFormat::PF_G8:
+					value = (float)((uint8*)data_ptr)[idx]     / 255.0f ;
+					break;
+				default:
 					break;
 				}
+				if ( value > 0 ) samples.Add( value ) ;
 			}
 		}
 #if WITH_EDITORONLY_DATA

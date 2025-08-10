@@ -52,7 +52,7 @@ bool FPCGPlaneSamplerElement::ExecuteInternal(FPCGContext* Context) const// cann
 			const FVector pos(x, y, settings->mPlaneZ);
 			FPCGPoint p;
 			p.Transform = FTransform(pos); // Z = 0 平面
-			p.Density   = stream.FRand(); // 0?1のランダム値
+			p.Density   = 1.0f;//stream.FRand(); // 0?1のランダム値
 			p.Seed		= stream.RandHelper(INT32_MAX); // ←これ大事！
 			p.MetadataEntry = mt_data->AddEntry(); // ←これも必須！
 			p.BoundsMin = b_min ;

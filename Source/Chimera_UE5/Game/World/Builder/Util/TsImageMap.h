@@ -248,7 +248,7 @@ public:
 			SetWorld(bound);
 		}
 	}
-	virtual ~TsImageMap() {}
+	virtual ~TsImageMap() { ReleaseImage() ;}
 
 	void 		ClearImage() {
 		FMemory::Memzero(mImage, sizeof(T) * mW * mH * mD);
@@ -307,10 +307,10 @@ public:
 				break ;
 			case EImageFormat::FormatL16:
 			case EImageFormat::FormatR16:
-				((uint16*)mSlot)[i] = ((T *)mImage)[i]*65535 ;
+				((uint16*)mSlot)[i] = FMath::Clamp( ((T *)mImage)[i]*65535, 0, 65535) ;
 				break ;
 			case EImageFormat::FormatR8:
-				((uint8 *)mSlot)[i] = ((T *)mImage)[i]*255   ;
+				((uint8 *)mSlot)[i] = FMath::Clamp( ((T *)mImage)[i]*255  , 0, 255 ) ;
 				break ;
 			}
 		}

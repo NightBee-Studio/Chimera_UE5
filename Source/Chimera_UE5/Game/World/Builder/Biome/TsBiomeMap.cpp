@@ -216,6 +216,7 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 				float val = 0.0f;
 				if ( mPixels[x + y * mW].mValues.Contains(ty)) {
 					val = mPixels[x + y * mW].mValues[ty];
+					//if ( ty != EMaterialType::EBMt_Clay_A && y != EMaterialType::EBMt_Clay_A && ty != EMaterialType::EBMt_Clay_D && ty != EMaterialType::EBMt_Soil_B ) UE_LOG(LogTemp, Log, TEXT(" !!!!! [%d,%d]%d val%f (pixel)"),x,y, ty, val );
 					need_save = true;
 				}
 				bitmap->SetPixel(x, y, val );
@@ -223,9 +224,12 @@ void	TsMaterialMap::SaveAll(int x, int y, int w, int h)
 		if (need_save){
 		    FString name  = enum_ptr->GetNameStringByValue(static_cast<int64>(ty)).Mid( 5 ) ;
 			FString fname = FString::Printf( TEXT("MI_%s"), *name );
-			bitmap->Save( *(fname + FString(".dds")), EImageFile::Dds, EImageFormat::FormatL16, 0, 0, w, h);
+			//bitmap->Save( *(fname + FString(".dds")), EImageFile::Dds, EImageFormat::FormatL16, 0, 0, w, h);
 			UTexture2D*		tex_asset = bitmap->SaveAsset( *fname, EImageFormat::FormatR8 ) ;
 			if ( tex_asset ) mTexParams.Add( TsGroundSlot( ty, tex_asset ) );
+
+			UE_LOG(LogTemp, Log, TEXT(" !!!!! %s (saved)"), *fname );
+
 		}
 	}
 }
