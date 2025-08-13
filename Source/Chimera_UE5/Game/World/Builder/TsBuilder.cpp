@@ -149,10 +149,10 @@ public:
 	{
 		mode = 0 ;
 //		mode |= (int)EBuildMode::EBM_HeightMap   ;
-		mode |= (int)EBuildMode::EBM_MaterialMap ;
+//		mode |= (int)EBuildMode::EBM_MaterialMap ;
 //		mode |= (int)EBuildMode::EBM_FoliageMap	 ;
 //		mode |= (int)EBuildMode::EBM_StaticMesh	 ;
-		mode |= (int)EBuildMode::EBM_UpdateRatio ;
+//		mode |= (int)EBuildMode::EBM_UpdateRatio ;
 
 		TsUtil::RandSeed( seed );
 
@@ -490,9 +490,9 @@ public:
 
 				TArray<TsUtil::TsIPoint> points ;
 				const int NN = 5 ;
-				for ( int oy=0 ; oy<NN ; oy++ ){
-					for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
-				}
+				//for ( int oy=0 ; oy<NN ; oy++ ){
+				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
+				//}
 				//points.Add( TsUtil::TsIPoint(3,2) ) ;
 
 				mMaskBiome = new TsMaskMap( 0.1f ) ;

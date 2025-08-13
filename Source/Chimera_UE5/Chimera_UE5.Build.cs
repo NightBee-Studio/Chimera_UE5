@@ -32,15 +32,17 @@ public class Chimera_UE5 : ModuleRules
 
 		// mesh output
 		PrivateDependencyModuleNames.AddRange(new string[] {
-			"ProceduralMeshComponent",
-			"AssetTools",
 			"AssetRegistry",
-			"EditorScriptingUtilities",
 			"MeshDescription",
 			"StaticMeshDescription",
-            "UnrealEd",
-		    "EditorSubsystem", "EditorFramework" // GEditor経由で必要なこともある
 		});
+		if (Target.bBuildEditor){
+			PrivateDependencyModuleNames.AddRange(new string[] {
+				"UnrealEd",
+				"AssetTools",
+				"EditorScriptingUtilities", "EditorSubsystem", "EditorFramework"
+			});
+		}
 
         PublicIncludePaths.AddRange(new string[] {
 				Path.Combine(ModuleDirectory, "../Chimera_UE5")
