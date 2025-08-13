@@ -281,8 +281,8 @@ public:
 									{ 0.05f, 0.0f, EMaterialType::EBMt_Soil_A   },
 									{ 0.08f, 0.0f, EMaterialType::EBMt_Soil_B   },
 									{ 0.20f, 0.0f, EMaterialType::EBMt_Grass_A  },
-									{ 0.24f, 0.0f, EMaterialType::EBMt_Grass_B  },
-									{ 0.02f, 0.0f, EMaterialType::EBMt_Grass_C  },
+									{ 0.255f,0.0f, EMaterialType::EBMt_Grass_B  },
+									{ 0.005f,0.0f, EMaterialType::EBMt_Grass_C  },
 									{ 0.15f, 0.0f, EMaterialType::EBMt_Forest_A },
 									{ 0.25f, 0.0f, EMaterialType::EBMt_Forest_B },
 								},{
@@ -369,11 +369,12 @@ public:
 					{
 						TsExtraMap( ETextureMap::ETM_Height   , texture_maps[ETextureMap::ETM_Height   ], &mBoundingbox,	0.0f, EExtraOp::E_Add	),	//	 1.0f E_InvMul
 						TsExtraMap( ETextureMap::ETM_Flow     , texture_maps[ETextureMap::ETM_Flow     ], &mBoundingbox,   -0.5f, EExtraOp::E_Add		),	//  -1.2f
-						TsExtraMap( ETextureMap::ETM_Slope    , texture_maps[ETextureMap::ETM_Slope    ], &mBoundingbox,   -1.8f, EExtraOp::E_Add		),	//  -1.8f
+						TsExtraMap( ETextureMap::ETM_Slope    , texture_maps[ETextureMap::ETM_Slope    ], &mBoundingbox,    1.5f, EExtraOp::E_InvMul),	//  -1.8f
 						TsExtraMap( ETextureMap::ETM_Curvature, texture_maps[ETextureMap::ETM_Curvature], &mBoundingbox,	0.0f, EExtraOp::E_Add		),	//  -1.8f
 					}
 				);
 			moist_map->Lock() ;// for read extra-maps
+			moist_map->UpdateNoiseRemap();
 
 			TsBiomeMap::AddBiomeMap( ETextureMap::ETM_Moisture , moist_map ) ;
 			TsBiomeMap::AddBiomeMap( ETextureMap::ETM_Height   , &moist_map->mExtras[0]) ;
@@ -489,17 +490,10 @@ public:
 
 				TArray<TsUtil::TsIPoint> points ;
 				const int NN = 5 ;
-				//for ( int oy=0 ; oy<NN ; oy++ ){
-				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
-				//}
-				points.Add( TsUtil::TsIPoint(1,2) ) ;
-				points.Add( TsUtil::TsIPoint(2,2) ) ;
-				points.Add( TsUtil::TsIPoint(3,2) ) ;
-				points.Add( TsUtil::TsIPoint(4,2) ) ;
-				points.Add( TsUtil::TsIPoint(1,1) ) ;
-				points.Add( TsUtil::TsIPoint(2,1) ) ;
-				points.Add( TsUtil::TsIPoint(3,1) ) ;
-				points.Add( TsUtil::TsIPoint(4,1) ) ;
+				for ( int oy=0 ; oy<NN ; oy++ ){
+					for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
+				}
+				//points.Add( TsUtil::TsIPoint(3,2) ) ;
 
 				mMaskBiome = new TsMaskMap( 0.1f ) ;
 				mMaskTypeS = new TsMaskMap( 0.4f ) ;
@@ -603,7 +597,7 @@ public:
 											pix.Add( it, 1.0f );
 
 											if ( s_type==EBiomeSType::EBSf_Field ){
-												foliage_map.SetPixel( px, py, 1-((float)it)/EBMt_Max );
+												foliage_map.SetPixel( px, py, 1-((float)it + r.mValue)/EBMt_Max );
 												foliage_items.AddUnique( it ) ;
 											}
 										}
@@ -630,35 +624,10 @@ public:
 						FString asset_name = FString::Printf(TEXT("T_FoliageMap_%1d%1d"), pn.mX, pn.mY );
 						foliage_map.SaveAsset(*asset_name, EImageFormat::FormatR8 ) ;
 						for ( auto &it : foliage_items ){
-							UE_LOG(LogTemp, Log, TEXT("       Foriage[%s] %f"),
-								*StaticEnum<EMaterialType>()->GetNameStringByValue(static_cast<int64>(it)), 1-((float)it)/EBMt_Max );	
+							UE_LOG(LogTemp, Log, TEXT("       Foriage[%s] %f -> %f"),
+								*StaticEnum<EMaterialType>()->GetNameStringByValue(static_cast<int64>(it)), 1-((float)it)/EBMt_Max, 1-((float)it+1)/EBMt_Max );	
 						}
 					}
-
-
-					//if ( mode & (int)EBuildMode::EBM_FoliageMap	){
-					//	UE_LOG(LogTemp, Log, TEXT("       FoliageMap start...") );
-
-					//	bool save = false ;
-					//	foliage_map.ClearImage() ;
-					//	foliage_map.SetWorld( &loc_bound );
-					//	foliage_map.ForeachPixel(
-					//		[&](int px, int py) {
-					//			float		val = 0 ;
-					//			FVector2D	p = foliage_map.GetWorldPos( px, py ) ;
-					//			TsBiome *	b = SearchBiome( p, false );
-					//			if ( b && b->mSType == EBiomeSType::EBSf_Field ){
-					//				val = moist_map->Remap(moist_map->GetValue( p )) ;
-					//				save = true ;
-					//			}
-					//			foliage_map.SetPixel( px, py, val );
-					//		});
-					//	if ( save ){
-					//		FString asset_name = FString::Printf(TEXT("T_FoliageMap_%1d%1d"), pn.mX, pn.mY );
-					//		foliage_map.SaveAsset(*asset_name, EImageFormat::FormatR8 ) ;
-					//	}
-					//	UE_LOG(LogTemp, Log, TEXT("       FoliageMap done.") );
-					//}
 
 					if ( mode & (int)EBuildMode::EBM_StaticMesh ){
 						UE_LOG(LogTemp, Log, TEXT("       StaticMesh start...") );

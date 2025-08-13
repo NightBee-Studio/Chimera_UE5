@@ -25,36 +25,6 @@ void	TsBiomeSFunc::RemapHeight(TsBiome* b, const FVector2D& p)
 
 // -------------------------------- TsBiomeMFunc --------------------------------
 
-#if 0
-TsMaterialPixel	TsBiomeMFunc::GetMaterial(const FVector2D& p)
-{
-	EMaterialType type = EMaterialType::MT_None;
-
-	TsBiomeMap* bm = TsBiomeMap::GetBiomeMap(mMapType);
-	float		v  = bm->GetValue(p);
-	TsMaterialPixel	pl;
-	for (const auto& l : mLayers) {
-		if (l.mMaterialType != EMaterialType::MT_None) {
-			if (l.mMin <= v && v < l.mMax) {
-				float val;
-				if ( type ) {
-					val = FMath::Min((v - l.mMin) / ((l.mMax - l.mMin) * 0.4f), 1);
-					//if (val < 1) px.Add( TsMaterialValue(type, 1) );
-				} else {
-					val = 1;
-				}
-				pl.Add( TsMaterialValue(l.mMaterialType, val) );
-				break;
-			}
-		}
-		type = l.mMaterialType;
-	}
-	//	UE_LOG(LogTemp, Log, TEXT("NoResult (%f %f) %d"), p.X, p.Y, mConfigs.Num());
-
-	return pl;
-}
-#endif
-
 
 // -------------------------------- TsBiomeSurface  --------------------------------
 

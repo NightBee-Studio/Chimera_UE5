@@ -116,7 +116,7 @@ public:
 				float min = (i>0 ? items[i-1].mThreshold : mMin) ;
 				float max = items[i].mThreshold ;
 				float v = (h-min)/(max-min) ;
-				v = FMath::Clamp( v*2.0f, 0, 1 ) ;
+				//v = FMath::Clamp( v*2.0f, 0, 1 ) ;
 				return { .mIndex=i, .mValue=v };
 			}
 		}
@@ -178,14 +178,29 @@ public:
 			std::initializer_list<TsExtraMap>	extra
 		)
 		: TsBiomeMap( extra.begin()->GetW(), extra.begin()->GetH(), bound, cnf )
-		, mExtras( extra ){}
+		, mExtras( extra )
+		, mNoiseMin( 10000.0f)
+		, mNoiseMax(-10000.0f){}
 
 	TArray<TsExtraMap>	mExtras ;
+	float	mNoiseMin;
+	float	mNoiseMax;
 
 	void Lock() ;
 	void UnLock() ;
 
 	virtual float	GetValue(const FVector2D& p) override;
+
+	void UpdateNoiseRemap() {
+		int inc =  mW>8000 ? 8 : mW>4000 ? 4: mW>2000 ? 2 : 1 ;
+		ForeachPixel(
+			[&](int px, int py) {
+				float val = TsNoiseMap::GetValue( GetWorldPos(px, py) ) ;
+				mNoiseMin = FMath::Min(mNoiseMin, val);// update ing the remap
+				mNoiseMax = FMath::Max(mNoiseMax, val);
+			}, inc );
+	}
+
 };
 
 

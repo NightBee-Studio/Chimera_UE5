@@ -49,7 +49,7 @@ bool FPCGPlaneSamplerElement::ExecuteInternal(FPCGContext* Context) const// cann
 	TArray<FPCGPoint> points;
 	for (float x = min.X; x <= max.X; x += step_x){
 		for (float y = min.Y; y <= max.Y; y += step_y){
-			const FVector pos(x, y, settings->mPlaneZ);
+			const FVector pos(x, y, (min.Z+max.Z)*0.5f + settings->mPlaneZ );
 			FPCGPoint p;
 			p.Transform = FTransform(pos); // Z = 0 •½–Ê
 			p.Density   = 1.0f;//stream.FRand(); // 0?1‚Ìƒ‰ƒ“ƒ_ƒ€’l

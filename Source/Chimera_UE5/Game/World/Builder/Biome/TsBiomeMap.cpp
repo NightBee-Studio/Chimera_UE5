@@ -24,8 +24,8 @@ float	TsBiomeMap::GetValue(const FVector2D& p)	// world-coord
 		v = TsNoiseMap::GetValue(p);					// calc noise value
 		TsLevelMap::SetPixel(p, v);
 	}
-	mMin = FMath::Min(mMin, v);// update ing the remap
-	mMax = FMath::Max(mMax, v);
+	//mMin = FMath::Min(mMin, v);// update ing the remap			         want stop this..... 2025/8/11
+	//mMax = FMath::Max(mMax, v);
 	return v;
 }
 
@@ -250,19 +250,16 @@ float	TsMoistureMap::GetValue( const FVector2D& p )
 	float		val = TsBiomeMap::GetValue( p ) ;
 
 	for ( auto &ex : mExtras ){
-		float pix = 0;
-		TsUtil::ForeachGaussian(
-			pos, 1,
-			[&]( const FVector2D &p, float wt){
-				pix += ex.GetPixelTex2D_Linear( p.X, p.Y ) * wt ;
-			} ) ;
-
+		float pix = ex.GetPixelTex2D_Linear( pos.X, pos.Y );
 		switch( ex.mOp ){
 		case EExtraOp::E_Mul:
 			val *= (pix    ) * ex.mScale ; 
 			break ;
-		case EExtraOp::E_InvMul:
-			val *= (1 - pix) * ex.mScale ; 
+		case EExtraOp::E_InvMul:{
+				float v = val - mNoiseMin ;
+				v *= (1 - FMath::Clamp( pix* ex.mScale, 0, 1) ) ; 
+				val = mNoiseMin + v ;
+			}
 			break ;
 		default:
 		case EExtraOp::E_Add:
@@ -270,7 +267,7 @@ float	TsMoistureMap::GetValue( const FVector2D& p )
 			break ;
 		}
 	}
-	mMin = FMath::Min(mMin, val);// update ing the remap
+	mMin = FMath::Min(mMin, val);// update ing the remap 
 	mMax = FMath::Max(mMax, val);
 
 	return val ;

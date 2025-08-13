@@ -7,6 +7,8 @@
 #include "Helpers/PCGAsync.h"
 #include "Data/PCGPointData.h"
 #include "Data/PCGSpatialData.h"
+#include "PCGVolume.h"
+#include "EngineUtils.h"   // TActorIterator
 
 #define LOCTEXT_NAMESPACE "PCGSnapToGroundElement"
 
@@ -48,7 +50,11 @@ bool FPCGSnapToGroundElement::ExecuteInternal(FPCGContext* Context) const// cann
 			FCollisionQueryParams params;
 			params.bTraceComplex = true;
 			params.AddIgnoredActor(Context->SourceComponent->GetOwner());
+			for (TActorIterator<APCGVolume> it(world); it; ++it){
+				params.AddIgnoredActor( *it );
+			}
 
+TArray<FName> hitnames ; 
 			for (int ip = 0; ip < points.Num(); ip++) {
 				out_points.Add(points[ip]);
 
@@ -57,13 +63,19 @@ bool FPCGSnapToGroundElement::ExecuteInternal(FPCGContext* Context) const// cann
 				FVector from = trans.GetLocation() + FVector(0, 0, GAP);
 				FVector to = trans.GetLocation() + FVector(0, 0, -GAP);
 				FHitResult result;
-				if (world->LineTraceSingleByChannel(result, from, to, ECC_Visibility, params)) {
-					//UE_LOG(LogTemp, Log, TEXT(" Pos=(%f %f %f)->Hit %f %f %f"),
+				if (world->LineTraceSingleByChannel(result, from, to, ECC_WorldStatic, params)) {
+					if ( result.GetActor() ) hitnames.AddUnique( *result.GetActor()->GetName()) ;
+					//UE_LOG(LogTemp, Log, TEXT(" Pos=(%f %f %f)->Hit %f %f %f Actot:%s"),
 					//	trans.GetLocation().X, trans.GetLocation().Y, trans.GetLocation().Z,
-					//	result.Location.X, result.Location.Y, result.Location.Z);
+					//	result.Location.X, result.Location.Y, result.Location.Z, *result.GetActor()->GetName());
 					trans.SetLocation(result.Location);
 				}
 			}
+
+for( auto &nm : hitnames ){
+	UE_LOG(LogTemp, Log, TEXT(" hitActot:%s"), *nm.ToString() ) ;
+}
+
 		}
 	}
 

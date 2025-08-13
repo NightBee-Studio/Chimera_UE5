@@ -73,25 +73,29 @@ bool FPCGRangeCalculationElement::ExecuteInternal(FPCGContext* Context) const
 		mip.BulkData.Unlock();
 #endif
 	}
-	// sort the samaples to decide the threshold.
-	samples.Sort();
 
-	// threshold from index amount..
-	TArray<float>	results;
-	float ratio = 0;
-	int   max = (samples.Num() - 1);
-	for (auto& ly : settings->mLayers) {
-		ratio += ly.mRatio;
-		results.Add( samples[max * FMath::Min(1, ratio)] );
+	float res[4] = {0,0,0,0} ;
+	if ( samples.Num() > 0 ){
+		// sort the samaples to decide the threshold.
+		samples.Sort();
+
+		// threshold from index amount..
+		float	ratio = 0;
+		int		max = (samples.Num() - 1);
+		int		i = 0 ;
+		for (auto& ly : settings->mLayers) {
+			ratio += ly.mRatio;
+			if ( i<4 ) res[i++] = samples[max * FMath::Min(1, ratio)] ;
+		}
 	}
 
 	UPCGPointData* pn_data = NewObject<UPCGPointData>();
 	pn_data->InitializeFromData(nullptr);
 
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R1"), results.Num()>0 ? results[0] : 0.0f, false, false);
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R2"), results.Num()>1 ? results[1] : 0.0f, false, false);
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R3"), results.Num()>2 ? results[2] : 0.0f, false, false);
-	pn_data->Metadata->CreateAttribute<float>(TEXT("R4"), results.Num()>3 ? results[3] : 0.0f, false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R1"), res[0], false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R2"), res[1], false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R3"), res[2], false, false);
+	pn_data->Metadata->CreateAttribute<float>(TEXT("R4"), res[3], false, false);
 	pn_data->Metadata->AddEntry();
 	pn_data->GetMutablePoints().Add( FPCGPoint() );
 
