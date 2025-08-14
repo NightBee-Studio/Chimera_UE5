@@ -6,12 +6,13 @@
 #include "Kismet/KismetSystemLibrary.h"
 #include "Engine/Texture2D.h"
 
+#if WITH_EDITOR
 #include "Misc/PackageName.h"
 #include "UObject/Package.h"
 #include "UObject/SavePackage.h"
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
-
+#endif
 
 
 // -------------------------------- TsValueMap  --------------------------------
@@ -564,6 +565,7 @@ float	TsImageCore::GetPixelTex2D_Linear(float x, float y, int reso )
 bool TsImageCore::Lock() 
 {
 	if ( mTex ){
+#if WITH_EDITOR
 		if (
 #if WITH_EDITORONLY_DATA
 			mTex->Source.IsValid()
@@ -580,6 +582,7 @@ bool TsImageCore::Lock()
 #endif
 			return true;
 		}
+#endif	//WITH_EDITOR
 	}
 	return false;
 }
@@ -587,6 +590,7 @@ bool TsImageCore::Lock()
 void TsImageCore::UnLock()
 {
 	if ( mTex ){
+#if WITH_EDITOR
 		if ( mImage ){
 		#if WITH_EDITORONLY_DATA
 			mTex->Source.UnlockMip(0);
@@ -594,6 +598,7 @@ void TsImageCore::UnLock()
 			mTex->GetPlatformData()->Mips[0].BulkData.Unlock();
 		#endif
 		}
+#endif	//WITH_EDITOR
 		mImage = nullptr;
 	}
 }

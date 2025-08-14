@@ -1,5 +1,6 @@
 #include "TsBuilderTool.h"
 
+#if WITH_EDITOR
 //packageŠÖ˜A
 #include "AssetRegistry/AssetRegistryModule.h"
 #include "AssetToolsModule.h"
@@ -16,6 +17,7 @@
 #include "Engine/Texture2DArray.h"
 #include "Engine/Texture2D.h"
 #include "Materials/MaterialInstanceConstant.h"
+#endif
 
 
 #include "../Biome/TsBiomeMap.h"
@@ -27,6 +29,7 @@ UTexture2D*		 TsBuilderTool::Combine_Texture(
     		const FString&			   asset_name
 	)
 {
+#if WITH_EDITOR
     int w = 0;
     int h = 0;
     TArray<FColor> OutputPixels;
@@ -87,6 +90,9 @@ UTexture2D*		 TsBuilderTool::Combine_Texture(
     UPackage::SavePackage(package, tex, *pkg_filename, save_args);
 
     return tex;
+#else 
+    return nullptr;
+#endif
 }
 
 
@@ -97,6 +103,7 @@ UTexture2DArray* TsBuilderTool::Build_TexArray(
 {
     if (textures.Num() == 0) return nullptr;
 
+#if WITH_EDITOR
     FString         package_path = TsUtil::GetPackagePath( asset_name ) ;
     FString         package_name = FPackageName::ObjectPathToPackageName(package_path);
     UPackage*       package      = CreatePackage(*package_name);
@@ -187,6 +194,9 @@ UTexture2DArray* TsBuilderTool::Build_TexArray(
     UPackage::SavePackage(package, tex_array, *pkg_filename, save_args);
 
     return tex_array;
+#else 
+    return nullptr;
+#endif      //WITH_EDITOR
 }
 
 
@@ -195,7 +205,8 @@ void	TsBuilderTool::Build_MaterialSet(
 		TArray<FTsGroundTex>&	texsets
 	)
 {
-    TArray<UTexture2D*> alb_array ;
+ #if WITH_EDITOR
+   TArray<UTexture2D*> alb_array ;
     TArray<UTexture2D*> nrm_array ;
     for ( auto& set : texsets ){
         alb_array.Add(set.mTexAlbedo) ;
@@ -203,6 +214,7 @@ void	TsBuilderTool::Build_MaterialSet(
     }
     Build_TexArray( alb_array, TEXT("TA_GroundAlbedo") ) ;
     Build_TexArray( nrm_array, TEXT("TA_GroundNormal") ) ;
+#endif      //WITH_EDITOR
 }
 
 

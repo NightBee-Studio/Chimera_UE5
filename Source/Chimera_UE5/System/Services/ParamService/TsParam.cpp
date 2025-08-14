@@ -1,7 +1,12 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
+
 #include "TsParam.h"
 #include "TsParamService.h"
+
+#include "UObject/UnrealType.h"
+#include "UObject/MetaData.h"
+
 #include "System/TsSystem.h"
 
 
@@ -146,11 +151,9 @@ FTsParamSheet::FTsParamSheet( UStruct* type, void* container)
 		UE_LOG(LogTemp, Log, TEXT("---- [%p] FTsParamSheet ----"), (void *)container);
 		for (TFieldIterator<FProperty> it(type); it; ++it) {
 			FProperty* pr = *it;
-			FString name = pr->GetMetaData(TEXT("DisplayName"));
-			if (name.IsEmpty()) name = pr->GetName();
 
-			UE_LOG(LogTemp, Log, TEXT("Property: %s (%s)  [%p]"), *name, *pr->GetCPPType(), container);
-			mParamMaps.Add(FName(*name), CreateParam(pr, container));
+			UE_LOG(LogTemp, Log, TEXT("Property: %s (%s)  [%p]"), *pr->GetName(), *pr->GetCPPType(), container);
+			mParamMaps.Add( FName(*pr->GetName()), CreateParam(pr, container));
 		}
 	}
 }
