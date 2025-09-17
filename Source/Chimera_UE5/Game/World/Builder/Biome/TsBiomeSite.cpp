@@ -126,12 +126,13 @@ bool	TsBiomeSite::IsInside( const FVector2D &p ) const
 void	TsBiomeSite::Debug(UWorld* world) {
 	const float UP = 1.0f;
 	for (auto c : mCircles) {
-		DrawDebugCircle(world, FVector(c.X, c.Y, UP), 10, 32, FColor(255, 0, 255), true, 10000);
-		for (int i = 0; i < c.mN; i++) {
-			FVector	p0 = FVector( c.GetOutline(i + 0), UP);
-			FVector	p1 = FVector( c.GetOutline(i + 1), UP);
-			DrawDebugLine(world, p0, p1, FColor(255, 0, 0), true, 10000);
-		}
+		DrawDebugCircle(world, FVector(c.X, c.Y, UP), 10, 32, FColor(255, 0, 255), true, 10000, 0, 2.0f, FVector::XAxisVector,FVector::YAxisVector, false );
+		DrawDebugCircle(world, FVector(c.X, c.Y, UP), c.mR, 32, FColor(0,0,255), true, 10000, 0, 2.0f, FVector::XAxisVector,FVector::YAxisVector, false  );
+		//for (int i = 0; i < c.mN; i++) {
+		//	FVector	p0 = FVector( c.GetOutline(i + 0), UP);
+		//	FVector	p1 = FVector( c.GetOutline(i + 1), UP);
+		//	DrawDebugLine(world, p0, p1, FColor(255, 0, 0), true, 10000);
+		//}
 	}
 }
 

@@ -110,16 +110,16 @@ public:
 	{
 		mShape.Debug(world);
 
-		for (auto &b : mBiomes) {
-			FColor c(0, 0, 0);
-			switch (b.GetSType()) {
-			case EBiomeSType::EBSf_None:		c = FColor(  0,   0, 180); break;
-			case EBiomeSType::EBSf_Lake:		c = FColor(100, 120, 255); break;
-			case EBiomeSType::EBSf_Field:		c = FColor(125, 255,   0); break;
-			case EBiomeSType::EBSf_Mountain:	c = FColor(255, 255, 255); break;
-			}
-			b.Debug(world, c);
-		}
+//		for (auto &b : mBiomes) {
+//			FColor c(0, 0, 0);
+//			switch (b.GetSType()) {
+//			case EBiomeSType::EBSf_None:		c = FColor(  0,   0, 180); break;
+//			case EBiomeSType::EBSf_Lake:		c = FColor(100, 120, 255); break;
+//			case EBiomeSType::EBSf_Field:		c = FColor(125, 255,   0); break;
+//			case EBiomeSType::EBSf_Mountain:	c = FColor(255, 200, 42 ); break;
+//			}
+//			b.Debug(world, c);
+//		}
 	}
 
 	Builder_Work()
@@ -375,6 +375,7 @@ public:
 				);
 			moist_map->Lock() ;// for read extra-maps
 			moist_map->UpdateNoiseRemap();
+			moist_map->Save("MoiseMap.raw", EImageFile::Raw, EImageFormat::FormatL16);
 
 			TsBiomeMap::AddBiomeMap( ETextureMap::ETM_Moisture , moist_map ) ;
 			TsBiomeMap::AddBiomeMap( ETextureMap::ETM_Height   , &moist_map->mExtras[0]) ;
@@ -493,7 +494,7 @@ public:
 				//for ( int oy=0 ; oy<NN ; oy++ ){
 				//	for ( int ox=0 ; ox<NN ; ox++ ) points.Add( TsUtil::TsIPoint(ox,oy) ) ;
 				//}
-				//points.Add( TsUtil::TsIPoint(3,2) ) ;
+				points.Add( TsUtil::TsIPoint(1,1) ) ;
 
 				mMaskBiome = new TsMaskMap( 0.1f ) ;
 				mMaskTypeS = new TsMaskMap( 0.4f ) ;

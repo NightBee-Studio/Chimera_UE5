@@ -395,7 +395,7 @@ void TsBuilderTool::Build_HeightMesh(
 
     if ( !material ) material = LoadObject<UMaterialInterface>(nullptr, TEXT("/Engine/EngineMaterials/DefaultMaterial.DefaultMaterial"));
     static_mesh->GetStaticMaterials().Add( FStaticMaterial(material) );
-    static_mesh->NaniteSettings.bEnabled = true;
+    //static_mesh->NaniteSettings.bEnabled = true;
     static_mesh->CommitMeshDescription(LODIndex);
     static_mesh->ImportVersion = EImportStaticMeshVersion::LastVersion;
 
